@@ -76,7 +76,7 @@ Check "foreign hud.lua still refused" (-not (Get-PackStatus $game).HudCompatible
 "== HUD layouts: compact -> Minimalist -> Zors.o -> restore"
 $game = New-FakeGame $vanilla
 $payload = Join-Path $root "setup\payload"
-Install-Pack -Game $game -Hud $true -Crosshair "cross" -Layout "compact"
+Install-Pack -Game $game -Hud $true -Crosshair "cross" -CrosshairSize 150 -Layout "compact"
 Check "compact: layout detected" ((Get-PackStatus $game).Layout -eq "compact")
 Install-Pack -Game $game -Hud $true -Crosshair $null -Layout "minimalist"
 $st = Get-PackStatus $game
@@ -87,7 +87,10 @@ Check "minimalist: its textures in" ((Get-Sha "$game\data\ui\textures\context\hu
 Install-Pack -Game $game -Hud $true -Crosshair $null -Layout "zors" -HudSkin "pro"
 $st = Get-PackStatus $game
 Check "zors: layout and skin detected" ($st.Layout -eq "zors" -and $st.HudInstalled -and $st.HudSkin -eq "pro")
-Check "zors: purple menu background in" (Test-Path "$game\data\ui\textures\FE-MainMenu-BG.dds")
+$menu = "$game\data\ui\textures\menu_backgrounds"
+Check "zors: menu background for every menu skin" ((Test-Path "$menu\base\FE-MainMenu-BG.dds") -and (Test-Path "$menu\dlc3\FE-MainMenu-BG.dds") -and (Test-Path "$menu\classic\FE-AllScreens-BG.dds"))
+Check "zors: splash in data\ui" ((Get-Sha "$game\data\ui\earthworkgames.png") -eq (Get-Sha "$root\third_party\zors\textures\earthworkgames.png"))
+Check "zors: our cursor size setting removed" (-not ([IO.File]::ReadAllText("$game\data\db\constants_user.lua") -match "FORTS SETUP CURSOR SIZE"))
 Check "zors: minimalist textures gone" (-not (Test-Path "$game\data\ui\textures\context\hud-bg1.dds"))
 Check "zors: its own cursor" ((Get-Sha "$game\data\ui\textures\mouse_target.dds") -eq (Get-Sha "$payload\layouts\zors\textures\mouse_target.dds"))
 
@@ -104,7 +107,7 @@ Install-Pack -Game $game -Hud $false -Crosshair $null -Icons @{ extinguisher = 1
 Check "100%: zors extinguisher back" ((Get-Sha "$game\data\ui\textures\extinguisher.dds") -eq (Get-Sha "$payload\layouts\zors\textures\extinguisher.dds"))
 Check "100%: status back to 100" ((Get-PackStatus $game).Icons.repair -eq 100)
 Install-Pack -Game $game -Hud $true -Crosshair $null -Layout "compact" -Icons @{ extinguisher = 40; under_construction = 100; repair = 100 }
-Check "compact: zors textures gone" (-not (Test-Path "$game\data\ui\textures\FE-MainMenu-BG.dds"))
+Check "compact: zors textures gone" (-not (Test-Path "$menu\dlc3\FE-MainMenu-BG.dds") -and -not (Test-Path "$game\data\ui\earthworkgames.png"))
 Check "compact: extinguisher from game art at 40%" ((Get-PackStatus $game).Icons.extinguisher -eq 40)
 $skipped = @(Restore-Pack -Game $game)
 Check "layouts: restore clean" ($skipped.Count -eq 0 -and (Get-Sha "$game\data\ui\screens\hud.lua") -eq (Get-Sha "$root\original\hud.lua") -and

@@ -65,7 +65,21 @@ def main(game, payload, assets):
         shutil.rmtree(d, ignore_errors=True)
     os.makedirs(zors)
     shutil.copy2(os.path.join(ROOT, "build", "hud_zors.lua"), os.path.join(zors, "hud.lua"))
-    copy_tree(os.path.join(tp, "zors", "textures"), os.path.join(zors, "textures"))
+    # Zors.o's files go where the game reads them: menu backgrounds into every menu
+    # skin's folder (screens ask for menu_backgrounds/base, the menu skin redirects it),
+    # the splash to data\ui (logo.lua shows ui/earthworkgames), the rest next to the
+    # game's own in data\ui\textures.
+    for f in os.listdir(os.path.join(tp, "zors", "textures")):
+        src = os.path.join(tp, "zors", "textures", f)
+        if f.startswith("FE-") and f.endswith("-BG.dds"):  # the installer copies base to every menu skin
+            targets = [os.path.join(zors, "textures", "menu_backgrounds", "base", f)]
+        elif f == "earthworkgames.png":
+            targets = [os.path.join(zors, "ui", f)]
+        else:
+            targets = [os.path.join(zors, "textures", f)]
+        for t in targets:
+            os.makedirs(os.path.dirname(t), exist_ok=True)
+            shutil.copy2(src, t)
     os.makedirs(mini)
     shutil.copy2(os.path.join(tp, "minimalist", "screens", "hud.lua"), os.path.join(mini, "hud.lua"))
     copy_tree(os.path.join(tp, "minimalist", "textures"), os.path.join(mini, "textures"))
@@ -89,6 +103,7 @@ def main(game, payload, assets):
 
     # Wide previews for the HUD page frame (the frame is about 6:1).
     thumb(os.path.join(tp, "zors", "textures", "FE-MainMenu-BG.dds"), os.path.join(assets, "preview_zors.png"), (960, 160))
+    # (sources stay flat in third_party\zors\textures; see the mapping above)
     mini_shot = Image.open(os.path.join(tp, "minimalist", "preview.jpg")).convert("RGB")
     mini_shot.crop((0, 470, 1280, 720)).resize((960, 188), Image.LANCZOS).save(os.path.join(assets, "preview_minimalist.png"))
     thumb(os.path.join(assets, "hud_after.png"), os.path.join(assets, "layout_compact.png"))

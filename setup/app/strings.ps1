@@ -74,6 +74,7 @@ $script:English = @{
     "Иконки" = "Icons"; "Вернуть всем 100%" = "Set all back to 100%"; "Непрозрачность: " = "Opacity: "; "{0} изм." = "{0} changed"
     "иконки: " = "icons: "; "полупрозрачные иконки" = "see-through icons"
     "Значки тушения, строительства и ремонта над фортом. Сделай их полупрозрачными, чтобы не закрывали постройки." = "The extinguish, construction and repair icons over your fort. Make them see-through so they do not cover your build."
+    "Профиль Steam" = "Steam profile"
     # update check
     "Доступна версия {0}" = "Version {0} is available"; "Скачать" = "Download"
     # engine

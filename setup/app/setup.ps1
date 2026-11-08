@@ -40,7 +40,10 @@ $layoutInfo = @{
     zors       = @{ title = (L "Zors.o · фиолетовая тема"); text = (L "Наш компактный HUD в фиолетовом, плюс фон меню, курсоры с прицелом и иконки от Zors.o."); preview = "preview_zors.png" }
     minimalist = @{ title = (L "Minimalist · автор nutellafish"); text = (L "Прозрачный минимальный интерфейс; убранные кнопки нажимаются горячими клавишами."); preview = "preview_minimalist.png" }
 }
-$workshopUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=3750502564"
+$layoutLinks = @{
+    zors       = @{ text = (L "Профиль Steam"); url = "https://steamcommunity.com/profiles/76561199099877561" }
+    minimalist = @{ text = (L "Мастерская Steam"); url = "https://steamcommunity.com/sharedfiles/filedetails/?id=3750502564" }
+}
 $layoutSegs = @{}
 foreach ($key in $Layouts.Keys) {
     $seg = [Windows.Controls.RadioButton]::new()
@@ -60,7 +63,9 @@ function Show-Layout([string]$key) {
     $info = $layoutInfo[$key]
     $ui.LayoutTitle.Text = $info.title
     $ui.LayoutText.Text = $info.text
-    $ui.LayoutLink.Visibility = $(if ($key -eq "minimalist") { "Visible" } else { "Collapsed" })
+    $link = $layoutLinks[$key]
+    $ui.LayoutLink.Visibility = $(if ($link) { "Visible" } else { "Collapsed" })
+    if ($link) { $ui.LayoutLink.Content = $link.text; $ui.LayoutLink.Tag = $link.url }
     $ui.MiniWarn.Visibility = $(if ($key -eq "minimalist") { "Visible" } else { "Collapsed" })
     foreach ($n in "SkinRow", "SkinSep") { $ui[$n].Visibility = $(if ($key -eq "minimalist") { "Collapsed" } else { "Visible" }) }
     $ui.PhotosBox.Visibility = $(if ($key -eq "compact") { "Visible" } else { "Collapsed" })
@@ -86,7 +91,7 @@ function Show-Layout([string]$key) {
     Update-IconArt
     if (Get-Command Update-InstallButton -ErrorAction SilentlyContinue) { Update-InstallButton }
 }
-$ui.LayoutLink.Add_Click({ Start-Process $workshopUrl })
+$ui.LayoutLink.Add_Click({ if ($ui.LayoutLink.Tag -like "https://steamcommunity.com/*") { Start-Process $ui.LayoutLink.Tag } })
 
 # HUD photos: our layout in different matches.
 $photos = "hud_after", "hud_photo_2", "hud_photo_3"

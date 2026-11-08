@@ -53,6 +53,8 @@ end
 # HUD layouts: our compact one, the same in Zors.o's purple theme, and nutellafish's
 # Minimalist HUD (Steam Workshop 3750502564, "you can copy anything in this mod").
 $script:Layouts = [ordered]@{ compact = "Компактный"; zors = "Zors.o"; minimalist = "Minimalist" }
+# Menu skin folders (db/skins_menu_*.lua redirect menu_backgrounds/base to these).
+$script:MenuSkins = @("classic", "tog", "dlc1", "dlc2", "dlc3")
 
 # World icons whose opacity can be set (the grey ones are their disabled look).
 $script:IconNames = [ordered]@{ extinguisher = "Тушение"; under_construction = "Строительство"; repair = "Ремонт" }
@@ -321,11 +323,25 @@ function Install-Pack {
                 $plan += @{ rel = (Join-Path $script:HudTextureDir $tex.Name); source = $tex.FullName; owner = "hud" }
             }
         }
-        $textures = Join-Path $layoutDir "textures"
-        if (Test-Path -LiteralPath $textures) {
-            foreach ($tex in Get-ChildItem -LiteralPath $textures -File -Recurse) {
-                $plan += @{ rel = (Join-Path "data\ui\textures" $tex.FullName.Substring($textures.Length + 1)); source = $tex.FullName; owner = "hud" }
+        # The layout's own files: textures\ -> data\ui\textures, ui\ -> data\ui (the splash).
+        foreach ($sub in @(@("textures", "data\ui\textures"), @("ui", "data\ui"))) {
+            $from = Join-Path $layoutDir $sub[0]
+            if (-not (Test-Path -LiteralPath $from)) { continue }
+            foreach ($file in Get-ChildItem -LiteralPath $from -File -Recurse) {
+                $rel = Join-Path $sub[1] $file.FullName.Substring($from.Length + 1)
+                $plan += @{ rel = $rel; source = $file.FullName; owner = "hud" }
+                if ($rel -like "data\ui\textures\menu_backgrounds\base\*") {
+                    # Menu screens ask for menu_backgrounds\base; each menu skin redirects it to its folder.
+                    foreach ($skin in $script:MenuSkins) {
+                        $plan += @{ rel = $rel.Replace("\menu_backgrounds\base\", "\menu_backgrounds\$skin\"); source = $file.FullName; owner = "hud" }
+                    }
+                }
             }
+        }
+        if (-not $Crosshair -and (Test-Path -LiteralPath (Join-Path $layoutDir "textures\mouse_target.dds"))) {
+            # The layout brings its own crosshair: our cursor size setting would scale it.
+            $configPlan = Get-CursorConfigPlan $Game 100
+            if ($configPlan) { $configPlan.owner = "crosshair"; $plan += $configPlan }
         }
     }
     if ($Icons) {
