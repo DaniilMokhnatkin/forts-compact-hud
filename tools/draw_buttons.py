@@ -10,7 +10,7 @@ preview sheet textures/preview.png.
 """
 import os
 
-from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageOps, DdsImagePlugin  # noqa: F401 (registers DDS)
+from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter, ImageOps, DdsImagePlugin  # noqa: F401 (registers DDS)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "textures", "grid_button_dlc3.png")
@@ -131,7 +131,11 @@ SKINS = {
              "colour": ((226, 212, 196), (205, 188, 170))},
     "pro": {"mask": ("round", (7, 3, 58, 59), 12), "glyph": (18, 16, 46, 47), "centre": (32, 31.5), "scale": 0.9,
             "colour": ((50, 235, 70), (25, 205, 45))},
-    "elite": {"mask": ("circle", (33.5, 35.5), 26.5), "arc": 18, "glyph": None, "disc": ((34, 30), 14), "centre": (33.5, 30), "scale": 0.82,
+    # Elite: a generated blank knob (textures/skins/knob_elite_source.png, 1254 px, its
+    # knob centre at (620.5, 672), radius 440.5) placed where the game's knob sits,
+    # plus the white pointer light on the rim at the "0" end of the dial.
+    "elite": {"art": ("knob_elite_source.png", (620.5, 672), 440.5, (33.5, 35.5), 26.5), "pointer": (285, 385),
+              "centre": (33.3, 30.1), "scale": 0.8,
               "colour": ((222, 228, 236), (190, 198, 210))},
     # High Seas: the whole face is cleaned, edge to edge, so no patch shows.
     "dlc1": {"mask": ("rect", (0, 0, 64, 63), 0), "glyph": (6, 10, 58, 58), "flat": (12, 30), "centre": (33, 32),
@@ -140,18 +144,34 @@ SKINS = {
 SKIN_OUT = os.path.join(ROOT, "textures", "HUD", "skins")
 
 
-def arc_mask(button, bottom):
-    """Elite: the 0 / 1 dial arc and its pointer above the knob, kept from the
-    capture. Only its light, grey strokes; the ground between them goes clear."""
-    mask = Image.new("L", (SIZE, SIZE), 0)
-    px, out = button.load(), mask.load()
-    for y in range(bottom):
-        for x in range(SIZE):
-            r, g, b = px[x, y][:3]
-            light, spread = (r + g + b) / 3, max(r, g, b) - min(r, g, b)
-            if spread < 75:  # grey, not the brown ground
-                out[x, y] = round(min(max((light - 92) / 55, 0), 1) * 255)
-    return mask
+def knob_from_art(file, centre, radius, target, target_radius, pointer):
+    """Scale the knob art so its knob lands on the game's knob (at 8x, then down),
+    and light the pointer: a white dot with a soft glow, drawn on the art."""
+    art = Image.open(os.path.join(ROOT, "textures", "skins", file)).convert("RGBA")
+    # The pointer is a short white tick on the rim, radial, aimed at the "0" end.
+    (px0, py0), (cx, cy) = pointer, centre
+    dx, dy = px0 - cx, py0 - cy
+    n = (dx * dx + dy * dy) ** 0.5
+    ux, uy = dx / n, dy / n
+    inner = (px0 - ux * 40, py0 - uy * 40)
+    outer = (px0 + ux * 48, py0 + uy * 48)
+    halo = Image.new("L", art.size, 0)
+    ImageDraw.Draw(halo).line([inner, outer], fill=150, width=78)
+    halo = halo.filter(ImageFilter.GaussianBlur(18))
+    glow = Image.new("RGBA", art.size, (255, 255, 255, 0))
+    glow.putalpha(halo)
+    tick = Image.new("RGBA", art.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(tick)
+    d.line([inner, outer], fill=(255, 255, 255, 255), width=38)
+    for end in (inner, outer):  # round caps
+        d.ellipse([end[0] - 19, end[1] - 19, end[0] + 19, end[1] + 19], fill=(255, 255, 255, 255))
+    glow = Image.alpha_composite(glow, tick)
+    art = Image.alpha_composite(art, glow)
+    scale = target_radius / radius * SS
+    big = art.resize((round(art.width * scale), round(art.height * scale)), Image.LANCZOS)
+    canvas = Image.new("RGBA", (SIZE * SS, SIZE * SS), (0, 0, 0, 0))
+    canvas.alpha_composite(big, (round(target[0] * SS - centre[0] * scale), round(target[1] * SS - centre[1] * scale)))
+    return canvas.resize((SIZE, SIZE), Image.LANCZOS)
 
 
 def skin_mask(shape):
@@ -215,18 +235,21 @@ def skin_glyph_layer(shapes, centre, colours, scale=1.0):
 def draw_skins():
     sheet = Image.new("RGBA", (SIZE * len(glyphs()) + 10 * (len(glyphs()) + 1), (SIZE + 10) * len(SKINS) + 10), (70, 58, 40, 255))
     for row, (skin, spec) in enumerate(SKINS.items()):
-        base = Image.open(os.path.join(ROOT, "textures", "skins", f"grid_{skin}.png")).convert("RGBA")
-        if spec.get("flat"):  # flat face: one sampled colour
+        if spec.get("art"):
+            base = knob_from_art(*spec["art"], spec["pointer"])
+        else:
+            base = Image.open(os.path.join(ROOT, "textures", "skins", f"grid_{skin}.png")).convert("RGBA")
+        if spec.get("art"):
+            pass
+        elif spec.get("flat"):  # flat face: one sampled colour
             colour = base.getpixel(spec["flat"])[:3] + (255,)
             ImageDraw.Draw(base).rectangle([spec["glyph"][0], spec["glyph"][1], spec["glyph"][2] - 1, spec["glyph"][3] - 1], fill=colour)
         elif spec["glyph"]:
             clean_box(base, spec["glyph"])
         else:
             clean_disc(base, *spec["disc"])
-        alpha = skin_mask(spec["mask"])
-        if spec.get("arc"):
-            alpha = ImageChops.lighter(alpha, arc_mask(base, spec["arc"]))
-        base.putalpha(alpha)
+        if not spec.get("art"):
+            base.putalpha(skin_mask(spec["mask"]))
         out = os.path.join(SKIN_OUT, skin)
         os.makedirs(out, exist_ok=True)
         for col, (name, shapes) in enumerate(glyphs().items()):
