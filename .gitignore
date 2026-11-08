@@ -1,0 +1,19 @@
+# Build output
+build/
+dist/
+setup/payload/
+setup/app/assets/crosshair_*_[0-9]*.png
+docs/setup-size-*.png
+__pycache__/
+setup/app/.size-test.ps1
+setup/app/.probe.ps1
+
+# Game files (copyright EWS) and files derived from them: take them from your own
+# Forts install, see README.
+original/
+reference/
+textures/vanilla/
+hud.lua
+uisprites.lua
+transaction.lua
+hud_map.txt

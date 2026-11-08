@@ -1,0 +1,63 @@
+
+          <!-- crosshair -->
+          <StackPanel x:Name="CrossPage" Visibility="Collapsed">
+            <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
+            <TextBlock Text="Прицел" Style="{StaticResource PageTitle}"/>
+            <TextBlock Style="{StaticResource PageNote}" Text="Выбери вариант, цвет и размер. Слева — стандартный прицел игры."/>
+            <Grid x:Name="CrossView" Height="150" Margin="0,18,0,0">
+              <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="12"/><ColumnDefinition/></Grid.ColumnDefinitions>
+              <Border CornerRadius="14" ClipToBounds="True">
+                <Grid>
+                  <Image x:Name="SceneBefore" Stretch="UniformToFill"/>
+                  <Image x:Name="BeforeImage" Width="64" Height="64" RenderOptions.BitmapScalingMode="NearestNeighbor"
+                         AutomationProperties.Name="Стандартный прицел"/>
+                  <Border Style="{StaticResource Chip}"><TextBlock Text="Было" Foreground="White" FontSize="12"/></Border>
+                </Grid>
+              </Border>
+              <Border Grid.Column="2" CornerRadius="14" ClipToBounds="True">
+                <Grid>
+                  <Image x:Name="SceneAfter" Stretch="UniformToFill"/>
+                  <Image x:Name="AfterImage" Width="128" Height="128" RenderOptions.BitmapScalingMode="HighQuality"
+                         RenderTransformOrigin="0.5,0.5" AutomationProperties.Name="Новый прицел">
+                    <Image.RenderTransform><ScaleTransform x:Name="AfterScale"/></Image.RenderTransform>
+                  </Image>
+                  <Border CornerRadius="11" Background="#8C1C1C1E" BorderBrush="#33FFFFFF" BorderThickness="0.5" Padding="2"
+                          HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8">
+                    <StackPanel x:Name="Scenes" Orientation="Horizontal"/>
+                  </Border>
+                  <Border Style="{StaticResource Chip}"><TextBlock x:Name="AfterLabel" Text="Станет" Foreground="White" FontSize="12" FontWeight="Medium"/></Border>
+                </Grid>
+              </Border>
+            </Grid>
+            <Border CornerRadius="12" Background="{StaticResource Group}" Margin="0,16,0,0">
+              <StackPanel>
+                <Grid Margin="16,12">
+                  <StackPanel Margin="0,0,60,0">
+                    <TextBlock Text="Заменить прицел" Style="{StaticResource RowTitle}"/>
+                    <TextBlock x:Name="CrossNote" Text="Вместо большого круглого" Style="{StaticResource RowNote}"/>
+                  </StackPanel>
+                  <CheckBox x:Name="CrossSwitch" Style="{StaticResource Switch}" IsChecked="True" HorizontalAlignment="Right"
+                            VerticalAlignment="Center" AutomationProperties.Name="Менять прицел"/>
+                </Grid>
+                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <WrapPanel x:Name="Tiles" Margin="20,16,6,12" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Grid x:Name="ColourControls" Margin="16,6">
+                  <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                  <TextBlock Text="Цвет" Style="{StaticResource RowTitle}" VerticalAlignment="Center" Width="52"/>
+                  <StackPanel x:Name="Swatches" Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                </Grid>
+                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Grid x:Name="SizeControls" Margin="16,4">
+                  <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                  <TextBlock Text="Размер" Style="{StaticResource RowTitle}" VerticalAlignment="Center" Width="52"/>
+                  <Slider x:Name="SizeSlider" Grid.Column="1" Margin="14,0" Height="40" Style="{StaticResource SizeRange}" VerticalAlignment="Center"
+                          Minimum="50" Maximum="200" Value="100" TickFrequency="5" IsSnapToTickEnabled="True"
+                          SmallChange="5" LargeChange="10" FocusVisualStyle="{StaticResource Focus}"
+                          AutomationProperties.Name="Размер прицела в процентах" ToolTip="От 50 до 200%. Стрелки: шаг 5%."/>
+                  <TextBlock x:Name="SizeValue" Grid.Column="2" Text="100%" MinWidth="40" TextAlignment="Right"
+                             VerticalAlignment="Center" Foreground="{StaticResource SecondaryText}"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+          </StackPanel>

@@ -1,0 +1,134 @@
+
+    <!-- macOS slider: thin track, accent fill, white knob with a soft shadow -->
+    <Style x:Key="SizeRange" TargetType="Slider">
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Slider">
+            <Grid Background="Transparent" Margin="10,0">
+              <Border Height="4" CornerRadius="2" Background="#E3E3E8" VerticalAlignment="Center"/>
+              <Track x:Name="PART_Track" Height="36" VerticalAlignment="Center">
+                <Track.DecreaseRepeatButton>
+                  <RepeatButton Command="Slider.DecreaseLarge" Focusable="False">
+                    <RepeatButton.Template><ControlTemplate TargetType="RepeatButton">
+                      <Grid Background="Transparent"><Border Height="4" CornerRadius="2" Background="{StaticResource Accent}" VerticalAlignment="Center"/></Grid>
+                    </ControlTemplate></RepeatButton.Template>
+                  </RepeatButton>
+                </Track.DecreaseRepeatButton>
+                <Track.Thumb>
+                  <Thumb Width="22" Height="22" Cursor="Hand">
+                    <Thumb.Template><ControlTemplate TargetType="Thumb">
+                      <Ellipse Fill="White" Stroke="#14000000" StrokeThickness="0.5">
+                        <Ellipse.Effect><DropShadowEffect BlurRadius="6" ShadowDepth="1" Direction="270" Opacity="0.25"/></Ellipse.Effect>
+                      </Ellipse>
+                    </ControlTemplate></Thumb.Template>
+                  </Thumb>
+                </Track.Thumb>
+                <Track.IncreaseRepeatButton>
+                  <RepeatButton Command="Slider.IncreaseLarge" Focusable="False">
+                    <RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent"/></ControlTemplate></RepeatButton.Template>
+                  </RepeatButton>
+                </Track.IncreaseRepeatButton>
+              </Track>
+            </Grid>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+      <Style.Triggers><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4"/></Trigger></Style.Triggers>
+    </Style>
+
+    <!-- grouped list row text -->
+    <Style x:Key="RowTitle" TargetType="TextBlock"><Setter Property="FontWeight" Value="Medium"/></Style>
+    <Style x:Key="RowNote" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource SecondaryText}"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Margin" Value="0,2,0,0"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style x:Key="PageTitle" TargetType="TextBlock">
+      <Setter Property="FontFamily" Value="{StaticResource Display}"/>
+      <Setter Property="FontSize" Value="26"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style x:Key="PageNote" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource SecondaryText}"/>
+      <Setter Property="Margin" Value="0,6,0,0"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+      <Setter Property="LineHeight" Value="19"/>
+    </Style>
+    <!-- glass chip over pictures -->
+    <Style x:Key="Chip" TargetType="Border">
+      <Setter Property="CornerRadius" Value="11"/>
+      <Setter Property="Background" Value="#8C1C1C1E"/>
+      <Setter Property="BorderBrush" Value="#33FFFFFF"/>
+      <Setter Property="BorderThickness" Value="0.5"/>
+      <Setter Property="Padding" Value="10,3"/>
+      <Setter Property="Margin" Value="10"/>
+      <Setter Property="HorizontalAlignment" Value="Left"/>
+      <Setter Property="VerticalAlignment" Value="Bottom"/>
+    </Style>
+    <!-- colour swatch: filled circle, accent ring when chosen -->
+    <Style x:Key="Swatch" TargetType="RadioButton">
+      <Setter Property="GroupName" Value="Colour"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Margin" Value="0,0,12,0"/>
+      <Setter Property="FocusVisualStyle" Value="{StaticResource Focus}"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="RadioButton">
+            <Grid Width="30" Height="30" Background="Transparent">
+              <Ellipse x:Name="Ring" Stroke="{StaticResource Accent}" StrokeThickness="2.5" Opacity="0"/>
+              <Ellipse Margin="5" Fill="{TemplateBinding Background}" Stroke="#33000000" StrokeThickness="1"/>
+            </Grid>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsChecked" Value="True"><Setter TargetName="Ring" Property="Opacity" Value="1"/></Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.35"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!-- scene picker over the preview: segments on dark glass -->
+    <Style x:Key="SceneSeg" TargetType="RadioButton">
+      <Setter Property="GroupName" Value="Scene"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="RadioButton">
+            <Border x:Name="P" CornerRadius="9" Padding="10,3" Background="Transparent" BorderThickness="1" BorderBrush="Transparent">
+              <TextBlock x:Name="L" Text="{TemplateBinding Content}" Foreground="#CCFFFFFF" FontSize="11.5" FontWeight="Medium"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="P" Property="Background" Value="#40FFFFFF"/>
+                <Setter TargetName="L" Property="Foreground" Value="White"/>
+              </Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="P" Property="BorderBrush" Value="White"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="LangSeg" TargetType="RadioButton">
+      <Setter Property="GroupName" Value="Lang"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="FocusVisualStyle" Value="{StaticResource Focus}"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="RadioButton">
+            <Border x:Name="P" CornerRadius="6" Padding="10,2" Background="Transparent">
+              <TextBlock x:Name="L" Text="{TemplateBinding Content}" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource SecondaryText}"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="P" Property="Background" Value="White"/>
+                <Setter TargetName="P" Property="Effect"><Setter.Value><DropShadowEffect BlurRadius="3" ShadowDepth="0.5" Direction="270" Opacity="0.2"/></Setter.Value></Setter>
+                <Setter TargetName="L" Property="Foreground" Value="{StaticResource Label}"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </Window.Resources>

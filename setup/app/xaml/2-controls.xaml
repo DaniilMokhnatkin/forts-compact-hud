@@ -1,0 +1,141 @@
+
+    <!-- crosshair tile: dark well, accent ring when chosen -->
+    <Style x:Key="Tile" TargetType="RadioButton">
+      <Setter Property="GroupName" Value="Crosshair"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="FocusVisualStyle" Value="{StaticResource Focus}"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="RadioButton">
+            <StackPanel Background="Transparent" Margin="0,0,10,0">
+              <Grid Width="96" Height="72">
+                <Border x:Name="Ring" CornerRadius="16" BorderBrush="{StaticResource Accent}" BorderThickness="2.5" Opacity="0" Margin="-4"/>
+                <Border x:Name="Well" CornerRadius="13" Background="#232326">
+                  <Image Source="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" Width="52" Height="52"
+                         RenderOptions.BitmapScalingMode="HighQuality"/>
+                </Border>
+              </Grid>
+              <TextBlock x:Name="Name" Text="{TemplateBinding Content}" HorizontalAlignment="Center" Margin="0,9,0,0" FontSize="12"
+                         Foreground="{StaticResource SecondaryText}"/>
+            </StackPanel>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Well" Property="Background" Value="#2E2E32"/></Trigger>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="Ring" Property="Opacity" Value="1"/>
+                <Setter TargetName="Name" Property="Foreground" Value="{StaticResource Label}"/>
+                <Setter TargetName="Name" Property="FontWeight" Value="SemiBold"/>
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.35"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!-- capsule buttons -->
+    <Style x:Key="Primary" TargetType="Button">
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="FocusVisualStyle" Value="{StaticResource Focus}"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="B" CornerRadius="17" Height="34" MinWidth="128" Padding="20,0" Background="{StaticResource Accent}">
+              <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Color="#0A7AFF" Opacity="0.28"/></Border.Effect>
+              <TextBlock x:Name="T" Text="{TemplateBinding Content}" Foreground="White" FontWeight="SemiBold"
+                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="B" Property="Background" Value="#2B8CFF"/></Trigger>
+              <Trigger Property="IsPressed" Value="True"><Setter TargetName="B" Property="Background" Value="#0062D6"/></Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="B" Property="Background" Value="#E8E8ED"/>
+                <Setter TargetName="B" Property="Effect" Value="{x:Null}"/>
+                <Setter TargetName="T" Property="Foreground" Value="#A1A1A6"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="Secondary" TargetType="Button">
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="FocusVisualStyle" Value="{StaticResource Focus}"/>
+      <Setter Property="Foreground" Value="{StaticResource Label}"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="B" CornerRadius="17" Height="34" Padding="18,0" Background="#EDEDF0">
+              <TextBlock x:Name="T" Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}" FontWeight="Medium"
+                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="B" Property="Background" Value="#E3E3E8"/></Trigger>
+              <Trigger Property="IsPressed" Value="True"><Setter TargetName="B" Property="Background" Value="#D8D8DE"/></Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter TargetName="T" Property="Foreground" Value="#B0B0B5"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="Link" TargetType="Button">
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="FocusVisualStyle" Value="{StaticResource Focus}"/>
+      <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <TextBlock x:Name="T" Text="{TemplateBinding Content}" Foreground="{StaticResource Accent}" FontWeight="Medium" Padding="0,4"/>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="T" Property="TextDecorations" Value="Underline"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <!-- Windows 11 caption buttons: 46x36, Fluent glyphs, red close on hover -->
+    <Style x:Key="Caption" TargetType="Button">
+      <Setter Property="Width" Value="46"/>
+      <Setter Property="Height" Value="36"/>
+      <Setter Property="Focusable" Value="False"/>
+      <Setter Property="Foreground" Value="#1D1D1F"/>
+      <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="B" Background="Transparent">
+              <TextBlock x:Name="G" Text="{TemplateBinding Content}" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
+                         Foreground="{TemplateBinding Foreground}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="B" Property="Background" Value="#14000000"/></Trigger>
+              <Trigger Property="IsPressed" Value="True"><Setter TargetName="B" Property="Background" Value="#24000000"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="CaptionClose" TargetType="Button" BasedOn="{StaticResource Caption}">
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="B" Background="Transparent" CornerRadius="0,8,0,0">
+              <TextBlock x:Name="G" Text="{TemplateBinding Content}" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10"
+                         Foreground="{TemplateBinding Foreground}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="B" Property="Background" Value="#C42B1C"/>
+                <Setter TargetName="G" Property="Foreground" Value="White"/>
+              </Trigger>
+              <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="B" Property="Background" Value="#B3261A"/>
+                <Setter TargetName="G" Property="Foreground" Value="White"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>

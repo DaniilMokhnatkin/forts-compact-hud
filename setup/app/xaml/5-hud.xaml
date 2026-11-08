@@ -1,0 +1,48 @@
+
+    <!-- content card -->
+    <Border x:Name="Card" Grid.Column="1" Grid.Row="1" Margin="0,0,8,8" CornerRadius="18" Background="White" BorderBrush="#12000000" BorderThickness="0.5">
+      <Border.Effect><DropShadowEffect BlurRadius="18" ShadowDepth="2" Direction="270" Opacity="0.10"/></Border.Effect>
+      <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="68"/></Grid.RowDefinitions>
+        <Grid x:Name="Pages" Margin="32,26,32,0">
+
+          <!-- HUD -->
+          <StackPanel x:Name="HudPage">
+            <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
+            <TextBlock Text="Компактный HUD" Style="{StaticResource PageTitle}"/>
+            <TextBlock Style="{StaticResource PageNote}" Text="Меньше места внизу экрана, ресурсы всегда перед глазами. Без модов: меняются только файлы интерфейса."/>
+            <Border x:Name="HudFrame" Height="168" CornerRadius="14" Margin="0,18,0,0" ClipToBounds="True"
+                    AutomationProperties.Name="Компактный HUD в бою">
+              <Border x:Name="HudShot" CornerRadius="14"/>
+            </Border>
+            <Border CornerRadius="12" Background="{StaticResource Group}" Margin="0,16,0,0">
+              <StackPanel>
+                <Grid Margin="16,12">
+                  <StackPanel Margin="0,0,60,0">
+                    <TextBlock Text="Установить компактный HUD" Style="{StaticResource RowTitle}"/>
+                    <TextBlock x:Name="HudNote" Text="Иконки на 20% меньше, панель ниже" Style="{StaticResource RowNote}"/>
+                  </StackPanel>
+                  <CheckBox x:Name="HudSwitch" Style="{StaticResource Switch}" IsChecked="True" HorizontalAlignment="Right"
+                            VerticalAlignment="Center" AutomationProperties.Name="Компактный HUD"/>
+                </Grid>
+                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Grid Margin="16,10"><TextBlock Text="Экран игры" Style="{StaticResource RowTitle}"/>
+                  <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Ellipse x:Name="ScreenDot" Width="8" Height="8" Fill="#34C759" Margin="0,1,8,0" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="ScreenText" Text="—" Foreground="{StaticResource SecondaryText}"/>
+                  </StackPanel></Grid>
+                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Grid Margin="16,10"><TextBlock Text="Ресурсы" Style="{StaticResource RowTitle}"/>
+                  <TextBlock Text="«запас / лимит» по центру, над иконками" Foreground="{StaticResource SecondaryText}" HorizontalAlignment="Right"/></Grid>
+                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Grid Margin="16,10"><TextBlock Text="Кнопки" Style="{StaticResource RowTitle}"/>
+                  <TextBlock Text="сетка, двери, раскосы, пауза и меню в один ряд" Foreground="{StaticResource SecondaryText}" HorizontalAlignment="Right"/></Grid>
+                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Grid Margin="16,10"><TextBlock Text="Направление оружия" Style="{StaticResource RowTitle}"/>
+                  <TextBlock Text="открывается над рядом кнопок" Foreground="{StaticResource SecondaryText}" HorizontalAlignment="Right"/></Grid>
+                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Grid Margin="16,10"><TextBlock Text="Командир и реактор" Style="{StaticResource RowTitle}"/>
+                  <TextBlock Text="в левом нижнем углу" Foreground="{StaticResource SecondaryText}" HorizontalAlignment="Right"/></Grid>
+              </StackPanel>
+            </Border>
+          </StackPanel>

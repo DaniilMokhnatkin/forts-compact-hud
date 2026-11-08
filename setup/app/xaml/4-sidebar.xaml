@@ -1,0 +1,108 @@
+
+  <Grid x:Name="Shell" Opacity="0">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="248"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+    <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <!-- light tint over the system acrylic; opaque fallback is set in code when there is no backdrop -->
+    <Border x:Name="Tint" Grid.ColumnSpan="2" Grid.RowSpan="2" Background="#B8F4F4F7"/>
+
+    <!-- Windows 11 caption buttons -->
+    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+      <Button x:Name="MinLight" Style="{StaticResource Caption}" Content="&#xE921;" AutomationProperties.Name="Свернуть" ToolTip="Свернуть"/>
+      <Button x:Name="CloseLight" Style="{StaticResource CaptionClose}" Content="&#xE8BB;" AutomationProperties.Name="Закрыть" ToolTip="Закрыть"/>
+    </StackPanel>
+
+    <!-- sidebar -->
+    <Grid Grid.Row="1" Margin="12,0,10,14">
+      <Grid.RowDefinitions><RowDefinition Height="0"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+
+      <!-- app header -->
+      <Grid Grid.Row="1" Margin="8,2,0,18">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+        <Border Width="40" Height="40" CornerRadius="10">
+          <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#3A3A40" Offset="0"/><GradientStop Color="#141416" Offset="1"/></LinearGradientBrush></Border.Background>
+          <Border.Effect><DropShadowEffect BlurRadius="8" ShadowDepth="2" Direction="270" Opacity="0.25"/></Border.Effect>
+          <Canvas Width="24" Height="24">
+            <Ellipse Canvas.Left="5" Canvas.Top="5" Width="14" Height="14" Stroke="White" StrokeThickness="1.8"/>
+            <Path Data="M12,2 V7 M12,17 V22 M2,12 H7 M17,12 H22" Stroke="White" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+            <Ellipse Canvas.Left="10.5" Canvas.Top="10.5" Width="3" Height="3" Fill="#FF5A4E"/>
+          </Canvas>
+        </Border>
+        <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+          <TextBlock Text="Forts Setup" FontFamily="{StaticResource Display}" FontSize="15" FontWeight="SemiBold"/>
+          <TextBlock Text="HUD и прицел · Forts 1.39" Foreground="{StaticResource SecondaryText}" FontSize="12"/>
+        </StackPanel>
+      </Grid>
+
+      <!-- navigation; the accent pill slides behind the chosen item -->
+      <Grid Grid.Row="2">
+        <Border x:Name="NavPill" Height="34" CornerRadius="9" Background="{StaticResource Accent}" VerticalAlignment="Top">
+          <Border.RenderTransform><TranslateTransform x:Name="NavPillY"/></Border.RenderTransform>
+        </Border>
+        <StackPanel x:Name="Nav" KeyboardNavigation.DirectionalNavigation="Cycle">
+          <RadioButton x:Name="NavHud" Style="{StaticResource Nav}" Tag="HudPage" AutomationProperties.Name="Компактный HUD">
+            <Grid>
+              <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+              <Border Width="22" Height="22" CornerRadius="6">
+                <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#FF9F43" Offset="0"/><GradientStop Color="#F2711C" Offset="1"/></LinearGradientBrush></Border.Background>
+                <Path Data="M5,6 H17 V10 H5 Z M5,12 H9 V16 H5 Z M10,12 H12 V16 H10 Z M13,12 H17 V16 H13 Z" Fill="White" Width="22" Height="22"/>
+              </Border>
+              <TextBlock Grid.Column="1" Text="Компактный HUD" Margin="10,0,0,0" VerticalAlignment="Center"/>
+              <TextBlock x:Name="NavHudValue" Grid.Column="2" Text="Вкл." Opacity="0.6" FontSize="12" FontWeight="Normal" VerticalAlignment="Center"/>
+            </Grid>
+          </RadioButton>
+          <RadioButton x:Name="NavCross" Style="{StaticResource Nav}" Tag="CrossPage" AutomationProperties.Name="Прицел">
+            <Grid>
+              <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+              <Border Width="22" Height="22" CornerRadius="6">
+                <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#FF6B6B" Offset="0"/><GradientStop Color="#E5372E" Offset="1"/></LinearGradientBrush></Border.Background>
+                <Canvas Width="22" Height="22">
+                  <Ellipse Canvas.Left="6" Canvas.Top="6" Width="10" Height="10" Stroke="White" StrokeThickness="1.6"/>
+                  <Path Data="M11,3 V7 M11,15 V19 M3,11 H7 M15,11 H19" Stroke="White" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                </Canvas>
+              </Border>
+              <TextBlock Grid.Column="1" Text="Прицел" Margin="10,0,0,0" VerticalAlignment="Center"/>
+              <TextBlock x:Name="NavCrossValue" Grid.Column="2" Text="Крест" Opacity="0.6" FontSize="12" FontWeight="Normal" VerticalAlignment="Center"/>
+            </Grid>
+          </RadioButton>
+          <RadioButton x:Name="NavBackup" Style="{StaticResource Nav}" Tag="BackupPage" AutomationProperties.Name="Резервная копия">
+            <Grid>
+              <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+              <Border Width="22" Height="22" CornerRadius="6">
+                <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#A1A1A8" Offset="0"/><GradientStop Color="#6E6E76" Offset="1"/></LinearGradientBrush></Border.Background>
+                <Canvas Width="22" Height="22">
+                  <Path Data="M6.5,12.5 A5,5 0 1 0 8,7.5" Stroke="White" StrokeThickness="1.7" StrokeStartLineCap="Round"/>
+                  <Path Data="M5,5 L9.2,7.4 L5.6,10 Z" Fill="White"/>
+                </Canvas>
+              </Border>
+              <TextBlock Grid.Column="1" Text="Резервная копия" Margin="10,0,0,0" VerticalAlignment="Center"/>
+              <TextBlock x:Name="NavBackupValue" Grid.Column="2" Opacity="0.6" FontSize="12" FontWeight="Normal" VerticalAlignment="Center"/>
+            </Grid>
+          </RadioButton>
+        </StackPanel>
+      </Grid>
+
+      <!-- game folder -->
+      <StackPanel Grid.Row="3" Margin="8,0,0,0">
+        <Border x:Name="Update" CornerRadius="10" Background="#1A0A7AFF" Padding="12,9" Margin="-8,0,0,14" Visibility="Collapsed">
+          <StackPanel>
+            <TextBlock x:Name="UpdateText" FontWeight="SemiBold" FontSize="12"/>
+            <Button x:Name="UpdateLink" Style="{StaticResource Link}" Content="Скачать" FontSize="12" HorizontalAlignment="Left" Margin="0,0,0,-4"/>
+          </StackPanel>
+        </Border>
+        <Grid Margin="0,0,0,12">
+          <TextBlock Text="Язык" Foreground="{StaticResource SecondaryText}" FontSize="12" VerticalAlignment="Center"/>
+          <Border HorizontalAlignment="Right" Background="#14000000" CornerRadius="8" Padding="2" Margin="0,0,4,0">
+            <StackPanel Orientation="Horizontal">
+              <RadioButton x:Name="LangRu" Style="{StaticResource LangSeg}" Content="RU" AutomationProperties.Name="Русский"/>
+              <RadioButton x:Name="LangEn" Style="{StaticResource LangSeg}" Content="EN" AutomationProperties.Name="English"/>
+            </StackPanel>
+          </Border>
+        </Grid>
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Text="Папка игры" Foreground="{StaticResource SecondaryText}" FontSize="12"/>
+          <Button x:Name="ChangeFolder" Style="{StaticResource Link}" Content="Изменить…" FontSize="12" Margin="8,-4,0,-4"
+                  AutomationProperties.Name="Выбрать папку игры"/>
+        </StackPanel>
+        <TextBlock x:Name="GamePath" FontSize="12" TextTrimming="CharacterEllipsis" Margin="0,3,0,0"/>
+      </StackPanel>
+    </Grid>
