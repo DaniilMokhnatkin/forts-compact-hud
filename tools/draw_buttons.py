@@ -86,8 +86,9 @@ def rim_mask():
     return mask.resize((SIZE, SIZE), Image.LANCZOS)
 
 
-def states(normal):
-    """Rollover brighter, pressed darker and 1px lower, disabled greyed out."""
+def states(normal, selected=None):
+    """Rollover brighter, pressed darker and 1px lower, disabled greyed out.
+    `selected` replaces S where the skin draws switched-on buttons differently."""
     rgb, alpha = normal.convert("RGB"), normal.getchannel("A")
     rollover = ImageEnhance.Brightness(rgb).enhance(1.15)
     pressed = Image.new("RGB", rgb.size)
@@ -99,6 +100,8 @@ def states(normal):
     out = {"A": normal, "R": rollover.convert("RGBA"), "S": pressed.convert("RGBA"), "D": disabled.convert("RGBA")}
     for key, alpha_layer in (("R", alpha), ("S", pressed_alpha), ("D", alpha)):
         out[key].putalpha(alpha_layer)
+    if selected is not None:
+        out["S"] = selected
     return out
 
 
@@ -129,12 +132,13 @@ SKINS = {
              "colour": ((226, 212, 196), (205, 188, 170))},
     "dlc2": {"mask": ("round", (2, 2, 62, 61), 8), "glyph": (15, 17, 48, 50), "centre": (31.5, 33.5),
              "colour": ((226, 212, 196), (205, 188, 170))},
-    "pro": {"mask": ("round", (7, 3, 58, 59), 12), "glyph": (18, 16, 46, 47), "centre": (32, 31.5), "scale": 0.9,
+    "pro": {"on": {"file": "grid_pro_on.png", "mask": (8, 0, 56, 63, 10), "glyph": (14, 8, 50, 46), "centre": (32, 26.5)},
+            "mask": ("round", (7, 3, 58, 59), 12), "glyph": (18, 16, 46, 47), "centre": (32, 31.5), "scale": 0.9,
             "colour": ((50, 235, 70), (25, 205, 45))},
     # Elite: a generated blank knob (textures/skins/knob_elite_source.png, 1254 px, its
     # knob centre at (620.5, 672), radius 440.5) placed where the game's knob sits,
     # plus the white pointer light on the rim at the "0" end of the dial.
-    "elite": {"art": ("knob_elite_source.png", (620.5, 672), 440.5, (33.5, 35.5), 26.5), "pointer": (285, 385),
+    "elite": {"art": ("knob_elite_source.png", (620.5, 672), 440.5, (33.5, 35.5), 26.5), "pointer": (285, 385), "pointer_on": (956, 385),
               "centre": (33.3, 30.1), "scale": 0.8,
               "colour": ((222, 228, 236), (190, 198, 210))},
     # High Seas: the whole face is cleaned, edge to edge, so no patch shows.
@@ -172,6 +176,19 @@ def knob_from_art(file, centre, radius, target, target_radius, pointer):
     canvas = Image.new("RGBA", (SIZE * SS, SIZE * SS), (0, 0, 0, 0))
     canvas.alpha_composite(big, (round(target[0] * SS - centre[0] * scale), round(target[1] * SS - centre[1] * scale)))
     return canvas.resize((SIZE, SIZE), Image.LANCZOS)
+
+
+def pro_on_button(on, shapes):
+    """PRO switched on (from the game's Grid with the toggle on): white glyph with a
+    green glow on the dark face, green plate below."""
+    base = Image.open(os.path.join(ROOT, "textures", "skins", on["file"])).convert("RGBA")
+    clean_box(base, on["glyph"])
+    x0, y0, x1, y1, r = on["mask"]
+    base.putalpha(skin_mask(("round", (x0, y0, x1, y1), r)))
+    glyph = skin_glyph_layer(shapes, on["centre"], ((240, 255, 240), (225, 250, 228)), 0.9)
+    glow = Image.new("RGBA", glyph.size, (70, 255, 100, 0))
+    glow.putalpha(glyph.getchannel("A").filter(ImageFilter.GaussianBlur(2.2)).point(lambda a: min(255, a * 1.4)))
+    return Image.alpha_composite(Image.alpha_composite(base, glow), glyph)
 
 
 def skin_mask(shape):
@@ -252,9 +269,20 @@ def draw_skins():
             base.putalpha(skin_mask(spec["mask"]))
         out = os.path.join(SKIN_OUT, skin)
         os.makedirs(out, exist_ok=True)
+        base_on = knob_from_art(*spec["art"], spec["pointer_on"]) if spec.get("pointer_on") else None
         for col, (name, shapes) in enumerate(glyphs().items()):
-            button = Image.alpha_composite(base, skin_glyph_layer(shapes, spec["centre"], spec["colour"], spec.get("scale", 1.0)))
-            for state, image in states(button).items():
+            glyph = skin_glyph_layer(shapes, spec["centre"], spec["colour"], spec.get("scale", 1.0))
+            button = Image.alpha_composite(base, glyph)
+            selected = None
+            if spec.get("on"):
+                selected = pro_on_button(spec["on"], shapes)
+            elif base_on is not None:
+                # Elite: switched on, the rim pointer stands at "1". Play only shows
+                # while the game is paused, so it is drawn on in every state.
+                selected = Image.alpha_composite(base_on, glyph)
+                if name == "Play":
+                    button = selected
+            for state, image in states(button, selected).items():
                 image.save(os.path.join(out, f"{name}-{state}.dds"), "DDS")
             sheet.paste(button, (10 + col * (SIZE + 10), 10 + row * (SIZE + 10)), button)
     sheet.resize((sheet.width * 2, sheet.height * 2), Image.NEAREST).save(os.path.join(ROOT, "textures", "preview_skins.png"))
