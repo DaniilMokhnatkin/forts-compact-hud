@@ -67,6 +67,13 @@ function Show-Layout([string]$key) {
     $ui.LayoutLink.Visibility = $(if ($link) { "Visible" } else { "Collapsed" })
     if ($link) { $ui.LayoutLink.Content = $link.text; $ui.LayoutLink.Tag = $link.url }
     $ui.MiniWarn.Visibility = $(if ($key -eq "minimalist") { "Visible" } else { "Collapsed" })
+    $ui.ZorsWarn.Visibility = $(if ($key -eq "zors") { "Visible" } else { "Collapsed" })
+    if ($key -eq "zors") {
+        # DLC menu skins read their background from the DLC packs; loose files do not show there.
+        $ui.ZorsMenuText.Text = $(if ($script:menuSkin -in "dlc1", "dlc2", "dlc3") {
+            (L "Сейчас в игре скин меню «{0}», с ним фон Zors.o не виден: DLC-скины берут фон из своих файлов. Выбери в игре: Настройки → Игра → Скин меню → «По умолчанию», «Классика» или «Склад оружия».") -f (L $MenuSkinNames[$script:menuSkin]) }
+            else { L "Виден со скинами меню «По умолчанию», «Классика» и «Склад оружия». У «Лунохода», High Seas и Firebird фон свой." })
+    }
     foreach ($n in "SkinRow", "SkinSep") { $ui[$n].Visibility = $(if ($key -eq "minimalist") { "Collapsed" } else { "Visible" }) }
     $ui.PhotosBox.Visibility = $(if ($key -eq "compact") { "Visible" } else { "Collapsed" })
     if ($info.preview) {
@@ -79,8 +86,8 @@ function Show-Layout([string]$key) {
     Animate $ui.HudShot "Opacity" 1 240 0.4
     if ($key -eq "minimalist") {
         $ui.MiniSkin.Text = $(if ($script:gameSkin -and $script:gameSkin -ne "base") {
-            (L "• Сейчас в игре скин «{0}». Для этого HUD выбери в игре: Настройки → Игра → Скин HUD → «Стандартный».") -f (L $HudSkins[$script:gameSkin]) }
-            else { L "• Нужен скин HUD «Стандартный» (Настройки → Игра → Скин HUD)." })
+            (L "• Сейчас в игре скин «{0}». Для этого HUD выбери в игре: Настройки → Игра → Скин HUD → «По умолчанию».") -f (L $HudSkins[$script:gameSkin]) }
+            else { L "• Нужен скин HUD «По умолчанию» (Настройки → Игра → Скин HUD)." })
     }
     if (-not $script:settingUp -and $key -ne "compact") {
         # These layouts bring their own crosshair; ours replaces it only if asked.
@@ -341,6 +348,7 @@ function Refresh {
     $ui.GamePath.ToolTip = $script:game
     $script:status = Get-PackStatus $script:game
     $script:gameSkin = Get-GameHudSkin $script:game
+    $script:menuSkin = Get-GameMenuSkin $script:game
     $pick = $(if ($script:gameSkin) { $script:gameSkin } elseif ($script:status.HudSkin) { $script:status.HudSkin } else { "dlc3" })
     $skinChips[$pick].IsChecked = $true
     Update-SkinNote

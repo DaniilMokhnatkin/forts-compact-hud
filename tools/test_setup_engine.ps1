@@ -88,7 +88,8 @@ Install-Pack -Game $game -Hud $true -Crosshair $null -Layout "zors" -HudSkin "pr
 $st = Get-PackStatus $game
 Check "zors: layout and skin detected" ($st.Layout -eq "zors" -and $st.HudInstalled -and $st.HudSkin -eq "pro")
 $menu = "$game\data\ui\textures\menu_backgrounds"
-Check "zors: menu background for every menu skin" ((Test-Path "$menu\base\FE-MainMenu-BG.dds") -and (Test-Path "$menu\dlc3\FE-MainMenu-BG.dds") -and (Test-Path "$menu\classic\FE-AllScreens-BG.dds"))
+Check "zors: menu background for default, classic and tog" ((Test-Path "$menu\base\FE-MainMenu-BG.dds") -and (Test-Path "$menu\tog\FE-MainMenu-BG.dds") -and (Test-Path "$menu\classic\FE-AllScreens-BG.dds"))
+Check "zors: nothing in DLC menu folders (packs win there)" (-not (Test-Path "$menu\dlc3"))
 Check "zors: splash in data\ui" ((Get-Sha "$game\data\ui\earthworkgames.png") -eq (Get-Sha "$root\third_party\zors\textures\earthworkgames.png"))
 Check "zors: our cursor size setting removed" (-not ([IO.File]::ReadAllText("$game\data\db\constants_user.lua") -match "FORTS SETUP CURSOR SIZE"))
 Check "zors: minimalist textures gone" (-not (Test-Path "$game\data\ui\textures\context\hud-bg1.dds"))
@@ -121,7 +122,7 @@ Install-Pack -Game $game -Hud $false -Crosshair $null -Icons @{ extinguisher = 1
 Check "100%: zors extinguisher back" ((Get-Sha "$game\data\ui\textures\extinguisher.dds") -eq (Get-Sha "$payload\layouts\zors\textures\extinguisher.dds"))
 Check "100%: status back to 100" ((Get-PackStatus $game).Icons.repair -eq 100)
 Install-Pack -Game $game -Hud $true -Crosshair $null -Layout "compact" -Icons @{ extinguisher = 40; under_construction = 100; repair = 100 }
-Check "compact: zors textures gone" (-not (Test-Path "$menu\dlc3\FE-MainMenu-BG.dds") -and -not (Test-Path "$game\data\ui\earthworkgames.png"))
+Check "compact: zors textures gone" (-not (Test-Path "$menu\tog\FE-MainMenu-BG.dds") -and -not (Test-Path "$game\data\ui\earthworkgames.png"))
 Check "compact: extinguisher from game art at 40%" ((Get-PackStatus $game).Icons.extinguisher -eq 40)
 $skipped = @(Restore-Pack -Game $game)
 Check "layouts: restore clean" ($skipped.Count -eq 0 -and (Get-Sha "$game\data\ui\screens\hud.lua") -eq (Get-Sha "$root\original\hud.lua") -and
@@ -135,6 +136,10 @@ Set-Content "$game\users\1\settings.lua" "data = {`n`tCurrentHUDSkin = `"db/skin
 Check "skin read from settings: elite" ((Get-GameHudSkin $game) -eq "elite")
 Set-Content "$game\users\1\settings.lua" "data = {`n`tCurrentHUDSkin = `"db/skins_hud_dlc2_tester.lua`",`n}"
 Check "tester skin maps to dlc2" ((Get-GameHudSkin $game) -eq "dlc2")
+Set-Content "$game\users\1\settings.lua" "data = {`n`tCurrentHUDSkin = `"`",`n`tCurrentMenuSkin = `"`",`n}"
+Check "empty skin = default (HUD and menu)" ((Get-GameHudSkin $game) -eq "base" -and (Get-GameMenuSkin $game) -eq "base")
+Set-Content "$game\users\1\settings.lua" "data = {`n`tCurrentMenuSkin = `"db/skins_menu_dlc3.lua`",`n}"
+Check "menu skin dlc3 read" ((Get-GameMenuSkin $game) -eq "dlc3")
 Install-Pack -Game $game -Hud $true -Crosshair $null -HudSkin "pro"
 $st = Get-PackStatus $game
 Check "pro buttons installed and detected" ($st.HudInstalled -and $st.HudSkin -eq "pro")

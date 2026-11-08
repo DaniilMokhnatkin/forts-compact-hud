@@ -72,8 +72,24 @@ end
 # HUD layouts: our compact one, the same in Zors.o's purple theme, and nutellafish's
 # Minimalist HUD (Steam Workshop 3750502564, "you can copy anything in this mod").
 $script:Layouts = [ordered]@{ compact = "Компактный"; zors = "Zors.o"; minimalist = "Minimalist" }
-# Menu skin folders (db/skins_menu_*.lua redirect menu_backgrounds/base to these).
-$script:MenuSkins = @("classic", "tog", "dlc1", "dlc2", "dlc3")
+# Menu skin folders (db/skins_menu_*.lua redirect menu_backgrounds/base to these). The DLC
+# menu skins (dlc1 High Seas, dlc2 Moonshot, dlc3 Firebird) read their backgrounds from the
+# DLC packs and ignore loose files (checked in game), so a theme's background can only show
+# with the default, classic and tog menu skins.
+$script:MenuSkins = @("classic", "tog")
+$script:MenuSkinNames = [ordered]@{ base = "По умолчанию"; classic = "Классика"; tog = "Склад оружия"; dlc2 = "Луноход"; dlc1 = "High Seas"; dlc3 = "Firebird" }
+
+function Get-GameMenuSkin([string]$Game) {
+    <# The menu skin chosen in the game (CurrentMenuSkin in users\<id>\settings.lua). #>
+    $file = Get-ChildItem -LiteralPath (Join-Path $Game "users") -Filter "settings.lua" -Recurse -Depth 1 -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if (-not $file) { return $null }
+    # "Default" is stored as an empty string.
+    $m = [regex]::Match([IO.File]::ReadAllText($file.FullName), 'CurrentMenuSkin\s*=\s*"(?:db/skins_menu_?([a-z0-9]*)[^"]*)?"')
+    if (-not $m.Success) { return $null }
+    $key = $m.Groups[1].Value
+    if ($script:MenuSkinNames.Contains($key)) { $key } else { "base" }
+}
 
 # World icons whose opacity can be set (the grey ones are their disabled look).
 $script:IconNames = [ordered]@{ extinguisher = "Тушение"; under_construction = "Строительство"; repair = "Ремонт" }
@@ -156,14 +172,15 @@ function Test-FortsRunning([string]$Game) {
 
 # Our buttons (pause, menu, weapon facing) come in one set per HUD skin; dlc3 is the
 # set in payload\hud, the rest in payload\skins\<skin>.
-$script:HudSkins = [ordered]@{ dlc3 = "Firebird"; base = "Стандартный"; dlc1 = "High Seas"; dlc2 = "Moonshot"; pro = "PRO"; elite = "Elite" }
+$script:HudSkins = [ordered]@{ dlc3 = "Firebird"; base = "По умолчанию"; dlc1 = "High Seas"; dlc2 = "Луноход"; pro = "PRO"; elite = "Elite" }
 
 function Get-GameHudSkin([string]$Game) {
     <# The HUD skin chosen in the game (CurrentHUDSkin in users\<id>\settings.lua). #>
     $file = Get-ChildItem -LiteralPath (Join-Path $Game "users") -Filter "settings.lua" -Recurse -Depth 1 -ErrorAction SilentlyContinue |
         Sort-Object LastWriteTime -Descending | Select-Object -First 1
     if (-not $file) { return $null }
-    $m = [regex]::Match([IO.File]::ReadAllText($file.FullName), 'CurrentHUDSkin\s*=\s*"db/skins_hud_?([a-z0-9]*)')
+    # "Default" is stored as an empty string.
+    $m = [regex]::Match([IO.File]::ReadAllText($file.FullName), 'CurrentHUDSkin\s*=\s*"(?:db/skins_hud_?([a-z0-9]*)[^"]*)?"')
     if (-not $m.Success) { return $null }
     $key = ($m.Groups[1].Value -replace '_tester$', '')
     if ($script:HudSkins.Contains($key)) { $key } else { "base" }

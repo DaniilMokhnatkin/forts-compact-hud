@@ -52,7 +52,7 @@ $script:English = @{
     "Не тронул изменившиеся после установки: {0}." = "Left alone files changed after the install: {0}."
     "Оригинал на месте" = "Original restored"
     "Скин HUD в игре" = "HUD skin in the game"; "Кнопки рисуются под выбранный скин" = "Our buttons are drawn for the chosen skin"
-    "{0} · определён по настройкам игры" = "{0} · read from the game's settings"; "Стандартный" = "Default"
+    "{0} · определён по настройкам игры" = "{0} · read from the game's settings"; "По умолчанию" = "Default"; "Луноход" = "Moonshot"; "Классика" = "Classic"; "Склад оружия" = "Armoury"
     "Скин HUD: " = "HUD skin: "; "Фото {0}" = "Photo {0}"; "Неизвестный скин HUD." = "Unknown HUD skin."
     "Неизвестный HUD." = "Unknown HUD."; "Прозрачность иконок: от 10 до 100%." = "Icon opacity: 10 to 100%."
     "Компактный" = "Compact"; "Тушение" = "Extinguish"; "Строительство" = "Construction"; "Ремонт" = "Repair"
@@ -67,13 +67,16 @@ $script:English = @{
     "• В редакторе карт нет вкладок внизу." = "• The map editor has no tabs at the bottom."; "• Скорее всего работает только на 16:9." = "• Probably works only at 16:9."
     "• Обновление игры может сбросить интерфейс — поставь заново." = "• A game update can reset the interface: install again."
     "• Новые значки (в т. ч. рейтинговые) не видны, пока автор не обновит мод." = "• New badges (ranked ones too) do not show until the author updates the mod."
-    "• Сейчас в игре скин «{0}». Для этого HUD выбери в игре: Настройки → Игра → Скин HUD → «Стандартный»." = '• The game now uses the "{0}" skin. For this HUD choose in the game: Options → Game → HUD Skin → "Default".'
-    "• Нужен скин HUD «Стандартный» (Настройки → Игра → Скин HUD)." = '• Needs the "Default" HUD skin (Options → Game → HUD Skin).'
+    "• Сейчас в игре скин «{0}». Для этого HUD выбери в игре: Настройки → Игра → Скин HUD → «По умолчанию»." = '• The game now uses the "{0}" skin. For this HUD choose in the game: Options → Game → HUD Skin → "Default".'
+    "• Нужен скин HUD «По умолчанию» (Настройки → Игра → Скин HUD)." = '• Needs the "Default" HUD skin (Options → Game → HUD Skin).'
     "У этого HUD свой прицел. Включи, чтобы поставить наш вместо него." = "This HUD has its own crosshair. Turn on to put ours instead."
     "Оригиналы сохраняются, вернуть можно одной кнопкой" = "The originals are kept; restore with one button"
     "Иконки" = "Icons"; "Вернуть всем 100%" = "Set all back to 100%"; "Непрозрачность: " = "Opacity: "; "{0} изм." = "{0} changed"
     "иконки: " = "icons: "; "полупрозрачные иконки" = "see-through icons"
     "Значки тушения, строительства и ремонта над фортом. Сделай их полупрозрачными, чтобы не закрывали постройки." = "The extinguish, construction and repair icons over your fort. Make them see-through so they do not cover your build."
+    "Фон главного меню" = "Main menu background"
+    "Сейчас в игре скин меню «{0}», с ним фон Zors.o не виден: DLC-скины берут фон из своих файлов. Выбери в игре: Настройки → Игра → Скин меню → «По умолчанию», «Классика» или «Склад оружия»." = 'The game now uses the "{0}" menu skin, which does not show the Zors.o background: DLC skins use their own files. In the game choose Options → Game → Menu Skin → "Default", "Classic" or "Armoury".'
+    "Виден со скинами меню «По умолчанию», «Классика» и «Склад оружия». У «Лунохода», High Seas и Firebird фон свой." = 'Shows with the "Default", "Classic" and "Armoury" menu skins. Moonshot, High Seas and Firebird keep their own.'
     "Профиль Steam" = "Steam profile"; "Иконки и запуск" = "Icons and start-up"; "Запуск игры" = "Game start"
     "Пропускать заставку" = "Skip the intro"; "Логотипы при запуске Forts" = "The logos when Forts starts"
     "без заставки" = "no intro"; "с заставкой" = "with the intro"

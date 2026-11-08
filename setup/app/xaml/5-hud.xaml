@@ -60,6 +60,14 @@
                   </StackPanel></Grid>
               </StackPanel>
             </Border>
+            <!-- Zors.o: which menu skins show its menu background -->
+            <Border x:Name="ZorsWarn" CornerRadius="12" Background="#F5F0FF" BorderBrush="#D9C7FF" BorderThickness="1" Padding="14,10"
+                    Margin="0,10,0,0" Visibility="Collapsed">
+              <StackPanel>
+                <TextBlock Text="Фон главного меню" FontWeight="SemiBold" Foreground="#4B2A8C"/>
+                <TextBlock x:Name="ZorsMenuText" Foreground="#4B2A8C" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+              </StackPanel>
+            </Border>
             <!-- Minimalist: the author's known issues, shown before installing -->
             <Border x:Name="MiniWarn" CornerRadius="12" Background="#FFF6E5" BorderBrush="#FFD9A0" BorderThickness="1" Padding="14,10"
                     Margin="0,10,0,0" Visibility="Collapsed">
