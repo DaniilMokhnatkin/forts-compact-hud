@@ -1,0 +1,8 @@
+Tool: built-in imagegen, transparent_background=true.
+Final export: 1536 x 320 RGBA PNG, transparent margins trimmed to fit.
+
+Use case: ui-mockup. Create ONE new finished game UI sprite matching the provided reference's materials, palette, hand-painted finish and normal-state restrained lighting.
+Subject: a very wide horizontal tab button, about 5:1 aspect ratio, on a 1536 x 320 transparent PNG canvas. This must be a horizontal capsule with rounded ends and straight long horizontal sides, NOT a square. Button bounds approximately x=18..1518, y=16..304; centered, small even margins, no cropping. End radius approximately half the tab height. Orthographic straight-on front view.
+A dark matte gunmetal frame with soft simple bevel, modest consistent border thickness about 12 pixels, around a recessed deep night-violet face (#1A0B2E to #2B1150). Face contains very faint purple nebula and sparse tiny dim natural star specks, leaving a dark quiet EMPTY central surface. Thin restrained magenta-violet rim glow (#C04DFF to #FF3DDB) along the inner edge, matching reference normal state. Crisp clean antialiased silhouette, clean hand-painted 2D cartoon military strategy game UI.
+Reference is for style only; replace its square geometry with a WIDE horizontal rounded-end tab, do not include the square button.
+Background: actual fully transparent PNG alpha outside tab. No checkerboard baked in, no opaque background, no ground plane, no ground drop shadow. No text, no symbols, no icons, no logos, no lettering, no decorative plates, no bolts, no watermark. Exactly one empty horizontal tab. Canvas 1536x320.

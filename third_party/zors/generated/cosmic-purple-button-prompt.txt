@@ -1,0 +1,13 @@
+Generation: built-in imagegen, transparent_background=true.
+Final export: 1024 x 1024 RGBA PNG, alpha preserved.
+
+Use case: ui-mockup.
+Asset type: one finished raster game UI button sprite, ready to import, 1024 x 1024 square PNG with genuine RGBA transparency.
+Input images: Image 1 is only a color and mood reference from the player's game; Image 2 is only a reference for its purple cosmic texture. Do not reproduce their scenery, moon, icon, arrow, or layout. Generate a NEW single empty button.
+Primary request: A single square button for a 2D cartoon military strategy game, dark cosmic purple theme. Orthographic straight-on front view. Center the button on the square canvas, outer button bounds approximately x=51..973 and y=51..973 (about 90% canvas width and height), equal transparent margins. Rounded corners with radius approximately 15% of button width. Crisp clean silhouette and crisp antialiased edges.
+Structure/materials: an understated dark matte gunmetal frame, charcoal-black with a slight violet cast, soft simple hand-painted bevel. Keep the frame a modest width, about 35 pixels, and the central face expansive and clearly recessed. No rivets, no mechanical attachments. Subtle top-left bevel highlight, enough to read as a tactile game control. Do not show side walls or perspective.
+Face: deep night-violet base between #1A0B2E and #2B1150, very faint soft purple nebula texture and sparse tiny dim star points INSIDE the face only. Keep the face dark, quiet, visually empty and usable behind future content. A very thin controlled magenta-violet rim light along the INNER edge of the frame, #C04DFF transitioning subtly to #FF3DDB, with minimal restrained bloom contained on the button.
+Style/medium: polished clean hand-painted 2D cartoon game UI, readable when reduced to a small game button; soft matte materials, no photorealistic metal or glossy glass.
+Background: completely transparent, actual PNG alpha, including all four canvas corners and all pixels outside the button silhouette. No backdrop, no checkerboard pattern baked in, no floor, no ground shadow, no cast shadow outside the button.
+Text: none.
+Constraints: exactly ONE button; square with rounded corners, not circular; fully empty face, no text, no symbols, no icons, no letters, no runes, no logos, no star-shaped decorative icons (only tiny natural star specks), no watermark, no decorative corner plates, no bolts, no scene or landscape, no border around the canvas.

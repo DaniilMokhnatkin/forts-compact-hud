@@ -25,6 +25,8 @@ Copy-Item (Join-Path $root "textures\HUD\custom\*.dds") "$hud\textures\HUD\custo
 # Other layouts (Zors.o, Minimalist) and the icon sources for the opacity sliders.
 # Needs build\hud_zors.lua (py -3 layouts\compact.py --theme zors, then compile) and the game
 # for the vanilla icons.
+& $Python (Join-Path $PSScriptRoot "build_zors_hud.py") $Game (Join-Path $root "build\zors_hud")
+if ($LASTEXITCODE -ne 0) { throw "zors hud failed" }
 & $Python (Join-Path $PSScriptRoot "build_layouts.py") $Game $payload $assets
 if ($LASTEXITCODE -ne 0) { throw "layouts failed" }
 

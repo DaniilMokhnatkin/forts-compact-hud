@@ -13,8 +13,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 THEMES = {
     "default": {"plate": [0, 0, 0, 150], "slash": [255, 255, 255, 160],
                 "amount": [255, 255, 255, 255], "cap": [165, 172, 190, 255], "rate": [120, 230, 130, 255]},
-    # Zors.o: deep purple plates, lavender cap and slash; the rate stays green.
-    "zors": {"plate": [38, 8, 62, 170], "slash": [214, 170, 255, 190],
+    # Zors.o: the generated nebula plate (installed as HUD/custom/zors_plate.dds), lavender
+    # cap and slash; the rate stays green.
+    "zors": {"plate": [255, 255, 255, 255], "plate_texture": "ui/textures/HUD/custom/zors_plate.dds",
+             "slash": [214, 170, 255, 190],
              "amount": [255, 255, 255, 255], "cap": [200, 165, 245, 255], "rate": [120, 230, 130, 255]},
 }
 THEME_NAME = sys.argv[sys.argv.index("--theme") + 1] if "--theme" in sys.argv else "default"
@@ -153,7 +155,7 @@ READOUT_Y = 462  # 36-high boxes end at 498, just above the build icons
 PLATE = THEME["plate"]  # for the default, tinted plates and corner icons were tried and rejected
 for i, res in enumerate(("Metal", "Energy")):
     box = node_at(f"{RES}/Readout{res}")
-    box.set("Texture", "ui/textures/FE-PanelTiny.dds")
+    box.set("Texture", THEME.get("plate_texture", "ui/textures/FE-PanelTiny.dds"))
     box.set("Colour", PLATE)
     box.set("ColourLower", PLATE)
     # Measured in game at 16:9: the readouts' parent (ResourcePanel) starts at

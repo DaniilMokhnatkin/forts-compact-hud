@@ -86,7 +86,9 @@ Check "minimalist: our buttons removed" (-not (Test-Path "$game\data\ui\textures
 Check "minimalist: its textures in" ((Get-Sha "$game\data\ui\textures\context\hud-bg1.dds") -eq (Get-Sha "$payload\layouts\minimalist\textures\context\hud-bg1.dds"))
 Install-Pack -Game $game -Hud $true -Crosshair $null -Layout "zors" -HudSkin "pro"
 $st = Get-PackStatus $game
-Check "zors: layout and skin detected" ($st.Layout -eq "zors" -and $st.HudInstalled -and $st.HudSkin -eq "pro")
+Check "zors: layout detected" ($st.Layout -eq "zors" -and $st.HudInstalled)
+Check "zors: its own buttons over the skin set" ((Get-Sha "$game\data\ui\textures\HUD\custom\Pause-A.dds") -eq (Get-Sha "$payload\layouts\zors\textures\HUD\custom\Pause-A.dds"))
+Check "zors: purple tabs and plate in" ((Test-Path "$game\data\ui\textures\HUD\skin_base\tabs\Button-Long-A.dds") -and (Test-Path "$game\data\ui\textures\HUD\custom\zors_plate.dds"))
 $menu = "$game\data\ui\textures\menu_backgrounds"
 Check "zors: menu background for default, classic and tog" ((Test-Path "$menu\base\FE-MainMenu-BG.dds") -and (Test-Path "$menu\tog\FE-MainMenu-BG.dds") -and (Test-Path "$menu\classic\FE-AllScreens-BG.dds"))
 Check "zors: nothing in DLC menu folders (packs win there)" (-not (Test-Path "$menu\dlc3"))

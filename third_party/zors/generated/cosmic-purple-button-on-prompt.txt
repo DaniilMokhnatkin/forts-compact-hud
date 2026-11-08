@@ -1,0 +1,7 @@
+Tool: built-in imagegen, transparent_background=true.
+Final export: 1024 x 1024 RGBA PNG.
+
+Edit the provided game UI button into its switched ON / active state. This is an exact state variant of the SAME sprite, not a redesign.
+Preserve the reference button's exact square rounded silhouette, corner radius, frame width, front-facing orthographic view, canvas alignment, scale, position, existing nebula pattern and star placement. Square canvas 1024x1024. Keep physical frame bounds approximately x=50..970, y=53..973, matching the input. Preserve its clean hand-painted 2D cartoon military strategy UI style and soft beveled dark matte gunmetal frame.
+Change ONLY illumination: make the recessed face clearly brighter violet, glowing gently from within while retaining a night-violet base (#1A0B2E to #2B1150) and visible subtle nebula and tiny stars. Strengthen the thin magenta-violet inner rim glow (#C04DFF to #FF3DDB), and add a soft restrained violet light spill immediately outside the frame, fading smoothly into genuine transparent alpha within the existing canvas margins. Keep the center clear and visually empty. Frame remains dark gunmetal with soft violet reflected illumination.
+No text, no icons, no symbols, no lettering, no runes, no extra shapes, no added decorations. No ground, no drop shadow. Fully transparent PNG alpha background, never opaque black or checkerboard. The subtle outer halo must have soft partial alpha, and the distant background including canvas corners must be fully transparent. Render only ONE button.

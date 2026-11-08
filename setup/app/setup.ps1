@@ -37,7 +37,7 @@ $ui.Scenes.Children[0].IsChecked = $true
 # HUD layouts: compact (ours), Zors.o (ours in purple), Minimalist (nutellafish).
 $layoutInfo = @{
     compact    = @{ title = (L "Компактный · наш"); text = (L "Ресурсы «запас / лимит» по центру, кнопки в один ряд, иконки на 20% меньше."); preview = $null }
-    zors       = @{ title = (L "Zors.o · фиолетовая тема"); text = (L "Наш компактный HUD в фиолетовом, плюс фон меню, курсоры с прицелом и иконки от Zors.o."); preview = "preview_zors.png" }
+    zors       = @{ title = (L "Zors.o · фиолетовая тема"); text = (L "Наш компактный HUD в космическом фиолетовом: кнопки, вкладки, командир, реактор, иконки и прицел; фон меню и заставка от Zors.o."); preview = "preview_zors.png" }
     minimalist = @{ title = (L "Minimalist · автор nutellafish"); text = (L "Прозрачный минимальный интерфейс; убранные кнопки нажимаются горячими клавишами."); preview = "preview_minimalist.png" }
 }
 $layoutLinks = @{
@@ -71,10 +71,15 @@ function Show-Layout([string]$key) {
     if ($key -eq "zors") {
         # DLC menu skins read their background from the DLC packs; loose files do not show there.
         $ui.ZorsMenuText.Text = $(if ($script:menuSkin -in "dlc1", "dlc2", "dlc3") {
-            (L "Сейчас в игре скин меню «{0}», с ним фон Zors.o не виден: DLC-скины берут фон из своих файлов. Выбери в игре: Настройки → Игра → Скин меню → «По умолчанию», «Классика» или «Склад оружия».") -f (L $MenuSkinNames[$script:menuSkin]) }
-            else { L "Виден со скинами меню «По умолчанию», «Классика» и «Склад оружия». У «Лунохода», High Seas и Firebird фон свой." })
+            (L "• Сейчас в игре скин меню «{0}», с ним фон Zors.o не виден: DLC-скины берут фон из своих файлов. Выбери в игре: Настройки → Игра → Скин меню → «По умолчанию», «Классика» или «Склад оружия».") -f (L $MenuSkinNames[$script:menuSkin]) }
+            else { L "• Фон меню виден со скинами меню «По умолчанию», «Классика» и «Склад оружия»." })
+        # Its tabs, commander and reactor replace the Default skin's; DLC HUD skins use their packs.
+        $ui.ZorsHudText.Text = $(if ($script:gameSkin -and $script:gameSkin -ne "base") {
+            (L "• Сейчас в игре скин HUD «{0}». Чтобы были видны фиолетовые вкладки, командир и реактор, выбери: Настройки → Игра → Скин HUD → «По умолчанию».") -f (L $HudSkins[$script:gameSkin]) }
+            else { L "• Скин HUD «По умолчанию» — как нужно: вкладки, командир и реактор будут фиолетовыми." })
     }
-    foreach ($n in "SkinRow", "SkinSep") { $ui[$n].Visibility = $(if ($key -eq "minimalist") { "Collapsed" } else { "Visible" }) }
+    # Zors.o and Minimalist bring their own buttons, so there is no skin set to pick.
+    foreach ($n in "SkinRow", "SkinSep") { $ui[$n].Visibility = $(if ($key -in "minimalist", "zors") { "Collapsed" } else { "Visible" }) }
     $ui.PhotosBox.Visibility = $(if ($key -eq "compact") { "Visible" } else { "Collapsed" })
     if ($info.preview) {
         $brush = [Windows.Media.ImageBrush]::new((Image-From $info.preview))

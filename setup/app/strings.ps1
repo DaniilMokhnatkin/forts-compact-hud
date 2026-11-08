@@ -74,7 +74,12 @@ $script:English = @{
     "Иконки" = "Icons"; "Вернуть всем 100%" = "Set all back to 100%"; "Непрозрачность: " = "Opacity: "; "{0} изм." = "{0} changed"
     "иконки: " = "icons: "; "полупрозрачные иконки" = "see-through icons"
     "Значки тушения, строительства и ремонта над фортом. Сделай их полупрозрачными, чтобы не закрывали постройки." = "The extinguish, construction and repair icons over your fort. Make them see-through so they do not cover your build."
-    "Фон главного меню" = "Main menu background"
+    "Фон главного меню" = "Main menu background"; "Скины в игре" = "Skins in the game"
+    "Наш компактный HUD в космическом фиолетовом: кнопки, вкладки, командир, реактор, иконки и прицел; фон меню и заставка от Zors.o." = "Our compact HUD in cosmic purple: buttons, tabs, commander, reactor, icons and crosshair; menu background and splash by Zors.o."
+    "• Сейчас в игре скин меню «{0}», с ним фон Zors.o не виден: DLC-скины берут фон из своих файлов. Выбери в игре: Настройки → Игра → Скин меню → «По умолчанию», «Классика» или «Склад оружия»." = '• The game now uses the "{0}" menu skin, which does not show the Zors.o background: DLC skins use their own files. In the game choose Options → Game → Menu Skin → "Default", "Classic" or "Armoury".'
+    "• Фон меню виден со скинами меню «По умолчанию», «Классика» и «Склад оружия»." = '• The menu background shows with the "Default", "Classic" and "Armoury" menu skins.'
+    "• Сейчас в игре скин HUD «{0}». Чтобы были видны фиолетовые вкладки, командир и реактор, выбери: Настройки → Игра → Скин HUD → «По умолчанию»." = '• The game now uses the "{0}" HUD skin. For the purple tabs, commander and reactor choose Options → Game → HUD Skin → "Default".'
+    "• Скин HUD «По умолчанию» — как нужно: вкладки, командир и реактор будут фиолетовыми." = '• The HUD skin is "Default", as needed: tabs, commander and reactor will be purple.'
     "Сейчас в игре скин меню «{0}», с ним фон Zors.o не виден: DLC-скины берут фон из своих файлов. Выбери в игре: Настройки → Игра → Скин меню → «По умолчанию», «Классика» или «Склад оружия»." = 'The game now uses the "{0}" menu skin, which does not show the Zors.o background: DLC skins use their own files. In the game choose Options → Game → Menu Skin → "Default", "Classic" or "Armoury".'
     "Виден со скинами меню «По умолчанию», «Классика» и «Склад оружия». У «Лунохода», High Seas и Firebird фон свой." = 'Shows with the "Default", "Classic" and "Armoury" menu skins. Moonshot, High Seas and Firebird keep their own.'
     "Профиль Steam" = "Steam profile"; "Иконки и запуск" = "Icons and start-up"; "Запуск игры" = "Game start"

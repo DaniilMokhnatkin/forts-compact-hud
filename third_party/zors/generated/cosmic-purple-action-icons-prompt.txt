@@ -1,0 +1,15 @@
+Tool: built-in imagegen, transparent_background=true.
+Final sheet export: resized to 4096x2048 RGBA PNG, 4x2 cells of 1024x1024. Bottom-right cell empty.
+
+Create a sprite sheet of SEVEN circular game action icons for a 2D strategy game. Use the attached contact sheet as references: TOP ROW provides the EXACT SEVEN GLYPH SHAPES in order; BOTTOM ROW provides ONLY purple cosmic disc style. Remove all captions and contact-sheet backgrounds. Do NOT copy the colored red/yellow/green/blue top-row discs or black glyph colors.
+Layout: one sheet with 4 equal square cells across the top row and 3 across the bottom row, last bottom-right cell empty transparent. Each icon a perfect circle, identical diameter, centered in its square cell, occupying 95% of the cell with a narrow transparent gutter. Ideally sheet 4096x2048 (each cell 1024 square). All seven icons fully visible, no clipping or overlaps.
+Shared style: perfect circular disc filled with deep purple cosmic nebula, dark violet #1A0B2E to bright violet #7B2CFF swirls, a FEW tiny glowing stars, thin dark charcoal ring. Flat front view, crisp edges, clean simple 2D game art. In each disc exactly ONE bold simple flat symbol in soft milky white, composited at ABOUT 60% opacity over the nebula so nebula remains faintly visible THROUGH the symbol; extremely subtle soft glow. Symbols should appear translucent milky lavender, NOT solid brilliant opaque white and NOT black. Symbols roughly 60% disc diameter, preserving exact relative pose and size from reference.
+Icon order left to right, then second row:
+1. Fire extinguisher: preserve top-row first glyph, upright extinguisher bottle and nozzle hose to upper right.
+2. Construction: preserve top-row second glyph, diagonal claw hammer, head upper left, handle lower right. Recolor the original BLACK silhouette to translucent milky white.
+3. Upgrade: preserve top-row third glyph, thick upward arrow with wide triangular head and short square shaft. Recolor black to translucent milky white.
+4. Repair: preserve top-row fourth glyph, double-ended open wrench diagonal from lower left to upper right.
+5. Reload: preserve top-row fifth glyph exactly, block of stacked ammunition between TWO curved arrows going around it. Keep reference inner cutouts and curve directions.
+6. Banked reload: preserve top-row sixth glyph, tall bullet cartridge with small stopwatch on lower part, same silhouette and negative cutouts.
+7. Scrap: preserve top-row seventh glyph, trash bin with lid and three vertical stripe cutouts.
+All seven discs use the same purple palette and same thin dark charcoal ring, same rendering style and consistent visual weight. No additional objects or details. No text, no letters, no numbers, no filename labels, no watermark. Outside every disc is FULLY TRANSPARENT actual PNG alpha, never a checkerboard or opaque backdrop. Empty eighth cell is also alpha=0. No floor, no drop shadow. Output just the SEVEN icons in ONE transparent sheet.

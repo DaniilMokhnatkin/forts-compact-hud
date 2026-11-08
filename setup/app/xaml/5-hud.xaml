@@ -64,7 +64,8 @@
             <Border x:Name="ZorsWarn" CornerRadius="12" Background="#F5F0FF" BorderBrush="#D9C7FF" BorderThickness="1" Padding="14,10"
                     Margin="0,10,0,0" Visibility="Collapsed">
               <StackPanel>
-                <TextBlock Text="Фон главного меню" FontWeight="SemiBold" Foreground="#4B2A8C"/>
+                <TextBlock Text="Скины в игре" FontWeight="SemiBold" Foreground="#4B2A8C"/>
+                <TextBlock x:Name="ZorsHudText" Foreground="#4B2A8C" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
                 <TextBlock x:Name="ZorsMenuText" Foreground="#4B2A8C" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
               </StackPanel>
             </Border>
