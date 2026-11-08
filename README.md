@@ -7,7 +7,7 @@
 ## Скачать
 
 [Releases](https://github.com/DaniilMokhnatkin/forts-compact-hud/releases/latest) → **Forts-Setup.exe**
-(один файл) или **Forts-Setup.zip** (папка, запуск через `Forts Setup.cmd`). Закрой Forts перед установкой.
+(один файл) или **Forts-Setup.zip** (внутри тот же `Forts Setup.exe`). Закрой Forts перед установкой.
 Windows может предупредить о неизвестном издателе: файл не подписан, «Подробнее → Выполнить в любом случае».
 
 - компактный HUD: ресурсы «запас / лимит» по центру, кнопки в один ряд, иконки на 20% меньше;
@@ -67,16 +67,23 @@ dlc3, снятая с экрана) в `textures\HUD\custom\*.dds`, 4 состо
 
 ## Установщик (Forts Setup)
 
-Окно на WPF через PowerShell (ставить ничего не нужно), стекло Windows 11 и вид macOS Tahoe.
-- `setup\app\engine.ps1` — логика: поиск игры, резервная копия `Forts-Setup-Backup`, откат по хэшам,
-  перекраска прицела при установке, чтение разрешения игры. Проверка: `.\tools\test_setup_engine.ps1`.
-- `setup\app\setup.ps1` — окно; `-Game <папка>`, `-Lang ru|en`, `-State cross|backup|progress|success|error`.
-  Разметка в `setup\app\xaml\` (части склеиваются по номерам), стекло и анимации в `ui.ps1`,
-  английские строки в `strings.ps1`, версия и репозиторий для проверки обновлений в `version.json`.
+Начиная с 1.3.0 — приложение на C# / WPF (.NET Framework, встроен в Windows 10/11).
+Один EXE содержит окно, логику установки и ресурсы; PowerShell при запуске не используется.
+- `setup/native/Engine.cs` — поиск игры, установка, резервная копия `Forts-Setup-Backup`,
+  проверка хэшей, откат, цвет/размер прицела, прозрачность значков и пропуск заставки.
+  Старые резервные копии поддерживаются; изменённые Steam или пользователем файлы при восстановлении сохраняются.
+- `setup/native/WindowController.cs` — окно с прежней разметкой `setup/app/xaml/`.
+  Стартует с «Компактного» и нейтральной темы; Zors включается только при выборе.
+  Переходы цветов выполняет WPF, декодирование галереи и установка идут вне UI-потока.
+- `setup/native/App.cs` — вход в приложение и распаковка встроенных ресурсов в
+  `%LOCALAPPDATA%/FortsSetup/Native/<hash>`. Аргументы: `-Game <папка>`, `-Lang ru|en`, `-NoMotion`.
+- `setup/app/strings.ps1` — словарь переводов для сборки; в EXE попадает только `en.json`.
+  Прежние PowerShell-скрипты сохранены для сравнения и старых тестов, но не входят в дистрибутив.
 - Прицелы рисует `py -3 tools\draw_crosshairs.py`; фоны превью — `setup\app\assets\bg_*.png`.
 - `.\tools\build_setup.ps1` собирает `dist\Forts-Setup.zip` и `dist\Forts Setup.exe`
-  (лаунчер `tools\launcher\Launcher.cs` со встроенным архивом, распаковывается в `%LOCALAPPDATA%\FortsSetup`).
-  Перед этим нужен `build\` с HUD: `.\install.ps1 -DryRun`. Тесты окна: `.\tools\test_setup_size_ui.ps1`.
+  с нативным EXE. Перед этим нужен `build\` с HUD: `.\install.ps1 -DryRun`.
+- Если ресурсы уже собраны: `.\tools\build_native_setup.ps1 -Test` — проверки C# движка,
+  реальных WPF-контролов на временной папке игры и пересборка EXE/ZIP.
 
 ## Порядок работы
 

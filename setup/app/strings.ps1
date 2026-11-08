@@ -103,6 +103,10 @@ $script:English = @{
     "Копия {0} повреждена, остановился." = "The backup of {0} is damaged; stopped."
 }
 
+$script:English['Готово. Запускай Forts.'] = 'Done. Start Forts.'
+$script:English['• Фон меню Zors.o виден только со скинами «По умолчанию», «Классика» и «Склад оружия». Выбери один из них в настройках игры.'] = '• The Zors.o menu background requires Default, Classic or Tons of Guns. Choose one in the game settings.'
+$script:English['Не тронул изменившиеся после установки: '] = 'Left files changed since installation untouched: '
+
 function Lower-First([string]$s) { $s.Substring(0, 1).ToLower() + $s.Substring(1) }
 
 function L([string]$s) {

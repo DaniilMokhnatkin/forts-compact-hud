@@ -7,6 +7,7 @@ docs/setup-size-*.png
 __pycache__/
 setup/app/.size-test.ps1
 setup/app/.probe.ps1
+setup/app/en.json
 
 # Game files (copyright EWS) and files derived from them: take them from your own
 # Forts install, see README.

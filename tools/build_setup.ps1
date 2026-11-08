@@ -49,27 +49,9 @@ if ($LASTEXITCODE -ne 0) { throw "crosshair sizes failed" }
 & $Python (Join-Path $PSScriptRoot "make_setup_assets.py") $root $assets
 if ($LASTEXITCODE -ne 0) { throw "assets failed" }
 
-$zip = Join-Path $root "dist\Forts-Setup.zip"
-$stage = Join-Path $root "build\Forts-Setup"
-Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Force $stage | Out-Null
-Copy-Item (Join-Path $setup "*") $stage -Recurse
-Remove-Item $zip -ErrorAction SilentlyContinue
-Compress-Archive -Path $stage -DestinationPath $zip
-"built $zip ($((Get-Item $zip).Length) bytes)"
-
-# One-file Forts Setup.exe: the staged folder embedded in a small C# launcher.
-Add-Type -AssemblyName System.IO.Compression.FileSystem
-$appZip = Join-Path $root "build\app.zip"
-Remove-Item $appZip -ErrorAction SilentlyContinue
-[IO.Compression.ZipFile]::CreateFromDirectory($stage, $appZip)
+# The development pipeline may use scripts. The shipped installer is a native
+# C# WPF application with embedded assets/payload and no interpreter dependency.
 $icon = Join-Path $root "build\forts-setup.ico"
 & $Python (Join-Path $PSScriptRoot "launcher\make_icon.py") $icon
 if ($LASTEXITCODE -ne 0) { throw "icon failed" }
-$exe = Join-Path $root "dist\Forts Setup.exe"
-$csc = Join-Path $env:WINDIR "Microsoft.NET\Framework64\v4.0.30319\csc.exe"
-& $csc /nologo /target:winexe /optimize+ "/out:$exe" "/win32icon:$icon" "/resource:$appZip,app.zip" `
-    /r:System.IO.Compression.dll /r:System.IO.Compression.FileSystem.dll /r:System.Windows.Forms.dll `
-    (Join-Path $PSScriptRoot "launcher\Launcher.cs")
-if ($LASTEXITCODE -ne 0) { throw "launcher build failed" }
-"built $exe ($((Get-Item -LiteralPath $exe).Length) bytes)"
+& (Join-Path $PSScriptRoot 'build_native_setup.ps1')
