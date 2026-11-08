@@ -49,6 +49,11 @@ if ($LASTEXITCODE -ne 0) { throw "crosshair sizes failed" }
 & $Python (Join-Path $PSScriptRoot "make_setup_assets.py") $root $assets
 if ($LASTEXITCODE -ne 0) { throw "assets failed" }
 
+& $Python (Join-Path $PSScriptRoot 'build_tactical_art.py')
+if ($LASTEXITCODE -ne 0) { throw 'tactical art failed' }
+& $Python (Join-Path $PSScriptRoot 'build_customization.py') $Game
+if ($LASTEXITCODE -ne 0) { throw 'HUD customization variants failed' }
+
 # The development pipeline may use scripts. The shipped installer is a native
 # C# WPF application with embedded assets/payload and no interpreter dependency.
 $icon = Join-Path $root "build\forts-setup.ico"

@@ -104,6 +104,20 @@ $script:English = @{
 }
 
 $script:English['Готово. Запускай Forts.'] = 'Done. Start Forts.'
+$script:English['Настроить HUD'] = 'Customize HUD'
+$script:English['Кнопки в один ряд. Расположение ресурсов, размер карточек, фон и цвет выбираются в настройках HUD.'] = 'Buttons in one row. Choose resource placement, card size, background and colour in Customize HUD.'
+$script:English['Развернуть'] = 'Expand'
+$script:English['‹ Назад'] = '‹ Previous'
+$script:English['Далее ›'] = 'Next ›'
+$script:English['Предыдущий скриншот'] = 'Previous screenshot'
+$script:English['Следующий скриншот'] = 'Next screenshot'
+$script:English['Тактический'] = 'Tactical'
+$script:English['Тактический · по HUD RobberFox'] = 'Tactical · based on RobberFox HUD'
+$script:English['Плоские тёмно-синие боковые панели, свободный центр. Расположение ресурсов, фон, масштаб и оттенок настраиваются.'] = 'Flat navy side panels and a clear centre. Customize resource placement, background, scale and hue.'
+$script:English['Референс · HUD RobberFox'] = 'Reference · RobberFox HUD'
+$script:English['Тема по HUD RobberFox. Превью — исходный референс.'] = 'Theme based on RobberFox HUD. Preview shows the original reference.'
+$script:English['Ресурсы справа внизу'] = 'Resources at bottom right'
+$script:English['Ресурсы по центру'] = 'Resources in the centre'
 $script:English['• Фон меню Zors.o виден только со скинами «По умолчанию», «Классика» и «Склад оружия». Выбери один из них в настройках игры.'] = '• The Zors.o menu background requires Default, Classic or Tons of Guns. Choose one in the game settings.'
 $script:English['Не тронул изменившиеся после установки: '] = 'Left files changed since installation untouched: '
 

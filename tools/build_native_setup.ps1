@@ -9,14 +9,15 @@ $framework=Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319'
 $wpf=Join-Path $framework 'WPF'
 $csc=Join-Path $framework 'csc.exe'
 New-Item -ItemType Directory -Force $build | Out-Null
+New-Item -ItemType Directory -Force (Join-Path $root 'dist') | Out-Null
 . (Join-Path $root 'setup\app\strings.ps1')
 $script:English | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath (Join-Path $root 'setup\app\en.json') -Encoding UTF8
 $refs=@('/r:System.Web.Extensions.dll','/r:System.Net.Http.dll','/r:System.Xaml.dll','/r:System.Windows.Forms.dll',
     '/r:System.IO.Compression.dll','/r:System.IO.Compression.FileSystem.dll',
     "/r:$wpf\PresentationFramework.dll","/r:$wpf\PresentationCore.dll","/r:$wpf\WindowsBase.dll")
-$sources=@((Join-Path $native 'Engine.cs'),(Join-Path $native 'WindowController.cs'),(Join-Path $native 'App.cs'))
+$sources=@(Get-ChildItem -LiteralPath $native -Filter '*.cs' | ForEach-Object FullName)
 if ($Test) {
-    & $csc /nologo /target:exe "/out:$build\NativeEngineTests.exe" /r:System.Web.Extensions.dll (Join-Path $PSScriptRoot 'native\EngineTests.cs') $sources[0]
+    & $csc /nologo /target:exe "/out:$build\NativeEngineTests.exe" /r:System.Web.Extensions.dll (Join-Path $PSScriptRoot 'native\EngineTests.cs') (Join-Path $native 'Engine.cs') (Join-Path $native 'Customization.cs')
     if ($LASTEXITCODE -ne 0) { throw 'Native engine tests did not compile' }
     & (Join-Path $build 'NativeEngineTests.exe') $root
     if ($LASTEXITCODE -ne 0) { throw 'Native engine tests failed' }

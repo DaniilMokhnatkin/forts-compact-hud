@@ -180,4 +180,33 @@
         </Setter.Value>
       </Setter>
     </Style>
+    <Style x:Key="TahoeCombo" TargetType="ComboBox">
+      <Setter Property="FocusVisualStyle" Value="{StaticResource Focus}"/>
+      <Setter Property="ItemContainerStyle"><Setter.Value><Style TargetType="ComboBoxItem">
+        <Setter Property="Padding" Value="12,8"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+      </Style></Setter.Value></Setter>
+      <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBox">
+        <Grid>
+          <ToggleButton Focusable="False" IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" ClickMode="Press">
+            <ToggleButton.Template><ControlTemplate TargetType="ToggleButton"><Border CornerRadius="10" Background="White" BorderBrush="#20000000" BorderThickness="1"><Path Data="M 0,0 L 4,4 L 8,0" Stroke="#6E6E73" StrokeThickness="1.5" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,13,0"/></Border></ControlTemplate></ToggleButton.Template>
+          </ToggleButton>
+          <ContentPresenter Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" Margin="13,0,34,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+          <Popup Name="PART_Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
+            <Border Background="#FCFCFE" BorderBrush="#24000000" BorderThickness="1" CornerRadius="12" Padding="5" Margin="0,4,6,8" MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+              <Border.Effect><DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.15"/></Border.Effect>
+              <ScrollViewer MaxHeight="260"><StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/></ScrollViewer>
+            </Border>
+          </Popup>
+        </Grid>
+      </ControlTemplate></Setter.Value></Setter>
+    </Style>
+    <Style x:Key="HueRange" TargetType="Slider" BasedOn="{StaticResource SizeRange}">
+      <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Slider">
+        <Grid Background="Transparent" Margin="10,0"><Track x:Name="PART_Track" Height="36" VerticalAlignment="Center">
+          <Track.DecreaseRepeatButton><RepeatButton Command="Slider.DecreaseLarge" Focusable="False"><RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent"/></ControlTemplate></RepeatButton.Template></RepeatButton></Track.DecreaseRepeatButton>
+          <Track.Thumb><Thumb Width="22" Height="22"><Thumb.Template><ControlTemplate TargetType="Thumb"><Ellipse Fill="White" Stroke="#66000000" StrokeThickness="1"><Ellipse.Effect><DropShadowEffect BlurRadius="5" ShadowDepth="1" Opacity="0.25"/></Ellipse.Effect></Ellipse></ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
+          <Track.IncreaseRepeatButton><RepeatButton Command="Slider.IncreaseLarge" Focusable="False"><RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent"/></ControlTemplate></RepeatButton.Template></RepeatButton></Track.IncreaseRepeatButton>
+        </Track></Grid>
+      </ControlTemplate></Setter.Value></Setter>
+    </Style>
   </Window.Resources>

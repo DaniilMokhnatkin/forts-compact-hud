@@ -1,0 +1,11 @@
+Tool: built-in imagegen, transparent_background=true.
+Reference HUD credit: RobberFox — https://www.youtube.com/@robber_fox/videos
+
+Use the attached screenshot ONLY as an art direction reference for a NEW flat tactical game HUD theme. Create a clean UI ASSET SHEET on a fully transparent PNG background. Do not reproduce gameplay, characters, numbers, text, icons or video player.
+Style: flat dark navy charcoal panels #171A2B, muted slate-indigo inset bands #343B61, very fine periwinkle edge #929BDA, milky-white tiny bevel highlights. Squared geometry with almost square slightly rounded corners. Matte, clean hand-painted 2D strategy UI, restrained flat shading, no nebula, no neon, no screws, no heavy metal bevels. Match the understated navy tactical side panels seen at bottom left and bottom right in reference.
+Exactly FOUR EMPTY isolated assets with large transparent gutters, simple 2x2 arrangement on a 1536x1024 sheet:
+Top left: large empty rectangular side housing, 4:5 width:height ratio, thin periwinkle perimeter and dark navy fill, completely empty inside. No internal slots or decorations.
+Top right: one empty square button, dark navy frame around a slightly lighter slate-indigo face, fine periwinkle perimeter, small soft bevel.
+Bottom left: one long horizontal tab, 5:1 width:height, nearly square corners, dark slate-indigo face, thin periwinkle outline.
+Bottom right: one long horizontal readout plate, 5:1 ratio, simple flat muted slate-indigo rectangle with a fine border, entirely empty.
+All four isolated sprites must have crisp silhouettes and REAL alpha=0 outside their shapes. Flat front orthographic view. No text, symbols, icons, digits, illustrations or watermark. No drop shadows, no cast shadows, no ground, no checkerboard. Keep the EMPTY faces usable behind live game numbers and icons.

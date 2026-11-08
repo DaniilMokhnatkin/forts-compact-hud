@@ -15,6 +15,7 @@ namespace FortsSetup {
         public bool Hud;
         public string Layout="compact", Skin="dlc3", Crosshair, Color="white";
         public int Size=100;
+        public HudCustomization Customization;
         public bool? SkipIntro;
         public Dictionary<string,int> Icons=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
     }
@@ -22,6 +23,7 @@ namespace FortsSetup {
         public bool HudCompatible=true, HudInstalled, HasBackup, SkipIntro;
         public string Layout, Skin, Crosshair, Color="white";
         public int Size=100;
+        public HudCustomization Customization;
         public Dictionary<string,int> Icons=Engine.IconIds.ToDictionary(k=>k,k=>100);
     }
     // Lowercase property names keep backups compatible with the previous installer.
@@ -35,7 +37,7 @@ namespace FortsSetup {
     sealed class PlannedFile { public string Rel, Source, Owner; public byte[] Bytes; }
     public sealed class Engine {
         public const string BackupName="Forts-Setup-Backup", TextureDir=@"data\ui\textures\HUD\custom";
-        public static readonly string[] LayoutIds={"compact","zors","minimalist"}, SkinIds={"dlc3","base","dlc1","dlc2","pro","elite"};
+        public static readonly string[] LayoutIds={"compact","zors","minimalist","tactical"}, SkinIds={"dlc3","base","dlc1","dlc2","pro","elite"};
         public static readonly string[] IconIds={"extinguisher","under_construction","repair"};
         public static readonly Dictionary<string,string> Colors=new Dictionary<string,string>{{"white","FFFFFF"},{"green","5CFF6E"},{"yellow","FFE04A"},{"red","FF5A4E"},{"cyan","46E6FF"}};
         public static readonly string[] CrossFiles={@"data\ui\textures\mouse_target.dds",@"data\ui\textures\mouse_target_painted.dds"};
@@ -106,6 +108,14 @@ namespace FortsSetup {
             var state=ReadState(game);s.HasBackup=state.Count>0;
             string hudNow=Hash(SafePath(game,@"data\ui\screens\hud.lua"));
             foreach(string layout in LayoutIds) if(hudNow!=null && hudNow==Hash(LayoutHud(layout)))s.Layout=layout;
+            string profileFile=Path.Combine(game,BackupName,"hud-profile.json");
+            if(File.Exists(profileFile)){
+                var profile=json.Deserialize<HudProfile>(File.ReadAllText(profileFile));
+                if(profile!=null&&profile.hash==hudNow&&LayoutIds.Contains(profile.layout)){
+                    if(profile.customization!=null)profile.customization.Validate();
+                    s.Layout=profile.layout;s.Customization=profile.customization;
+                }
+            }
             foreach(var f in HudFiles) {
                 string current=Hash(SafePath(game,f.Key)); StateEntry previous; state.TryGetValue(f.Key,out previous);
                 bool known=current!=null&&(current==f.Value||current==Hash(Payload(@"hud\"+f.Key))||(previous!=null&&current==previous.installed));
@@ -151,6 +161,7 @@ namespace FortsSetup {
             CheckGame(game);
             if(!o.Hud&&o.Crosshair==null&&o.Icons.Count==0&&!o.SkipIntro.HasValue)throw new ArgumentException("Ничего не выбрано");
             if(o.Hud&&!LayoutIds.Contains(o.Layout))throw new ArgumentException("Неизвестный HUD.");
+            if(o.Customization!=null)o.Customization.Validate();
             if(!SkinIds.Contains(o.Skin)||!Colors.ContainsKey(o.Color)||o.Size<50||o.Size>200||o.Size%5!=0)throw new ArgumentException("Недопустимые настройки прицела или скина.");
             if(o.Icons.Any(p=>!IconIds.Contains(p.Key)||p.Value<10||p.Value>100))throw new ArgumentException("Прозрачность иконок: от 10 до 100%.");
             if(o.Crosshair!=null&&!Crosshairs.Contains(o.Crosshair))throw new ArgumentException("Неизвестный прицел.");
@@ -159,8 +170,9 @@ namespace FortsSetup {
             var status=Status(game);int? cursor=null;
             if(o.Hud){
                 if(!status.HudCompatible)throw new InvalidOperationException("HUD сделан для Forts 1.39.0 r22745, а файлы интерфейса у тебя другие (другая версия игры или чужой мод).");
-                if(o.Layout=="minimalist")add(@"data\ui\screens\hud.lua",LayoutHud(o.Layout),"hud");
-                else {foreach(string rel in HudFiles.Keys)add(rel,rel==@"data\ui\screens\hud.lua"?LayoutHud(o.Layout):Payload(@"hud\"+rel),"hud");foreach(string tex in Directory.GetFiles(SkinDir(o.Skin)))add(TextureDir+"\\"+Path.GetFileName(tex),tex,"hud");}
+                string selectedHud=o.Customization==null?LayoutHud(o.Layout):Payload(@"customization\variants\"+o.Layout+"\\"+o.Customization.Key+".lua");
+                if(o.Layout=="minimalist")add(@"data\ui\screens\hud.lua",selectedHud,"hud");
+                else {foreach(string rel in HudFiles.Keys)add(rel,rel==@"data\ui\screens\hud.lua"?selectedHud:Payload(@"hud\"+rel),"hud");foreach(string tex in Directory.GetFiles(SkinDir(o.Skin)))add(TextureDir+"\\"+Path.GetFileName(tex),tex,"hud");}
                 foreach(string sub in new[]{"textures","ui"}){
                     string from=Payload(@"layouts\"+o.Layout+"\\"+sub);if(!Directory.Exists(from))continue;
                     foreach(string file in Directory.GetFiles(from,"*",SearchOption.AllDirectories)){
@@ -169,6 +181,16 @@ namespace FortsSetup {
                     }
                 }
                 if(o.Crosshair==null&&File.Exists(Payload(@"layouts\"+o.Layout+@"\textures\mouse_target.dds")))cursor=100;
+                if(o.Customization!=null&&o.Customization.Hue!=0){
+                    string extras=Payload(@"customization\skins\"+o.Skin);
+                    if(Directory.Exists(extras))foreach(string file in Directory.GetFiles(extras,"*.dds",SearchOption.AllDirectories)){
+                        string rel=@"data\ui\textures\"+file.Substring(extras.Length+1);if(!plan.ContainsKey(rel))add(rel,file,"hud");
+                    }
+                    foreach(var p in plan.Values.Where(p=>p.Rel.StartsWith(@"data\ui\textures\HUD\",StringComparison.OrdinalIgnoreCase)&&p.Rel.EndsWith(".dds",StringComparison.OrdinalIgnoreCase))){
+                        string name=Path.GetFileName(p.Rel).ToLowerInvariant();if(name.Contains("reactor")||name.Contains("radial")||name.Contains("star"))continue;
+                        p.Bytes=HudCustomization.ShiftHue(File.ReadAllBytes(p.Source),o.Customization.Hue);
+                    }
+                }
             }
             string iconLayout=o.Hud?o.Layout:status.Layout??"compact";
             foreach(var icon in o.Icons)foreach(string file in new[]{icon.Key,icon.Key+"_grey"}){
@@ -199,6 +221,7 @@ namespace FortsSetup {
                 }
                 if(progress!=null)progress(++step,total,"Сохраняю резервную копию");
                 write(Path.Combine(backup,"state.json"),Encoding.UTF8.GetBytes(json.Serialize(state.Values.OrderBy(e=>e.path).ToArray())));
+                if(o.Hud)write(Path.Combine(backup,"hud-profile.json"),Encoding.UTF8.GetBytes(json.Serialize(new HudProfile{layout=o.Layout,hash=Hash(SafePath(game,@"data\ui\screens\hud.lua")),customization=o.Customization})));
                 if(o.Crosshair!=null)write(Path.Combine(backup,"crosshair.json"),Encoding.UTF8.GetBytes(json.Serialize(new{id=o.Crosshair,size=o.Size,color=o.Color,hash=Hash(SafePath(game,CrossFiles[0]))})));
                 if(o.Icons.Count>0)write(Path.Combine(backup,"icons.json"),Encoding.UTF8.GetBytes(json.Serialize(o.Icons)));
             } catch(Exception failure) {

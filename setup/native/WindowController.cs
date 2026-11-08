@@ -62,6 +62,8 @@ namespace FortsSetup {
         string game,skin="dlc3",cross="cross",color="white",updateUrl,lastPage="HudPage";
         readonly bool noMotion;
         bool initializing=true,busy,statusReady;
+        HudCustomization customization=new HudCustomization();
+        bool customizationChosen;
         int refreshVersion,galleryVersion;
         readonly Dictionary<string,string> english;
         readonly Dictionary<string,RadioButton> layouts=new Dictionary<string,RadioButton>(),skins=new Dictionary<string,RadioButton>(),tiles=new Dictionary<string,RadioButton>(),swatches=new Dictionary<string,RadioButton>();
@@ -69,7 +71,7 @@ namespace FortsSetup {
         readonly Dictionary<string,Image> iconImages=new Dictionary<string,Image>(),iconPreviews=new Dictionary<string,Image>();
         readonly Dictionary<string,TextBlock> iconValues=new Dictionary<string,TextBlock>();
         static readonly ConcurrentDictionary<string,BitmapSource> Bitmaps=new ConcurrentDictionary<string,BitmapSource>(StringComparer.OrdinalIgnoreCase);
-        readonly Dictionary<string,string> layoutNames=new Dictionary<string,string>{{"compact","Компактный"},{"zors","Zors.o"},{"minimalist","Minimalist"}};
+        readonly Dictionary<string,string> layoutNames=new Dictionary<string,string>{{"compact","Компактный"},{"zors","Zors.o"},{"minimalist","Minimalist"},{"tactical","Тактический"}};
         readonly Dictionary<string,string> crossNames=new Dictionary<string,string>{{"cross","Крест"},{"gap_cross","Разрыв"},{"fine_cross","Тонкий"},{"dot_ring","Кольцо"},{"brackets","Рамка"},{"scope","Оптика"},{"zors","Zors.o"}};
         readonly Dictionary<string,string> skinNames=new Dictionary<string,string>{{"dlc3","Firebird"},{"base","По умолчанию"},{"dlc1","High Seas"},{"dlc2","Луноход"},{"pro","PRO"},{"elite","Elite"}};
         readonly Dictionary<string,string> iconNames=new Dictionary<string,string>{{"extinguisher","Тушение"},{"under_construction","Строительство"},{"repair","Ремонт"}};
@@ -99,6 +101,7 @@ namespace FortsSetup {
             var xml=new XmlDocument();xml.LoadXml(xaml);
             if(lang=="en")foreach(XmlElement element in xml.SelectNodes("//*"))foreach(XmlAttribute a in element.Attributes)if(english.ContainsKey(a.Value))a.Value=L(a.Value);
             using(var reader=new XmlNodeReader(xml))Window=(Window)XamlReader.Load(reader);
+            Window.MaxHeight=Math.Max(600,SystemParameters.WorkArea.Height-32);
             // The controller is constructed before Application.Run, which normally installs
             // this context. Early asynchronous gallery loads must also resume on the UI thread.
             if(!(SynchronizationContext.Current is DispatcherSynchronizationContext))
@@ -122,13 +125,16 @@ namespace FortsSetup {
             UI<Button>("BackBtn").Click+=async(s,e)=>{ShowPage(lastPage);Visible("BackBtn",false);Visible("DoneBtn",false);UI<StackPanel>("Nav").IsEnabled=true;UI<Button>("ChangeFolder").IsEnabled=true;Ready=Refresh();await Ready;};
             UI<Button>("ChangeFolder").Click+=async(s,e)=>{using(var dialog=new System.Windows.Forms.FolderBrowserDialog{SelectedPath=game??"",Description=L("Выбрать папку игры")})if(dialog.ShowDialog()==System.Windows.Forms.DialogResult.OK){game=dialog.SelectedPath;Ready=Refresh();await Ready;}};
             UI<Button>("FullScreenBtn").Click+=(s,e)=>OpenViewer();UI<Border>("HudShot").MouseLeftButtonUp+=(s,e)=>OpenViewer();
-            UI<Button>("LayoutLink").Click+=(s,e)=>OpenUrl(Layout=="zors"?"https://steamcommunity.com/profiles/76561199099877561":"https://steamcommunity.com/sharedfiles/filedetails/?id=3750502564");
+            UI<Button>("PhotoPrevious").Click+=(s,e)=>StepShot(-1);UI<Button>("PhotoNext").Click+=(s,e)=>StepShot(1);
+            UI<Button>("LayoutLink").Click+=(s,e)=>OpenUrl(Layout=="tactical"?"https://www.youtube.com/@robber_fox/videos":Layout=="zors"?"https://steamcommunity.com/profiles/76561199099877561":"https://steamcommunity.com/sharedfiles/filedetails/?id=3750502564");
+            UI<Button>("CustomizationBtn").Click+=(s,e)=>{var dialog=new CustomizationDialog(Window,customization,Layout,lang=="en");if(dialog.ShowDialog()==true){customization=dialog.Value.Clone();customizationChosen=true;UpdateSummary();}};
             UI<Button>("UpdateLink").Click+=(s,e)=>{if(updateUrl!=null)OpenUrl(updateUrl);};
             UI<RadioButton>(lang=="en"?"LangEn":"LangRu").IsChecked=true;
             UI<RadioButton>("LangEn").Click+=(s,e)=>SwitchLanguage("en");UI<RadioButton>("LangRu").Click+=(s,e)=>SwitchLanguage("ru");
             Window.KeyDown+=(s,e)=>{if(e.Key==Key.Escape)Window.Close();};
             Window.Closing+=(s,e)=>{if(busy){e.Cancel=true;Text("WorkText",L("Устанавливаю…"));}};
             swatches[selection==null?"white":selection.Color].IsChecked=true;
+            if(selection!=null&&selection.Customization!=null){customization=selection.Customization.Clone();customizationChosen=true;}
             tiles[selection==null?"cross":selection.Crosshair??"cross"].IsChecked=true;
             UI<Slider>("SizeSlider").Value=selection==null?100:selection.Size;
             layouts[selection==null?"compact":selection.Layout].IsChecked=true;
@@ -149,10 +155,18 @@ namespace FortsSetup {
         public void SelectLayout(string key) {
             if(layouts[key].IsChecked!=true){layouts[key].IsChecked=true;return;}
             Layout=key;Theme.Apply(key=="zors");
+            if(!customizationChosen)customization=new HudCustomization{Background=key=="tactical"?100:0};
             Text("LayoutTitle",L(key=="compact"?"Компактный · наш":key=="zors"?"Zors.o · фиолетовая тема":"Minimalist · автор nutellafish"));
             Text("LayoutText",L(key=="compact"?"Ресурсы «запас / лимит» по центру, кнопки в один ряд, иконки на 20% меньше.":key=="zors"?"Наш компактный HUD в космическом фиолетовом: кнопки, вкладки, командир, реактор, иконки и прицел; фон меню и заставка от Zors.o.":"Прозрачный минимальный интерфейс; убранные кнопки нажимаются горячими клавишами."));
+            if(key=="compact")Text("LayoutText",L("Кнопки в один ряд. Расположение ресурсов, размер карточек, фон и цвет выбираются в настройках HUD."));
             Visible("SkinRow",key=="compact");Visible("SkinSep",key=="compact");Visible("ZorsWarn",key=="zors");Visible("MiniWarn",key=="minimalist");Visible("LayoutLink",key!="compact");
             UI<Button>("LayoutLink").Content=L(key=="zors"?"Профиль Steam":"Мастерская Steam");UpdateSkinNote();
+            if(key=="tactical"){
+                Text("LayoutTitle",L("Тактический · по HUD RobberFox"));
+                Text("LayoutText",L("Плоские тёмно-синие боковые панели, свободный центр. Расположение ресурсов, фон, масштаб и оттенок настраиваются."));
+                UI<Button>("LayoutLink").Content="RobberFox · YouTube";
+                Visible("ZorsWarn",true);Text("ZorsMenuText",L("Тема по HUD RobberFox. Превью — исходный референс."));
+            }
             foreach(string id in Engine.IconIds){var bmp=Image("icon_"+key+"_"+id+".png");iconImages[id].Source=bmp;iconPreviews[id].Source=bmp;}
             if(!initializing&&key!="compact") {UI<CheckBox>("CrossSwitch").IsChecked=key=="zors";if(key=="zors")tiles["zors"].IsChecked=true;}
             Text("HudNote",L(Installed!=null&&Installed.Layout==key?"Уже стоит. Переустановка ничего не сломает":"Оригиналы сохраняются, вернуть можно одной кнопкой"));
@@ -164,28 +178,29 @@ namespace FortsSetup {
             Text("ZorsHudText",current!=null&&current!="base"?L("• Нужен скин HUD «По умолчанию» (Настройки → Игра → Скин HUD)."):L("• Скин HUD «По умолчанию» — как нужно: вкладки, командир и реактор будут фиолетовыми."));
             Text("ZorsMenuText",new[]{"dlc1","dlc2","dlc3"}.Contains(menu)?L("• Фон меню Zors.o виден только со скинами «По умолчанию», «Классика» и «Склад оружия». Выбери один из них в настройках игры."):L("• Фон меню виден со скинами меню «По умолчанию», «Классика» и «Склад оружия»."));
             Text("MiniSkin",L("• Нужен скин HUD «По умолчанию» (Настройки → Игра → Скин HUD)."));
+            if(Layout=="tactical")Text("ZorsMenuText",L("Тема по HUD RobberFox. Превью — исходный референс."));
         }
         async void LoadGallery(string key) {
             int version=++galleryVersion;
             string dir=Path.Combine(assets,"gallery",key);
             gallery=Directory.Exists(dir)?Directory.GetFiles(dir).Where(p=>new[]{".jpg",".png"}.Contains(Path.GetExtension(p).ToLowerInvariant())).OrderBy(p=>p).ToArray():new string[0];
+            if(key=="tactical")gallery=new[]{Path.Combine(assets,"tactical_reference.png")};
             if(gallery.Length==0)gallery=(key=="compact"?new[]{"hud_after.png","hud_photo_2.png","hud_photo_3.png"}:new[]{key=="zors"?"preview_zors.png":"minimalist_preview.jpg"}).Select(p=>Path.Combine(assets,p)).ToArray();
-            UI<StackPanel>("Photos").Children.Clear();Visible("PhotosBox",gallery.Length>1);
-            for(int i=0;i<gallery.Length;i++){int n=i;Choice(UI<StackPanel>("Photos"),"SceneSeg",(i+1).ToString(),"Photo",i.ToString(),()=>ShowShot(n));}
-            try {string path=gallery[0];await Task.Run(()=>Bitmap(path));if(version!=galleryVersion)return;UI<RadioButton>("NavHud").Dispatcher.VerifyAccess();((RadioButton)UI<StackPanel>("Photos").Children[0]).IsChecked=true;}
+            UI<Button>("PhotoPrevious").IsEnabled=gallery.Length>1;UI<Button>("PhotoNext").IsEnabled=gallery.Length>1;
+            try {string path=gallery[0];await Task.Run(()=>Bitmap(path));if(version!=galleryVersion)return;ShowShot(0);}
             catch(Exception e){if(version==galleryVersion)Text("ShotCaption",e.Message);}
         }
         async void ShowShot(int index) {
-            if(index<0||index>=gallery.Length)return;shotIndex=index;int version=galleryVersion;string path=gallery[index];
+            if(index<0||index>=gallery.Length)return;shotIndex=index;int version=galleryVersion;string path=gallery[index];Text("PhotoCount",(index+1)+" / "+gallery.Length);
             try {var bmp=await Task.Run(()=>Bitmap(path));if(version!=galleryVersion||shotIndex!=index)return;
-                var brush=new ImageBrush(bmp){Stretch=Stretch.UniformToFill};if(bmp.PixelWidth/(double)bmp.PixelHeight<3)brush.Viewbox=new Rect(0,0.66,1,0.34);UI<Border>("HudShot").Background=brush;
-                string caption=System.Text.RegularExpressions.Regex.Replace(Path.GetFileNameWithoutExtension(path),@"^\d+\s*","");Text("ShotCaption",caption);Visible("ShotCaptionBox",Path.GetDirectoryName(path)!=assets);
+                var brush=new ImageBrush(bmp){Stretch=Stretch.Uniform};var target=UI<Border>("HudShot");target.Background=brush;target.BeginAnimation(UIElement.OpacityProperty,null);target.Opacity=noMotion?1:0.35;Animate(target,UIElement.OpacityProperty,1,180);
+                string caption=System.Text.RegularExpressions.Regex.Replace(Path.GetFileNameWithoutExtension(path),@"^\d+\s*","");if(Layout=="tactical")caption=L("Референс · HUD RobberFox");Text("ShotCaption",caption);Visible("ShotCaptionBox",Layout=="tactical"||Path.GetDirectoryName(path)!=assets);
             }catch(Exception e){Text("ShotCaption",e.Message);}
         }
         void OpenViewer() {
-            if(gallery.Length==0)return;int index=shotIndex;var image=new Image{Stretch=Stretch.Uniform};var viewer=new Window{Owner=Window,Title="Forts Setup — "+L(layoutNames[Layout]),WindowState=WindowState.Maximized,WindowStyle=WindowStyle.None,Background=Brushes.Black,Content=image,ShowInTaskbar=false};
-            Action show=()=>image.Source=Bitmap(gallery[index]);show();viewer.KeyDown+=(s,e)=>{if(e.Key==Key.Escape)viewer.Close();else if(e.Key==Key.Left||e.Key==Key.Right){index=(index+(e.Key==Key.Left?-1:1)+gallery.Length)%gallery.Length;show();}};image.MouseLeftButtonUp+=(s,e)=>{index=(index+1)%gallery.Length;show();};viewer.ShowDialog();
+            if(gallery.Length==0)return;var viewer=new GalleryViewer(Window,gallery,shotIndex,L(layoutNames[Layout]),lang=="en",noMotion);viewer.ShowDialog();ShowShot(viewer.Index);
         }
+        void StepShot(int delta){if(gallery.Length==0)return;ShowShot((shotIndex+delta+gallery.Length)%gallery.Length);}
         BitmapSource Tinted(BitmapSource bmp,string hex) {
             if(hex=="FFFFFF")return bmp;var src=new FormatConvertedBitmap(bmp,PixelFormats.Bgra32,null,0);int stride=src.PixelWidth*4;byte[] px=new byte[stride*src.PixelHeight];src.CopyPixels(px,stride,0);
             int r=Convert.ToInt32(hex.Substring(0,2),16),g=Convert.ToInt32(hex.Substring(2,2),16),b=Convert.ToInt32(hex.Substring(4,2),16);for(int i=0;i<px.Length;i+=4){px[i]=(byte)(px[i]*b/255);px[i+1]=(byte)(px[i+1]*g/255);px[i+2]=(byte)(px[i+2]*r/255);}var result=BitmapSource.Create(src.PixelWidth,src.PixelHeight,96,96,PixelFormats.Bgra32,null,px,stride);result.Freeze();return result;
@@ -196,7 +211,7 @@ namespace FortsSetup {
             image.Source=enabled?Tinted(Image("crosshair_"+cross+"_"+size+".png"),Engine.Colors[cross=="zors"?"white":color]):Image("crosshair_vanilla.png");
             Text("AfterLabel",enabled?L(crossNames[cross])+" · "+size+"%":L("Не меняется"));UpdateSummary();
         }
-        public Options Selection() {return new Options{Hud=On("HudSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=cross=="zors"?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch")};}
+        public Options Selection() {return new Options{Hud=On("HudSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=cross=="zors"?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=customization.Clone()};}
         public void ShowPage(string name) {
             Page=name;foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackupPage","WorkPage"})Visible(page,page==name);
             if(name!="WorkPage"){
@@ -210,6 +225,7 @@ namespace FortsSetup {
             var o=Selection();var parts=new List<string>();if(o.Hud)parts.Add("HUD «"+L(layoutNames[Layout])+"»");if(o.Crosshair!=null)parts.Add(L("Прицел")+" «"+L(crossNames[cross])+"» "+o.Size+"%");
             foreach(var p in o.Icons)if(p.Value<100)parts.Add(L(iconNames[p.Key])+" "+p.Value+"%");if(Installed!=null&&o.SkipIntro!=Installed.SkipIntro)parts.Add(L(o.SkipIntro==true?"без заставки":"с заставкой"));
             Text("Summary",parts.Count>0?L("Будет установлено: ")+String.Join("; ",parts):L("Ничего не выбрано"));Text("NavHudValue",o.Hud?L(layoutNames[Layout]):L("Выкл."));Text("NavCrossValue",o.Crosshair==null?L("Выкл."):L(crossNames[cross]));Text("NavIconsValue",o.Icons.Count(p=>p.Value<100)>0?o.Icons.Count(p=>p.Value<100)+" изм.":"");
+            UI<Button>("CustomizationBtn").ToolTip=(customization.Resources=="corner"?L("Ресурсы справа внизу"):L("Ресурсы по центру"))+" · "+customization.Cards+"% · "+CustomizationDialog.HueLabel(Layout,customization.Hue,lang=="en");
             UI<WrapPanel>("Tiles").IsEnabled=o.Crosshair!=null;UI<Grid>("SizeControls").IsEnabled=o.Crosshair!=null;UI<Grid>("ColourControls").IsEnabled=o.Crosshair!=null&&cross!="zors";UI<StackPanel>("Skins").IsEnabled=o.Hud;
             bool changes=Installed!=null&&(o.Icons.Any(p=>p.Value!=Installed.Icons[p.Key])||o.SkipIntro!=Installed.SkipIntro);
             UI<Button>("InstallBtn").IsEnabled=!busy&&statusReady&&Engine.IsGame(game)&&(o.Hud||o.Crosshair!=null||changes||Page!="IconsPage");
@@ -223,6 +239,7 @@ namespace FortsSetup {
                 Visible("Status",!status.HudCompatible);Text("Status",status.HudCompatible?"":L("Не подходит к этой версии игры"));
                 string detected=Engine.GameSkin(game,false)??status.Skin??"dlc3";if(skins.ContainsKey(detected))skins[detected].IsChecked=true;
                 // Installed state is informational; never change the user's selected layout/theme here.
+                if(!customizationChosen&&status.Customization!=null){customization=status.Customization.Clone();customizationChosen=true;}
                 foreach(var p in status.Icons)iconSliders[p.Key].Value=p.Value;UI<CheckBox>("IntroSwitch").IsChecked=status.SkipIntro;
                 if(initializing)return;
                 Text("HudNote",L(status.Layout==Layout?"Уже стоит. Переустановка ничего не сломает":"Оригиналы сохраняются, вернуть можно одной кнопкой"));

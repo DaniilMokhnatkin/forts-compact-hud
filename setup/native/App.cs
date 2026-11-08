@@ -11,8 +11,8 @@ using System.Linq;
 [assembly:AssemblyTitle("Forts Setup")]
 [assembly:AssemblyProduct("Forts Setup")]
 [assembly:AssemblyDescription("Native HUD and crosshair installer for Forts")]
-[assembly:AssemblyVersion("1.3.0.0")]
-[assembly:AssemblyFileVersion("1.3.0.0")]
+[assembly:AssemblyVersion("1.4.0.0")]
+[assembly:AssemblyFileVersion("1.4.0.0")]
 namespace FortsSetup {
     public static class EmbeddedPack {
         public static string Extract() {

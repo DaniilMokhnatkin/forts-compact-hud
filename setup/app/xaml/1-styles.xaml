@@ -1,6 +1,6 @@
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Forts Setup" Width="1000" Height="680" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen"
+        Title="Forts Setup" Width="1000" Height="780" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen"
         Background="Transparent" FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="13" Foreground="#1D1D1F"
         UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
   <WindowChrome.WindowChrome>
