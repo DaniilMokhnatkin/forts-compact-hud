@@ -10,7 +10,7 @@ preview sheet textures/preview.png.
 """
 import os
 
-from PIL import Image, ImageDraw, ImageEnhance, ImageOps, DdsImagePlugin  # noqa: F401 (registers DDS)
+from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageOps, DdsImagePlugin  # noqa: F401 (registers DDS)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "textures", "grid_button_dlc3.png")
@@ -131,13 +131,27 @@ SKINS = {
              "colour": ((226, 212, 196), (205, 188, 170))},
     "pro": {"mask": ("round", (7, 3, 58, 59), 12), "glyph": (18, 16, 46, 47), "centre": (32, 31.5), "scale": 0.9,
             "colour": ((50, 235, 70), (25, 205, 45))},
-    "elite": {"mask": ("circle", (33.5, 35.5), 26.5), "glyph": None, "disc": ((34, 30), 14), "centre": (33.5, 30), "scale": 0.82,
+    "elite": {"mask": ("circle", (33.5, 35.5), 26.5), "arc": 18, "glyph": None, "disc": ((34, 30), 14), "centre": (33.5, 30), "scale": 0.82,
               "colour": ((222, 228, 236), (190, 198, 210))},
     # High Seas: the whole face is cleaned, edge to edge, so no patch shows.
     "dlc1": {"mask": ("rect", (0, 0, 64, 63), 0), "glyph": (6, 10, 58, 58), "flat": (12, 30), "centre": (33, 32),
              "colour": ((70, 205, 255), (35, 175, 245))},
 }
 SKIN_OUT = os.path.join(ROOT, "textures", "HUD", "skins")
+
+
+def arc_mask(button, bottom):
+    """Elite: the 0 / 1 dial arc and its pointer above the knob, kept from the
+    capture. Only its light, grey strokes; the ground between them goes clear."""
+    mask = Image.new("L", (SIZE, SIZE), 0)
+    px, out = button.load(), mask.load()
+    for y in range(bottom):
+        for x in range(SIZE):
+            r, g, b = px[x, y][:3]
+            light, spread = (r + g + b) / 3, max(r, g, b) - min(r, g, b)
+            if spread < 75:  # grey, not the brown ground
+                out[x, y] = round(min(max((light - 92) / 55, 0), 1) * 255)
+    return mask
 
 
 def skin_mask(shape):
@@ -209,7 +223,10 @@ def draw_skins():
             clean_box(base, spec["glyph"])
         else:
             clean_disc(base, *spec["disc"])
-        base.putalpha(skin_mask(spec["mask"]))
+        alpha = skin_mask(spec["mask"])
+        if spec.get("arc"):
+            alpha = ImageChops.lighter(alpha, arc_mask(base, spec["arc"]))
+        base.putalpha(alpha)
         out = os.path.join(SKIN_OUT, skin)
         os.makedirs(out, exist_ok=True)
         for col, (name, shapes) in enumerate(glyphs().items()):
