@@ -94,6 +94,20 @@ Check "zors: our cursor size setting removed" (-not ([IO.File]::ReadAllText("$ga
 Check "zors: minimalist textures gone" (-not (Test-Path "$game\data\ui\textures\context\hud-bg1.dds"))
 Check "zors: its own cursor" ((Get-Sha "$game\data\ui\textures\mouse_target.dds") -eq (Get-Sha "$payload\layouts\zors\textures\mouse_target.dds"))
 
+"== skip intro"
+Install-Pack -Game $game -Hud $false -Crosshair $null -SkipIntro $true
+Check "skip intro on" (Get-PackStatus $game).SkipIntro
+Install-Pack -Game $game -Hud $false -Crosshair "scope" -CrosshairSize 150
+$cfg = [IO.File]::ReadAllText("$game\data\db\constants_user.lua")
+Check "cursor size and skip intro live side by side" (($cfg -match "FORTS SETUP CURSOR SIZE") -and ($cfg -match "SkipIntro = true"))
+Install-Pack -Game $game -Hud $false -Crosshair $null -SkipIntro $false
+$cfg = [IO.File]::ReadAllText("$game\data\db\constants_user.lua")
+Check "skip intro off, cursor size kept" ((-not (Get-PackStatus $game).SkipIntro) -and ($cfg -match "FORTS SETUP CURSOR SIZE"))
+Set-Content "$game\data\db\constants_user.lua" "-- mine`n`n-- BEGIN SKIP INTRO (by hand)`nGame = Game or {}`nGame.SkipIntro = true`n-- END SKIP INTRO`n"
+Install-Pack -Game $game -Hud $false -Crosshair $null -SkipIntro $false
+Check "hand-made skip intro block removed too, the rest kept" ((-not (Get-PackStatus $game).SkipIntro) -and ([IO.File]::ReadAllText("$game\data\db\constants_user.lua") -match "-- mine"))
+Install-Pack -Game $game -Hud $true -Crosshair $null -Layout "zors" -HudSkin "pro"
+
 "== icon opacity"
 Install-Pack -Game $game -Hud $false -Crosshair $null -Icons @{ extinguisher = 50; under_construction = 100; repair = 30 }
 $st = Get-PackStatus $game

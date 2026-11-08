@@ -21,12 +21,31 @@ $script:CrosshairFiles = @("data\ui\textures\mouse_target.dds", "data\ui\texture
 $script:CrosshairSizes = @(50..200 | Where-Object { $_ % 5 -eq 0 })
 $script:CursorSizeBlock = '(?s)\r?\n-- BEGIN FORTS SETUP CURSOR SIZE\r?\n.*?-- END FORTS SETUP CURSOR SIZE\r?\n'
 
-function Get-CursorConfigPlan([string]$Game, [int]$Percent) {
+$script:SkipIntroBlock = '(?s)\r?\n-- BEGIN FORTS SETUP SKIP INTRO\r?\n.*?-- END FORTS SETUP SKIP INTRO\r?\n'
+$script:OldSkipIntroBlock = '(?s)\r?\n-- BEGIN SKIP INTRO\b.*?-- END SKIP INTRO\r?\n'  # added by hand before the setup had it
+
+function Get-CursorConfigPlan([string]$Game, [int]$Percent) { Get-ConfigPlan $Game $Percent $null }
+
+function Get-ConfigPlan([string]$Game, $Percent, $SkipIntro) {
+    <# One edit of data\db\constants_user.lua for both of our blocks, so they never
+       overwrite each other: the cursor size ($Percent, $null = leave) and skipping
+       the intro ($SkipIntro $true / $false, $null = leave). Everything else is kept. #>
     $rel = 'data\db\constants_user.lua'
     $path = Join-Path $Game $rel
-    $text = if (Test-Path -LiteralPath $path) { [IO.File]::ReadAllText($path) } else { '' }
-    $hadBlock = $text -match $script:CursorSizeBlock
-    if ($Percent -le 110 -and -not $hadBlock) { return }
+    $before = if (Test-Path -LiteralPath $path) { [IO.File]::ReadAllText($path) } else { '' }
+    $text = $before
+    if ($null -ne $SkipIntro) {
+        $text = [regex]::Replace([regex]::Replace($text, $script:SkipIntroBlock, ''), $script:OldSkipIntroBlock, '')
+        if ($SkipIntro) {
+            $text += "`n-- BEGIN FORTS SETUP SKIP INTRO`n-- the engine reads Game.SkipIntro at startup (like -novid)`nGame = Game or {}`nGame.SkipIntro = true`n-- END FORTS SETUP SKIP INTRO`n"
+        }
+    }
+    if ($null -ne $Percent) { $text = Set-CursorBlock $text ([int]$Percent) }
+    if ($text -eq $before) { return }
+    @{ rel = $rel; bytes = [Text.UTF8Encoding]::new($false).GetBytes($text); owner = "config" }
+}
+
+function Set-CursorBlock([string]$text, [int]$Percent) {
     $text = [regex]::Replace($text, $script:CursorSizeBlock, '')
     if ($Percent -gt 110) {
         $width = (32 * $Percent / 100).ToString('0.###', [Globalization.CultureInfo]::InvariantCulture)
@@ -47,7 +66,7 @@ end
 
 "@
     }
-    @{ rel = $rel; bytes = [Text.UTF8Encoding]::new($false).GetBytes($text) }
+    $text
 }
 
 # HUD layouts: our compact one, the same in Zors.o's purple theme, and nutellafish's
@@ -285,6 +304,8 @@ function Get-PackStatus([string]$Game) {
         HudCompatible = $hudOk
         HudInstalled  = $hudInstalled
         Layout        = $layout
+        SkipIntro     = [bool]((Test-Path -LiteralPath (Join-Path $Game 'data\db\constants_user.lua')) -and
+            ([IO.File]::ReadAllText((Join-Path $Game 'data\db\constants_user.lua')) -match 'Game\.SkipIntro\s*=\s*true'))
         Icons         = $icons
         HudSkin       = $hudSkin
         Crosshair     = $crosshair
@@ -298,11 +319,13 @@ function Install-Pack {
     <# Installs the HUD and/or a crosshair. $Progress gets (step, total, text). #>
     param([string]$Game, [bool]$Hud, [string]$Crosshair, [scriptblock]$Progress = {}, [int]$CrosshairSize = 100,
           [string]$CrosshairColor = "white", [string]$HudSkin = "dlc3", [string]$Layout = "compact",
-          [hashtable]$Icons = $null)  # $Icons: extinguisher/under_construction/repair -> opacity %, $null = leave
+          [hashtable]$Icons = $null,  # extinguisher/under_construction/repair -> opacity %, $null = leave
+          $SkipIntro = $null)         # $true / $false: skip the logo intro at start, $null = leave
 
     if (-not (Test-FortsFolder $Game)) { throw (L "В этой папке нет Forts.exe.") }
     if (Test-FortsRunning $Game) { throw (L "Закрой Forts и попробуй ещё раз.") }
-    if (-not $Hud -and -not $Crosshair -and -not $Icons) { throw (L "Ничего не выбрано.") }
+    if (-not $Hud -and -not $Crosshair -and -not $Icons -and $null -eq $SkipIntro) { throw (L "Ничего не выбрано.") }
+    $cursorPercent = $null
 
     $plan = @()  # @{ rel; source | bytes; owner }
     if ($Hud) {
@@ -339,9 +362,7 @@ function Install-Pack {
             }
         }
         if (-not $Crosshair -and (Test-Path -LiteralPath (Join-Path $layoutDir "textures\mouse_target.dds"))) {
-            # The layout brings its own crosshair: our cursor size setting would scale it.
-            $configPlan = Get-CursorConfigPlan $Game 100
-            if ($configPlan) { $configPlan.owner = "crosshair"; $plan += $configPlan }
+            $cursorPercent = 100  # the layout brings its own crosshair: our size setting would scale it
         }
     }
     if ($Icons) {
@@ -383,9 +404,10 @@ function Install-Pack {
             $tinted = Get-TintedCrosshair $dir $CrosshairColor  # normal and painted art are the same
             foreach ($rel in $script:CrosshairFiles) { $plan += @{ rel = $rel; bytes = $tinted; owner = "crosshair" } }
         }
-        $configPlan = Get-CursorConfigPlan $Game $CrosshairSize
-        if ($configPlan) { $configPlan.owner = "crosshair"; $plan += $configPlan }
+        $cursorPercent = $CrosshairSize
     }
+    $configPlan = Get-ConfigPlan $Game $cursorPercent $SkipIntro
+    if ($configPlan) { $plan += $configPlan }
 
     $backup = Join-Path $Game $script:BackupName
     New-Item -ItemType Directory -Force -Path $backup | Out-Null

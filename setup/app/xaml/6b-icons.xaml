@@ -2,9 +2,9 @@
           <!-- icons: opacity of the extinguish / construction / repair icons -->
           <StackPanel x:Name="IconsPage" Visibility="Collapsed">
             <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
-            <TextBlock Text="Иконки" Style="{StaticResource PageTitle}"/>
+            <TextBlock Text="Иконки и запуск" Style="{StaticResource PageTitle}"/>
             <TextBlock Style="{StaticResource PageNote}" Text="Значки тушения, строительства и ремонта над фортом. Сделай их полупрозрачными, чтобы не закрывали постройки."/>
-            <Border CornerRadius="14" ClipToBounds="True" Height="120" Margin="0,16,0,0">
+            <Border CornerRadius="14" ClipToBounds="True" Height="100" Margin="0,14,0,0">
               <Grid>
                 <Image x:Name="IconScene" Stretch="UniformToFill"/>
                 <StackPanel x:Name="IconPreview" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -15,4 +15,15 @@
             </Border>
             <Button x:Name="IconsReset" Style="{StaticResource Link}" Content="Вернуть всем 100%" FontSize="12"
                     HorizontalAlignment="Left" Margin="4,10,0,0"/>
+            <TextBlock Text="Запуск игры" Style="{StaticResource RowTitle}" Margin="4,18,0,8"/>
+            <Border CornerRadius="12" Background="{StaticResource Group}">
+              <Grid Margin="16,11">
+                <StackPanel Margin="0,0,60,0">
+                  <TextBlock Text="Пропускать заставку" Style="{StaticResource RowTitle}"/>
+                  <TextBlock x:Name="IntroNote" Text="Логотипы при запуске Forts" Style="{StaticResource RowNote}"/>
+                </StackPanel>
+                <CheckBox x:Name="IntroSwitch" Style="{StaticResource Switch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                          AutomationProperties.Name="Пропускать заставку"/>
+              </Grid>
+            </Border>
           </StackPanel>

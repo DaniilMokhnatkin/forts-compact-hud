@@ -178,6 +178,7 @@ function Update-IconArt {
     }
 }
 $ui.IconsReset.Add_Click({ foreach ($s in $iconSliders.Values) { $s.Value = 100 } })
+$ui.IntroSwitch.Add_Click({ Update-InstallButton })
 
 $script:gameSkin = $null
 function Selected-Skin {
@@ -303,6 +304,9 @@ function Update-Summary {
     $icons = Selected-Icons
     $dim = @($IconNames.Keys | Where-Object { $icons[$_] -lt 100 } | ForEach-Object { (Lower-First (L $IconNames[$_])) + " " + $icons[$_] + "%" })
     if ($dim) { $parts += (L "иконки: ") + ($dim -join ", ") }
+    if ($script:status -and [bool]$ui.IntroSwitch.IsChecked -ne $script:status.SkipIntro) {
+        $parts += $(if ($ui.IntroSwitch.IsChecked) { L "без заставки" } else { L "с заставкой" })
+    }
     $ui.Summary.Text = $(if ($parts) { (L "Будет установлено: ") + ($parts -join "; ") } else { L "Ничего не выбрано" })
     $ui.NavHudValue.Text = $(if ($ui.HudSwitch.IsChecked) { L $Layouts[(Selected-Layout)] } else { L "Выкл." })
     $ui.NavCrossValue.Text = $(if ($cross) { $crosshairNames[$cross] } else { L "Выкл." })
@@ -315,6 +319,7 @@ function Update-InstallButton {
     $ui.Skins.IsEnabled = [bool]$ui.HudSwitch.IsChecked
     $icons = Selected-Icons
     $iconsChanged = @($IconNames.Keys | Where-Object { $icons[$_] -ne $(if ($script:status) { $script:status.Icons[$_] } else { 100 }) }).Count -gt 0
+    $iconsChanged = $iconsChanged -or ($script:status -and [bool]$ui.IntroSwitch.IsChecked -ne $script:status.SkipIntro)
     $ui.InstallBtn.IsEnabled = ($script:game -and (Test-FortsFolder $script:game) -and
         ($ui.HudSwitch.IsChecked -or (Selected-Crosshair) -or $iconsChanged -or (Current-Page) -ne "IconsPage"))
     Update-Summary
@@ -343,6 +348,7 @@ function Refresh {
     $layout = $(if ($script:status.Layout) { $script:status.Layout } else { Selected-Layout })
     if ($layoutSegs[$layout].IsChecked) { Show-Layout $layout } else { $layoutSegs[$layout].IsChecked = $true }
     foreach ($name in $IconNames.Keys) { $iconSliders[$name].Value = $script:status.Icons[$name] }
+    $ui.IntroSwitch.IsChecked = $script:status.SkipIntro
     $script:settingUp = $false
     $ui.HudSwitch.IsEnabled = $script:status.HudCompatible
     if (-not $script:status.HudCompatible) {
@@ -463,7 +469,7 @@ $ui.InstallBtn.Add_Click({
     Flush
     try {
         Install-Pack -Game $script:game -Hud $hud -Crosshair $cross -CrosshairSize $size -CrosshairColor (Selected-Colour) `
-            -HudSkin (Selected-Skin) -Layout $layout -Icons (Selected-Icons) -Progress $progress
+            -HudSkin (Selected-Skin) -Layout $layout -Icons (Selected-Icons) -SkipIntro ([bool]$ui.IntroSwitch.IsChecked) -Progress $progress
         $parts = @()
         if ($hud) { $parts += "HUD «" + (L $Layouts[$layout]) + "»" }
         if ($cross) { $parts += (L "прицел «{0}»") -f $crosshairNames[$cross] }
