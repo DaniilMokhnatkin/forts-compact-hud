@@ -10,13 +10,13 @@
                 <StackPanel x:Name="IconPreview" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center"/>
               </Grid>
             </Border>
-            <Border CornerRadius="12" Background="{StaticResource Group}" Margin="0,16,0,0">
+            <Border CornerRadius="12" Background="{DynamicResource Group}" Margin="0,16,0,0">
               <StackPanel x:Name="IconRows"/>
             </Border>
             <Button x:Name="IconsReset" Style="{StaticResource Link}" Content="Вернуть всем 100%" FontSize="12"
                     HorizontalAlignment="Left" Margin="4,10,0,0"/>
             <TextBlock Text="Запуск игры" Style="{StaticResource RowTitle}" Margin="4,18,0,8"/>
-            <Border CornerRadius="12" Background="{StaticResource Group}">
+            <Border CornerRadius="12" Background="{DynamicResource Group}">
               <Grid Margin="16,11">
                 <StackPanel Margin="0,0,60,0">
                   <TextBlock Text="Пропускать заставку" Style="{StaticResource RowTitle}"/>

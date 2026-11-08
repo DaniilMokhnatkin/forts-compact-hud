@@ -10,7 +10,7 @@
                 <Track.DecreaseRepeatButton>
                   <RepeatButton Command="Slider.DecreaseLarge" Focusable="False">
                     <RepeatButton.Template><ControlTemplate TargetType="RepeatButton">
-                      <Grid Background="Transparent"><Border Height="4" CornerRadius="2" Background="{StaticResource Accent}" VerticalAlignment="Center"/></Grid>
+                      <Grid Background="Transparent"><Border Height="4" CornerRadius="2" Background="{DynamicResource Accent}" VerticalAlignment="Center"/></Grid>
                     </ControlTemplate></RepeatButton.Template>
                   </RepeatButton>
                 </Track.DecreaseRepeatButton>
@@ -76,7 +76,7 @@
         <Setter.Value>
           <ControlTemplate TargetType="RadioButton">
             <Grid Width="30" Height="30" Background="Transparent">
-              <Ellipse x:Name="Ring" Stroke="{StaticResource Accent}" StrokeThickness="2.5" Opacity="0"/>
+              <Ellipse x:Name="Ring" Stroke="{DynamicResource Accent}" StrokeThickness="2.5" Opacity="0"/>
               <Ellipse Margin="5" Fill="{TemplateBinding Background}" Stroke="#33000000" StrokeThickness="1"/>
             </Grid>
             <ControlTemplate.Triggers>
@@ -167,7 +167,7 @@
         <Setter.Value>
           <ControlTemplate TargetType="RadioButton">
             <Grid Width="38" Height="38" Background="Transparent">
-              <Border x:Name="Ring" CornerRadius="10" BorderBrush="{StaticResource Accent}" BorderThickness="2.5" Opacity="0"/>
+              <Border x:Name="Ring" CornerRadius="10" BorderBrush="{DynamicResource Accent}" BorderThickness="2.5" Opacity="0"/>
               <Image Source="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" Width="30" Height="30"
                      RenderOptions.BitmapScalingMode="HighQuality"/>
             </Grid>

@@ -43,7 +43,7 @@
             </Grid>
             <ControlTemplate.Triggers>
               <Trigger Property="IsChecked" Value="True">
-                <Setter TargetName="Track" Property="Background" Value="{StaticResource Accent}"/>
+                <Setter TargetName="Track" Property="Background" Value="{DynamicResource Accent}"/>
                 <Trigger.EnterActions><BeginStoryboard><Storyboard>
                   <DoubleAnimation Storyboard.TargetName="Slide" Storyboard.TargetProperty="X" To="18" Duration="{SPRING}" EasingFunction="{StaticResource Spring}"/>
                 </Storyboard></BeginStoryboard></Trigger.EnterActions>

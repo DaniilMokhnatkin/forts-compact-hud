@@ -4,6 +4,8 @@
     <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="*"/></Grid.RowDefinitions>
     <!-- light tint over the system acrylic; opaque fallback is set in code when there is no backdrop -->
     <Border x:Name="Tint" Grid.ColumnSpan="2" Grid.RowSpan="2" Background="#B8F4F4F7"/>
+    <!-- Zors.o theme: his purple landscape fades in behind the window when his HUD is picked -->
+    <Image x:Name="ThemeArt" Grid.ColumnSpan="2" Grid.RowSpan="2" Stretch="UniformToFill" Opacity="0" IsHitTestVisible="False"/>
 
     <!-- Windows 11 caption buttons -->
     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
@@ -35,7 +37,7 @@
 
       <!-- navigation; the accent pill slides behind the chosen item -->
       <Grid Grid.Row="2">
-        <Border x:Name="NavPill" Height="34" CornerRadius="9" Background="{StaticResource Accent}" VerticalAlignment="Top">
+        <Border x:Name="NavPill" Height="34" CornerRadius="9" Background="{DynamicResource Accent}" VerticalAlignment="Top">
           <Border.RenderTransform><TranslateTransform x:Name="NavPillY"/></Border.RenderTransform>
         </Border>
         <StackPanel x:Name="Nav" KeyboardNavigation.DirectionalNavigation="Cycle">

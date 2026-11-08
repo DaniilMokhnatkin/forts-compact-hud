@@ -4,20 +4,20 @@
             <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
             <TextBlock Text="Резервная копия" Style="{StaticResource PageTitle}"/>
             <TextBlock Style="{StaticResource PageNote}" Text="Перед первой установкой файлы игры сохраняются. Кнопка «Вернуть оригинал» кладёт их обратно."/>
-            <Border CornerRadius="12" Background="{StaticResource Group}" Margin="0,18,0,0">
+            <Border CornerRadius="12" Background="{DynamicResource Group}" Margin="0,18,0,0">
               <StackPanel>
                 <Grid Margin="16,12">
                   <TextBlock Text="Состояние" Style="{StaticResource RowTitle}"/>
                   <TextBlock x:Name="BackupState" Foreground="{StaticResource SecondaryText}" HorizontalAlignment="Right"/>
                 </Grid>
-                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Border Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
                 <Grid Margin="16,12">
                   <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
                   <TextBlock Text="Где лежит" Style="{StaticResource RowTitle}"/>
                   <TextBlock x:Name="BackupPath" Grid.Column="1" Foreground="{StaticResource SecondaryText}" HorizontalAlignment="Right"
                              TextTrimming="CharacterEllipsis" Margin="24,0,0,0"/>
                 </Grid>
-                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Border Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
                 <Grid Margin="16,12">
                   <TextBlock Text="Если игра обновилась" Style="{StaticResource RowTitle}"/>
                   <TextBlock Text="новые файлы не трогаются" Foreground="{StaticResource SecondaryText}" HorizontalAlignment="Right"/>
@@ -48,7 +48,7 @@
             <TextBlock x:Name="WorkText" Style="{StaticResource PageNote}" TextAlignment="Center" Margin="0,8,0,0"/>
             <Grid x:Name="Bar" Height="6" Margin="0,24,0,0">
               <Border CornerRadius="3" Background="#E8E8ED"/>
-              <Border x:Name="BarFill" CornerRadius="3" Background="{StaticResource Accent}" HorizontalAlignment="Left" Width="0"/>
+              <Border x:Name="BarFill" CornerRadius="3" Background="{DynamicResource Accent}" HorizontalAlignment="Left" Width="0"/>
             </Grid>
           </StackPanel>
         </Grid>

@@ -12,7 +12,7 @@ $reduceMotion = $NoMotion -or -not [System.Windows.SystemParameters]::ClientArea
 
 $crosshairNames = [ordered]@{
     cross = (L "Крест"); gap_cross = (L "Разрыв"); fine_cross = (L "Тонкий")
-    dot_ring = (L "Кольцо"); brackets = (L "Рамка"); scope = (L "Оптика")
+    dot_ring = (L "Кольцо"); brackets = (L "Рамка"); scope = (L "Оптика"); zors = "Zors.o"
 }
 
 $window, $ui = Load-Window (Join-Path $PSScriptRoot "xaml") @{ SPRING = $(if ($reduceMotion) { "0:0:0" } else { "0:0:0.32" }) }
@@ -59,7 +59,58 @@ function Selected-Layout {
     if ($k) { $k } else { "compact" }
 }
 $script:settingUp = $true  # Refresh picks the installed layout; only a user's pick changes the crosshair default
+# The window's look follows the picked HUD: Zors.o turns it purple, the others back.
+$themes = @{
+    default = @{ Accent = "#0A7AFF"; Group = "#F5F5F7"; Separator = "#E5E5EA"; Tint = "#B8F4F4F7"; Card = "#FFFFFF"; Art = 0.0 }
+    zors    = @{ Accent = "#9D4DFF"; Group = "#F1E9FD"; Separator = "#E1D3F5"; Tint = "#A6EDE3FB"; Card = "#FDFBFF"; Art = 0.30 }
+}
+$ui.ThemeArt.Source = Image-From "theme_zors.jpg"
+# Brushes freeze once WPF uses them, so the colours are tweened by a timer that puts a new
+# brush in place each frame: Accent, Group and Separator are DynamicResource in the XAML,
+# so every template (triggers included) follows; Tint and Card are set directly.
+$script:theme = "default"
+$script:themeNow = @{}
+foreach ($k in "Accent", "Group", "Separator", "Tint", "Card") {
+    $script:themeNow[$k] = [Windows.Media.ColorConverter]::ConvertFromString($themes.default[$k])
+}
+function Set-ThemeColours([hashtable]$colours) {
+    foreach ($k in "Accent", "Group", "Separator") { $window.Resources[$k] = [Windows.Media.SolidColorBrush]::new($colours[$k]) }
+    $ui.Tint.Background = [Windows.Media.SolidColorBrush]::new($colours.Tint)
+    $ui.Card.Background = [Windows.Media.SolidColorBrush]::new($colours.Card)
+}
+function Set-Theme([string]$name) {
+    if ($name -eq $script:theme) { return }
+    $script:theme = $name
+    $t = $themes[$name]
+    $script:themeFrom = $script:themeNow.Clone()
+    $script:themeTo = @{}
+    foreach ($k in $script:themeFrom.Keys) { $script:themeTo[$k] = [Windows.Media.ColorConverter]::ConvertFromString($t[$k]) }
+    $ms = $(if ($reduceMotion) { 0 } else { 700 })
+    Animate $ui.ThemeArt "Opacity" $t.Art ($ms * 1.3)
+    if ($script:themeTimer) { $script:themeTimer.Stop() }
+    if ($ms -eq 0) { $script:themeNow = $script:themeTo; Set-ThemeColours $script:themeTo; return }
+    $script:themeStart = [DateTime]::Now
+    $script:themeMs = $ms
+    $script:themeTimer = [Windows.Threading.DispatcherTimer]::new()
+    $script:themeTimer.Interval = [TimeSpan]::FromMilliseconds(16)
+    $script:themeTimer.Add_Tick({
+        $p = [math]::Min(1, ([DateTime]::Now - $script:themeStart).TotalMilliseconds / $script:themeMs)
+        $e = $(if ($p -lt 0.5) { 4 * $p * $p * $p } else { 1 - [math]::Pow(-2 * $p + 2, 3) / 2 })  # ease in-out
+        $now = @{}
+        foreach ($k in $script:themeTo.Keys) {
+            $a = $script:themeFrom[$k]; $b = $script:themeTo[$k]
+            $now[$k] = [Windows.Media.Color]::FromArgb([byte]($a.A + ($b.A - $a.A) * $e), [byte]($a.R + ($b.R - $a.R) * $e),
+                [byte]($a.G + ($b.G - $a.G) * $e), [byte]($a.B + ($b.B - $a.B) * $e))
+        }
+        $script:themeNow = $now
+        Set-ThemeColours $now
+        if ($p -ge 1) { $script:themeTimer.Stop() }
+    })
+    $script:themeTimer.Start()
+}
+
 function Show-Layout([string]$key) {
+    Set-Theme $(if ($key -eq "zors") { "zors" } else { "default" })
     $info = $layoutInfo[$key]
     $ui.LayoutTitle.Text = $info.title
     $ui.LayoutText.Text = $info.text
@@ -87,9 +138,16 @@ function Show-Layout([string]$key) {
             else { L "• Нужен скин HUD «По умолчанию» (Настройки → Игра → Скин HUD)." })
     }
     if (-not $script:settingUp -and $key -ne "compact") {
-        # These layouts bring their own crosshair; ours replaces it only if asked.
-        $ui.CrossSwitch.IsChecked = $false
-        $ui.CrossNote.Text = L "У этого HUD свой прицел. Включи, чтобы поставить наш вместо него."
+        if ($key -eq "zors" -and $tiles.ContainsKey("zors")) {
+            # Zors.o's crosshair is preselected, but any other one (and any size) can be picked.
+            $ui.CrossSwitch.IsChecked = $true
+            $tiles["zors"].IsChecked = $true
+            $ui.CrossNote.Text = L "Прицел Zors.o выбран по умолчанию — можно поменять на любой."
+        } else {
+            # Minimalist brings its own crosshair; ours replaces it only if asked.
+            $ui.CrossSwitch.IsChecked = $false
+            $ui.CrossNote.Text = L "У этого HUD свой прицел. Включи, чтобы поставить наш вместо него."
+        }
     }
     if ($script:status) { $ui.HudNote.Text = $(if ($script:status.Layout -eq $key) { L "Уже стоит. Переустановка ничего не сломает" } else { L "Оригиналы сохраняются, вернуть можно одной кнопкой" }) }
     Update-IconArt
@@ -286,6 +344,7 @@ foreach ($c in $CrosshairColors.Keys) {
 }
 
 function Selected-Colour {
+    if ((Selected-Crosshair) -eq "zors") { return "white" }  # its own colours, never tinted
     $c = ($swatches.GetEnumerator() | Where-Object { $_.Value.IsChecked } | Select-Object -First 1).Key
     if ($c) { $c } else { "white" }
 }
@@ -300,7 +359,10 @@ foreach ($id in $crosshairNames.Keys) {
     [Windows.Automation.AutomationProperties]::SetName($tile, (L "Прицел: ") + $crosshairNames[$id])
     $ui.Tiles.Children.Add($tile) | Out-Null
     $tiles[$id] = $tile
-    $tile.Add_Checked({ param($s) Show-Crosshair (($tiles.GetEnumerator() | Where-Object { $_.Value -eq $s }).Key) })
+    $tile.Add_Checked({ param($s)
+        Show-Crosshair (($tiles.GetEnumerator() | Where-Object { $_.Value -eq $s }).Key)
+        if (Get-Command Update-InstallButton -ErrorAction SilentlyContinue) { Update-InstallButton }
+    })
 }
 
 function Selected-Crosshair {
@@ -396,7 +458,8 @@ function Update-Summary {
 function Update-InstallButton {
     $ui.Tiles.IsEnabled = [bool]$ui.CrossSwitch.IsChecked
     $ui.SizeControls.IsEnabled = [bool]$ui.CrossSwitch.IsChecked
-    $ui.ColourControls.IsEnabled = [bool]$ui.CrossSwitch.IsChecked
+    # Zors.o's crosshair has its own colours; tinting would spoil them.
+    $ui.ColourControls.IsEnabled = [bool]$ui.CrossSwitch.IsChecked -and (Selected-Crosshair) -ne "zors"
     $ui.Skins.IsEnabled = [bool]$ui.HudSwitch.IsChecked
     $icons = Selected-Icons
     $iconsChanged = @($IconNames.Keys | Where-Object { $icons[$_] -ne $(if ($script:status) { $script:status.Icons[$_] } else { 100 }) }).Count -gt 0

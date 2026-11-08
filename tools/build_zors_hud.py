@@ -178,6 +178,8 @@ def crosshair(out):
     tex.alpha_composite(img, (1, 1))
     for name in ("mouse_target", "mouse_target_painted"):
         save(tex, os.path.join(out, name + ".dds"))
+        # also one of the setup's crosshairs ("Zors.o"), so it can be picked, sized or swapped
+        save(tex, os.path.join(ROOT, "textures", "crosshairs", "zors", name + ".dds"))
 
 
 def plate(out):

@@ -8,10 +8,10 @@
         <Setter.Value>
           <ControlTemplate TargetType="RadioButton">
             <StackPanel Background="Transparent" Margin="0,0,10,0">
-              <Grid Width="96" Height="72">
-                <Border x:Name="Ring" CornerRadius="16" BorderBrush="{StaticResource Accent}" BorderThickness="2.5" Opacity="0" Margin="-4"/>
+              <Grid Width="82" Height="62">
+                <Border x:Name="Ring" CornerRadius="16" BorderBrush="{DynamicResource Accent}" BorderThickness="2.5" Opacity="0" Margin="-4"/>
                 <Border x:Name="Well" CornerRadius="13" Background="#232326">
-                  <Image Source="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" Width="52" Height="52"
+                  <Image Source="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" Width="46" Height="46"
                          RenderOptions.BitmapScalingMode="HighQuality"/>
                 </Border>
               </Grid>
@@ -39,8 +39,8 @@
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
-            <Border x:Name="B" CornerRadius="17" Height="34" MinWidth="128" Padding="20,0" Background="{StaticResource Accent}">
-              <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Color="#0A7AFF" Opacity="0.28"/></Border.Effect>
+            <Border x:Name="B" CornerRadius="17" Height="34" MinWidth="128" Padding="20,0" Background="{DynamicResource Accent}">
+              <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Color="#000000" Opacity="0.18"/></Border.Effect>
               <TextBlock x:Name="T" Text="{TemplateBinding Content}" Foreground="White" FontWeight="SemiBold"
                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
@@ -86,7 +86,7 @@
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
-            <TextBlock x:Name="T" Text="{TemplateBinding Content}" Foreground="{StaticResource Accent}" FontWeight="Medium" Padding="0,4"/>
+            <TextBlock x:Name="T" Text="{TemplateBinding Content}" Foreground="{DynamicResource Accent}" FontWeight="Medium" Padding="0,4"/>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="T" Property="TextDecorations" Value="Underline"/></Trigger>
             </ControlTemplate.Triggers>

@@ -41,7 +41,7 @@
                 </Button>
               </Grid>
             </Border>
-            <Border CornerRadius="12" Background="{StaticResource Group}" Margin="0,12,0,0">
+            <Border CornerRadius="12" Background="{DynamicResource Group}" Margin="0,12,0,0">
               <StackPanel>
                 <Grid Margin="16,11">
                   <StackPanel Margin="0,0,60,0">
@@ -51,7 +51,7 @@
                   <CheckBox x:Name="HudSwitch" Style="{StaticResource Switch}" IsChecked="True" HorizontalAlignment="Right"
                             VerticalAlignment="Center" AutomationProperties.Name="Установить HUD"/>
                 </Grid>
-                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Border Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
                 <Grid Margin="16,10">
                   <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                   <StackPanel>
@@ -61,7 +61,7 @@
                   <Button x:Name="LayoutLink" Grid.Column="1" Style="{StaticResource Link}" Content="Мастерская Steam" FontSize="12"
                           VerticalAlignment="Center" Margin="12,0,0,0" Visibility="Collapsed"/>
                 </Grid>
-                <Border x:Name="SkinSep" Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Border x:Name="SkinSep" Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
                 <Grid x:Name="SkinRow" Margin="16,8">
                   <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Скин HUD в игре" Style="{StaticResource RowTitle}"/>
@@ -69,7 +69,7 @@
                   </StackPanel>
                   <StackPanel x:Name="Skins" Orientation="Horizontal" HorizontalAlignment="Right" KeyboardNavigation.DirectionalNavigation="Cycle"/>
                 </Grid>
-                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Border Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
                 <Grid Margin="16,10"><TextBlock Text="Экран игры" Style="{StaticResource RowTitle}"/>
                   <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Ellipse x:Name="ScreenDot" Width="8" Height="8" Fill="#34C759" Margin="0,1,8,0" VerticalAlignment="Center"/>

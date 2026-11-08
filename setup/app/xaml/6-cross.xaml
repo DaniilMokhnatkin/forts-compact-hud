@@ -29,7 +29,7 @@
                 </Grid>
               </Border>
             </Grid>
-            <Border CornerRadius="12" Background="{StaticResource Group}" Margin="0,16,0,0">
+            <Border CornerRadius="12" Background="{DynamicResource Group}" Margin="0,16,0,0">
               <StackPanel>
                 <Grid Margin="16,12">
                   <StackPanel Margin="0,0,60,0">
@@ -39,15 +39,15 @@
                   <CheckBox x:Name="CrossSwitch" Style="{StaticResource Switch}" IsChecked="True" HorizontalAlignment="Right"
                             VerticalAlignment="Center" AutomationProperties.Name="Менять прицел"/>
                 </Grid>
-                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Border Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
                 <WrapPanel x:Name="Tiles" Margin="20,16,6,12" KeyboardNavigation.DirectionalNavigation="Cycle"/>
-                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Border Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
                 <Grid x:Name="ColourControls" Margin="16,6">
                   <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
                   <TextBlock Text="Цвет" Style="{StaticResource RowTitle}" VerticalAlignment="Center" Width="52"/>
                   <StackPanel x:Name="Swatches" Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0" KeyboardNavigation.DirectionalNavigation="Cycle"/>
                 </Grid>
-                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Border Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
                 <Grid x:Name="SizeControls" Margin="16,4">
                   <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                   <TextBlock Text="Размер" Style="{StaticResource RowTitle}" VerticalAlignment="Center" Width="52"/>
