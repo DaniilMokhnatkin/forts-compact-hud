@@ -3,7 +3,7 @@
 #   1. py -3 layouts\compact.py; layouts\sprites.py; layouts\transaction.py; .\install.ps1 -DryRun
 #   2. py -3 tools\draw_buttons.py; tools\draw_crosshairs.py
 #   3. .\tools\build_setup.ps1
-param([string]$Python)
+param([string]$Python, [string]$Game = "C:\Program Files (x86)\Steam\steamapps\common\Forts")
 $ErrorActionPreference = "Stop"
 if (-not $Python) {
     $bundled = Join-Path $env:USERPROFILE '.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
@@ -21,6 +21,12 @@ New-Item -ItemType Directory -Force "$hud\screens", "$hud\textures\HUD\custom", 
 Copy-Item (Join-Path $root "build\hud.lua"), (Join-Path $root "build\transaction.lua") "$hud\screens\"
 Copy-Item (Join-Path $root "build\uisprites.lua") "$hud\"
 Copy-Item (Join-Path $root "textures\HUD\custom\*.dds") "$hud\textures\HUD\custom\"
+
+# Other layouts (Zors.o, Minimalist) and the icon sources for the opacity sliders.
+# Needs build\hud_zors.lua (py -3 layouts\compact.py --theme zors, then compile) and the game
+# for the vanilla icons.
+& $Python (Join-Path $PSScriptRoot "build_layouts.py") $Game $payload $assets
+if ($LASTEXITCODE -ne 0) { throw "layouts failed" }
 
 # Button sets for the other HUD skins (dlc3 is the default set above).
 foreach ($dir in Get-ChildItem -LiteralPath (Join-Path $root "textures\HUD\skins") -Directory) {

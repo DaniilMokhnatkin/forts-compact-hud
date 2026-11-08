@@ -73,6 +73,44 @@ Check "older build: restore gives vanilla hud.lua" ((Get-Sha "$game\data\ui\scre
 Set-Content "$game\data\ui\screens\hud.lua" "-- someone else's mod"
 Check "foreign hud.lua still refused" (-not (Get-PackStatus $game).HudCompatible)
 
+"== HUD layouts: compact -> Minimalist -> Zors.o -> restore"
+$game = New-FakeGame $vanilla
+$payload = Join-Path $root "setup\payload"
+Install-Pack -Game $game -Hud $true -Crosshair "cross" -Layout "compact"
+Check "compact: layout detected" ((Get-PackStatus $game).Layout -eq "compact")
+Install-Pack -Game $game -Hud $true -Crosshair $null -Layout "minimalist"
+$st = Get-PackStatus $game
+Check "minimalist: layout detected and installed" ($st.Layout -eq "minimalist" -and $st.HudInstalled)
+Check "minimalist: game uisprites back" ((Get-Sha "$game\data\ui\uisprites.lua") -eq (Get-Sha "$root\original\uisprites.lua"))
+Check "minimalist: our buttons removed" (-not (Test-Path "$game\data\ui\textures\HUD\custom\Pause-A.dds"))
+Check "minimalist: its textures in" ((Get-Sha "$game\data\ui\textures\context\hud-bg1.dds") -eq (Get-Sha "$payload\layouts\minimalist\textures\context\hud-bg1.dds"))
+Install-Pack -Game $game -Hud $true -Crosshair $null -Layout "zors" -HudSkin "pro"
+$st = Get-PackStatus $game
+Check "zors: layout and skin detected" ($st.Layout -eq "zors" -and $st.HudInstalled -and $st.HudSkin -eq "pro")
+Check "zors: purple menu background in" (Test-Path "$game\data\ui\textures\FE-MainMenu-BG.dds")
+Check "zors: minimalist textures gone" (-not (Test-Path "$game\data\ui\textures\context\hud-bg1.dds"))
+Check "zors: its own cursor" ((Get-Sha "$game\data\ui\textures\mouse_target.dds") -eq (Get-Sha "$payload\layouts\zors\textures\mouse_target.dds"))
+
+"== icon opacity"
+Install-Pack -Game $game -Hud $false -Crosshair $null -Icons @{ extinguisher = 50; under_construction = 100; repair = 30 }
+$st = Get-PackStatus $game
+Check "icons recorded" ($st.Icons.extinguisher -eq 50 -and $st.Icons.repair -eq 30 -and $st.Icons.under_construction -eq 100)
+$src = [IO.File]::ReadAllBytes("$payload\icons\zors\extinguisher.dds"); $now = [IO.File]::ReadAllBytes("$game\data\ui\textures\extinguisher.dds")
+# Alpha bytes only (pixels are B, G, R, A after the 128-byte header).
+$ok = $true; for ($i = 131; $i -lt $src.Length; $i += 100) { if ($now[$i] -ne [byte][math]::Floor([int]$src[$i] * 50 / 100)) { $ok = $false } }
+Check "extinguisher alpha halved, zors art kept" $ok
+Check "repair grey follows" (Test-Path "$game\data\ui\textures\repair_grey.dds")
+Install-Pack -Game $game -Hud $false -Crosshair $null -Icons @{ extinguisher = 100; under_construction = 100; repair = 100 }
+Check "100%: zors extinguisher back" ((Get-Sha "$game\data\ui\textures\extinguisher.dds") -eq (Get-Sha "$payload\layouts\zors\textures\extinguisher.dds"))
+Check "100%: status back to 100" ((Get-PackStatus $game).Icons.repair -eq 100)
+Install-Pack -Game $game -Hud $true -Crosshair $null -Layout "compact" -Icons @{ extinguisher = 40; under_construction = 100; repair = 100 }
+Check "compact: zors textures gone" (-not (Test-Path "$game\data\ui\textures\FE-MainMenu-BG.dds"))
+Check "compact: extinguisher from game art at 40%" ((Get-PackStatus $game).Icons.extinguisher -eq 40)
+$skipped = @(Restore-Pack -Game $game)
+Check "layouts: restore clean" ($skipped.Count -eq 0 -and (Get-Sha "$game\data\ui\screens\hud.lua") -eq (Get-Sha "$root\original\hud.lua") -and
+    (Get-Sha "$game\data\ui\textures\mouse_target.dds") -eq (Get-Sha "$vanilla\mouse_target.dds") -and
+    -not (Test-Path "$game\data\ui\textures\extinguisher.dds"))
+
 "== HUD skins"
 $game = New-FakeGame $vanilla
 New-Item -ItemType Directory -Force "$game\users\1" | Out-Null

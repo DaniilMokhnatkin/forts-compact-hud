@@ -17,3 +17,4 @@ hud.lua
 uisprites.lua
 transaction.lua
 hud_map.txt
+hud_*.lua

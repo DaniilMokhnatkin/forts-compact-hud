@@ -9,30 +9,43 @@
           <!-- HUD -->
           <StackPanel x:Name="HudPage">
             <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
-            <TextBlock Text="Компактный HUD" Style="{StaticResource PageTitle}"/>
-            <TextBlock Style="{StaticResource PageNote}" Text="Меньше места внизу экрана, ресурсы всегда перед глазами. Без модов: меняются только файлы интерфейса."/>
-            <Border x:Name="HudFrame" Height="112" CornerRadius="14" Margin="0,16,0,0" ClipToBounds="True"
-                    AutomationProperties.Name="Компактный HUD в бою">
+            <TextBlock Text="HUD" Style="{StaticResource PageTitle}"/>
+            <TextBlock Style="{StaticResource PageNote}" Text="Выбери вид интерфейса. Без модов: меняются только файлы интерфейса, оригиналы сохраняются."/>
+            <Border Background="#EDEDF0" CornerRadius="10" Padding="2" Margin="0,14,0,0" HorizontalAlignment="Left">
+              <StackPanel x:Name="LayoutPicker" Orientation="Horizontal" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+            </Border>
+            <Border x:Name="HudFrame" Height="112" CornerRadius="14" Margin="0,12,0,0" ClipToBounds="True"
+                    AutomationProperties.Name="Выбранный HUD">
               <Grid>
                 <Border x:Name="HudShot" CornerRadius="14"/>
-                <Border CornerRadius="11" Background="#8C1C1C1E" BorderBrush="#33FFFFFF" BorderThickness="0.5" Padding="2"
+                <Border x:Name="PhotosBox" CornerRadius="11" Background="#8C1C1C1E" BorderBrush="#33FFFFFF" BorderThickness="0.5" Padding="2"
                         HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8">
                   <StackPanel x:Name="Photos" Orientation="Horizontal"/>
                 </Border>
               </Grid>
             </Border>
-            <Border CornerRadius="12" Background="{StaticResource Group}" Margin="0,16,0,0">
+            <Border CornerRadius="12" Background="{StaticResource Group}" Margin="0,12,0,0">
               <StackPanel>
-                <Grid Margin="16,12">
+                <Grid Margin="16,11">
                   <StackPanel Margin="0,0,60,0">
-                    <TextBlock Text="Установить компактный HUD" Style="{StaticResource RowTitle}"/>
+                    <TextBlock Text="Установить HUD" Style="{StaticResource RowTitle}"/>
                     <TextBlock x:Name="HudNote" Text="Иконки на 20% меньше, панель ниже" Style="{StaticResource RowNote}"/>
                   </StackPanel>
                   <CheckBox x:Name="HudSwitch" Style="{StaticResource Switch}" IsChecked="True" HorizontalAlignment="Right"
-                            VerticalAlignment="Center" AutomationProperties.Name="Компактный HUD"/>
+                            VerticalAlignment="Center" AutomationProperties.Name="Установить HUD"/>
                 </Grid>
                 <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
-                <Grid Margin="16,8">
+                <Grid Margin="16,10">
+                  <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                  <StackPanel>
+                    <TextBlock x:Name="LayoutTitle" Style="{StaticResource RowTitle}"/>
+                    <TextBlock x:Name="LayoutText" Style="{StaticResource RowNote}"/>
+                  </StackPanel>
+                  <Button x:Name="LayoutLink" Grid.Column="1" Style="{StaticResource Link}" Content="Мастерская Steam" FontSize="12"
+                          VerticalAlignment="Center" Margin="12,0,0,0" Visibility="Collapsed"/>
+                </Grid>
+                <Border x:Name="SkinSep" Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
+                <Grid x:Name="SkinRow" Margin="16,8">
                   <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Скин HUD в игре" Style="{StaticResource RowTitle}"/>
                     <TextBlock x:Name="SkinNote" Text="Кнопки рисуются под выбранный скин" Style="{StaticResource RowNote}"/>
@@ -45,18 +58,18 @@
                     <Ellipse x:Name="ScreenDot" Width="8" Height="8" Fill="#34C759" Margin="0,1,8,0" VerticalAlignment="Center"/>
                     <TextBlock x:Name="ScreenText" Text="—" Foreground="{StaticResource SecondaryText}"/>
                   </StackPanel></Grid>
-                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
-                <Grid Margin="16,10"><TextBlock Text="Ресурсы" Style="{StaticResource RowTitle}"/>
-                  <TextBlock Text="«запас / лимит» по центру, над иконками" Foreground="{StaticResource SecondaryText}" HorizontalAlignment="Right"/></Grid>
-                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
-                <Grid Margin="16,10"><TextBlock Text="Кнопки" Style="{StaticResource RowTitle}"/>
-                  <TextBlock Text="сетка, двери, раскосы, пауза и меню в один ряд" Foreground="{StaticResource SecondaryText}" HorizontalAlignment="Right"/></Grid>
-                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
-                <Grid Margin="16,10"><TextBlock Text="Направление оружия" Style="{StaticResource RowTitle}"/>
-                  <TextBlock Text="открывается над рядом кнопок" Foreground="{StaticResource SecondaryText}" HorizontalAlignment="Right"/></Grid>
-                <Border Height="1" Background="{StaticResource Separator}" Margin="16,0"/>
-                <Grid Margin="16,10"><TextBlock Text="Командир и реактор" Style="{StaticResource RowTitle}"/>
-                  <TextBlock Text="в левом нижнем углу" Foreground="{StaticResource SecondaryText}" HorizontalAlignment="Right"/></Grid>
+              </StackPanel>
+            </Border>
+            <!-- Minimalist: the author's known issues, shown before installing -->
+            <Border x:Name="MiniWarn" CornerRadius="12" Background="#FFF6E5" BorderBrush="#FFD9A0" BorderThickness="1" Padding="14,10"
+                    Margin="0,10,0,0" Visibility="Collapsed">
+              <StackPanel>
+                <TextBlock Text="Известные проблемы (от автора)" FontWeight="SemiBold" Foreground="#8A5300"/>
+                <TextBlock x:Name="MiniSkin" Foreground="#8A5300" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                <TextBlock Foreground="#8A5300" FontSize="12" TextWrapping="Wrap" Text="• В редакторе карт нет вкладок внизу."/>
+                <TextBlock Foreground="#8A5300" FontSize="12" TextWrapping="Wrap" Text="• Скорее всего работает только на 16:9."/>
+                <TextBlock Foreground="#8A5300" FontSize="12" TextWrapping="Wrap" Text="• Обновление игры может сбросить интерфейс — поставь заново."/>
+                <TextBlock Foreground="#8A5300" FontSize="12" TextWrapping="Wrap" Text="• Новые значки (в т. ч. рейтинговые) не видны, пока автор не обновит мод."/>
               </StackPanel>
             </Border>
           </StackPanel>

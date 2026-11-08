@@ -1,13 +1,24 @@
 """Compact HUD: smaller build icons and a lower bottom panel.
 
 Built from original/hud.lua, so it can be re-run after a game update:
-    py -3 layouts\\compact.py            -> writes hud.lua
+    py -3 layouts\\compact.py               -> writes hud.lua
+    py -3 layouts\\compact.py --theme zors  -> writes hud_zors.lua (Zors.o purple)
 """
 import fnmatch
 import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# Colour themes: plates behind the readouts, the "/" and the three numbers.
+THEMES = {
+    "default": {"plate": [0, 0, 0, 150], "slash": [255, 255, 255, 160],
+                "amount": [255, 255, 255, 255], "cap": [165, 172, 190, 255], "rate": [120, 230, 130, 255]},
+    # Zors.o: deep purple plates, lavender cap and slash; the rate stays green.
+    "zors": {"plate": [38, 8, 62, 170], "slash": [214, 170, 255, 190],
+             "amount": [255, 255, 255, 255], "cap": [200, 165, 245, 255], "rate": [120, 230, 130, 255]},
+}
+THEME_NAME = sys.argv[sys.argv.index("--theme") + 1] if "--theme" in sys.argv else "default"
+THEME = THEMES[THEME_NAME]
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 import forts_ui as ui  # noqa: E402
@@ -119,8 +130,8 @@ for res in ("Metal", "Energy"):
     slash.set("Text", "/")
     slash.set("Size", 11)
     slash.set("Font", "readout")
-    slash.set("Colour", [255, 255, 255, 160])
-    slash.set("ColourLower", [255, 255, 255, 160])
+    slash.set("Colour", THEME["slash"])
+    slash.set("ColourLower", THEME["slash"])
     slash.get("Control").set("Position", [-7, -5.5])  # relative to the cap's anchor (75)
     slash.get("Control").set("Size", [6, 11])
     rate = controls(f"{box}/{res}Rate")[0]
@@ -130,8 +141,7 @@ for res in ("Metal", "Energy"):
     hide(node_at(f"{box}/{res}Rate/{res}RateLabel"))
 
     # Fixed colours: amount bright white, cap muted grey, rate green.
-    for name, colour in ((res, [255, 255, 255, 255]), (f"{res}Cap", [165, 172, 190, 255]),
-                         (f"{res}Rate", [120, 230, 130, 255])):
+    for name, colour in ((res, THEME["amount"]), (f"{res}Cap", THEME["cap"]), (f"{res}Rate", THEME["rate"])):
         text = node_at(f"{box}/{name}")
         text.set("Colour", colour)
         text.set("ColourLower", colour)
@@ -140,7 +150,7 @@ for res in ("Metal", "Energy"):
 # dark translucent plate. The engine pins ResourcePanel to the right edge, so the
 # position comes from a layout script on screen width (Position is the 16:9 value).
 READOUT_Y = 462  # 36-high boxes end at 498, just above the build icons
-PLATE = [0, 0, 0, 150]  # tinted plates and corner icons were tried and rejected
+PLATE = THEME["plate"]  # for the default, tinted plates and corner icons were tried and rejected
 for i, res in enumerate(("Metal", "Energy")):
     box = node_at(f"{RES}/Readout{res}")
     box.set("Texture", "ui/textures/FE-PanelTiny.dds")
@@ -269,6 +279,7 @@ for name in ("Timer", "PauseText", "ResumeButton"):
 for name in ("COBackground", "ReactorBars"):
     nudge(controls(f"{ITEMS}/{name}")[0], dy=88)
 
-with open(os.path.join(ROOT, "hud.lua"), "w", encoding="latin-1", newline="\n") as fh:
+OUT_NAME = "hud.lua" if THEME_NAME == "default" else f"hud_{THEME_NAME}.lua"
+with open(os.path.join(ROOT, OUT_NAME), "w", encoding="latin-1", newline="\n") as fh:
     fh.write(ui.to_source(globals_, f32))
-print(f"hud.lua written: icons x{ICON}, panel lowered by {DROP}")
+print(f"{OUT_NAME} written ({THEME_NAME}): icons x{ICON}, panel lowered by {DROP}")

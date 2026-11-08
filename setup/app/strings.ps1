@@ -54,6 +54,26 @@ $script:English = @{
     "Скин HUD в игре" = "HUD skin in the game"; "Кнопки рисуются под выбранный скин" = "Our buttons are drawn for the chosen skin"
     "{0} · определён по настройкам игры" = "{0} · read from the game's settings"; "Стандартный" = "Default"
     "Скин HUD: " = "HUD skin: "; "Фото {0}" = "Photo {0}"; "Неизвестный скин HUD." = "Unknown HUD skin."
+    "Неизвестный HUD." = "Unknown HUD."; "Прозрачность иконок: от 10 до 100%." = "Icon opacity: 10 to 100%."
+    "Компактный" = "Compact"; "Тушение" = "Extinguish"; "Строительство" = "Construction"; "Ремонт" = "Repair"
+    # layouts and icons
+    "Выбери вид интерфейса. Без модов: меняются только файлы интерфейса, оригиналы сохраняются." = 'Pick a HUD. No mods: only interface files change, the originals are kept.'
+    "Установить HUD" = "Install the HUD"; "Выбранный HUD" = "Chosen HUD"; "Мастерская Steam" = "Steam Workshop"
+    "Компактный · наш" = "Compact · ours"; "Zors.o · фиолетовая тема" = "Zors.o · purple theme"; "Minimalist · автор nutellafish" = "Minimalist · by nutellafish"
+    "Ресурсы «запас / лимит» по центру, кнопки в один ряд, иконки на 20% меньше." = 'Resources "stock / cap" in the centre, buttons in one row, icons 20% smaller.'
+    "Наш компактный HUD в фиолетовом, плюс фон меню, курсоры с прицелом и иконки от Zors.o." = "Our compact HUD in purple, plus the menu background, cursors with a crosshair and icons by Zors.o."
+    "Прозрачный минимальный интерфейс; убранные кнопки нажимаются горячими клавишами." = "A transparent minimal interface; removed buttons work through hotkeys."
+    "Известные проблемы (от автора)" = "Known issues (from the author)"
+    "• В редакторе карт нет вкладок внизу." = "• The map editor has no tabs at the bottom."; "• Скорее всего работает только на 16:9." = "• Probably works only at 16:9."
+    "• Обновление игры может сбросить интерфейс — поставь заново." = "• A game update can reset the interface: install again."
+    "• Новые значки (в т. ч. рейтинговые) не видны, пока автор не обновит мод." = "• New badges (ranked ones too) do not show until the author updates the mod."
+    "• Сейчас в игре скин «{0}». Для этого HUD выбери в игре: Настройки → Игра → Скин HUD → «Стандартный»." = '• The game now uses the "{0}" skin. For this HUD choose in the game: Options → Game → HUD Skin → "Default".'
+    "• Нужен скин HUD «Стандартный» (Настройки → Игра → Скин HUD)." = '• Needs the "Default" HUD skin (Options → Game → HUD Skin).'
+    "У этого HUD свой прицел. Включи, чтобы поставить наш вместо него." = "This HUD has its own crosshair. Turn on to put ours instead."
+    "Оригиналы сохраняются, вернуть можно одной кнопкой" = "The originals are kept; restore with one button"
+    "Иконки" = "Icons"; "Вернуть всем 100%" = "Set all back to 100%"; "Непрозрачность: " = "Opacity: "; "{0} изм." = "{0} changed"
+    "иконки: " = "icons: "; "полупрозрачные иконки" = "see-through icons"
+    "Значки тушения, строительства и ремонта над фортом. Сделай их полупрозрачными, чтобы не закрывали постройки." = "The extinguish, construction and repair icons over your fort. Make them see-through so they do not cover your build."
     # update check
     "Доступна версия {0}" = "Version {0} is available"; "Скачать" = "Download"
     # engine

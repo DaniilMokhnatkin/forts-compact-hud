@@ -34,6 +34,60 @@ foreach ($file in $sceneNames.Keys) {
 }
 $ui.Scenes.Children[0].IsChecked = $true
 
+# HUD layouts: compact (ours), Zors.o (ours in purple), Minimalist (nutellafish).
+$layoutInfo = @{
+    compact    = @{ title = (L "Компактный · наш"); text = (L "Ресурсы «запас / лимит» по центру, кнопки в один ряд, иконки на 20% меньше."); preview = $null }
+    zors       = @{ title = (L "Zors.o · фиолетовая тема"); text = (L "Наш компактный HUD в фиолетовом, плюс фон меню, курсоры с прицелом и иконки от Zors.o."); preview = "preview_zors.png" }
+    minimalist = @{ title = (L "Minimalist · автор nutellafish"); text = (L "Прозрачный минимальный интерфейс; убранные кнопки нажимаются горячими клавишами."); preview = "preview_minimalist.png" }
+}
+$workshopUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=3750502564"
+$layoutSegs = @{}
+foreach ($key in $Layouts.Keys) {
+    $seg = [Windows.Controls.RadioButton]::new()
+    $seg.Style = $window.FindResource("LayoutSeg")
+    $seg.Content = L $Layouts[$key]
+    [Windows.Automation.AutomationProperties]::SetName($seg, "HUD: " + (L $Layouts[$key]))
+    $seg.Add_Checked({ param($s) Show-Layout ($layoutSegs.GetEnumerator() | Where-Object { $_.Value -eq $s }).Key })
+    $ui.LayoutPicker.Children.Add($seg) | Out-Null
+    $layoutSegs[$key] = $seg
+}
+function Selected-Layout {
+    $k = ($layoutSegs.GetEnumerator() | Where-Object { $_.Value.IsChecked } | Select-Object -First 1).Key
+    if ($k) { $k } else { "compact" }
+}
+$script:settingUp = $true  # Refresh picks the installed layout; only a user's pick changes the crosshair default
+function Show-Layout([string]$key) {
+    $info = $layoutInfo[$key]
+    $ui.LayoutTitle.Text = $info.title
+    $ui.LayoutText.Text = $info.text
+    $ui.LayoutLink.Visibility = $(if ($key -eq "minimalist") { "Visible" } else { "Collapsed" })
+    $ui.MiniWarn.Visibility = $(if ($key -eq "minimalist") { "Visible" } else { "Collapsed" })
+    foreach ($n in "SkinRow", "SkinSep") { $ui[$n].Visibility = $(if ($key -eq "minimalist") { "Collapsed" } else { "Visible" }) }
+    $ui.PhotosBox.Visibility = $(if ($key -eq "compact") { "Visible" } else { "Collapsed" })
+    if ($info.preview) {
+        $brush = [Windows.Media.ImageBrush]::new((Image-From $info.preview))
+        $brush.Stretch = "UniformToFill"
+        $ui.HudShot.Background = $brush
+    } else {
+        ($ui.Photos.Children | Where-Object { $_.IsChecked } | Select-Object -First 1) | ForEach-Object { $ui.HudShot.Background = $_.Tag }
+    }
+    Animate $ui.HudShot "Opacity" 1 240 0.4
+    if ($key -eq "minimalist") {
+        $ui.MiniSkin.Text = $(if ($script:gameSkin -and $script:gameSkin -ne "base") {
+            (L "• Сейчас в игре скин «{0}». Для этого HUD выбери в игре: Настройки → Игра → Скин HUD → «Стандартный».") -f (L $HudSkins[$script:gameSkin]) }
+            else { L "• Нужен скин HUD «Стандартный» (Настройки → Игра → Скин HUD)." })
+    }
+    if (-not $script:settingUp -and $key -ne "compact") {
+        # These layouts bring their own crosshair; ours replaces it only if asked.
+        $ui.CrossSwitch.IsChecked = $false
+        $ui.CrossNote.Text = L "У этого HUD свой прицел. Включи, чтобы поставить наш вместо него."
+    }
+    if ($script:status) { $ui.HudNote.Text = $(if ($script:status.Layout -eq $key) { L "Уже стоит. Переустановка ничего не сломает" } else { L "Оригиналы сохраняются, вернуть можно одной кнопкой" }) }
+    Update-IconArt
+    if (Get-Command Update-InstallButton -ErrorAction SilentlyContinue) { Update-InstallButton }
+}
+$ui.LayoutLink.Add_Click({ Start-Process $workshopUrl })
+
 # HUD photos: our layout in different matches.
 $photos = "hud_after", "hud_photo_2", "hud_photo_3"
 for ($i = 0; $i -lt $photos.Count; $i++) {
@@ -62,6 +116,64 @@ foreach ($skin in $HudSkins.Keys) {
     $ui.Skins.Children.Add($chip) | Out-Null
     $skinChips[$skin] = $chip
 }
+# Icon opacity: one slider per icon, previewed over a match.
+$ui.IconScene.Source = Image-From "scene.png"
+$iconSliders = @{}; $iconImages = @{}; $iconPreviews = @{}; $iconValues = @{}
+foreach ($name in $IconNames.Keys) {
+    $row = [Windows.Controls.Grid]::new()
+    $row.Margin = [Windows.Thickness]::new(16, 6, 16, 6)
+    foreach ($w in 40, 120) { $c = [Windows.Controls.ColumnDefinition]::new(); $c.Width = [Windows.GridLength]::new($w); $row.ColumnDefinitions.Add($c) }
+    $row.ColumnDefinitions.Add([Windows.Controls.ColumnDefinition]::new())
+    $c = [Windows.Controls.ColumnDefinition]::new(); $c.Width = [Windows.GridLength]::new(46); $row.ColumnDefinitions.Add($c)
+    $img = [Windows.Controls.Image]::new(); $img.Width = 30; $img.Height = 30
+    $label = [Windows.Controls.TextBlock]::new(); $label.Text = L $IconNames[$name]; $label.FontWeight = "Medium"
+    $label.VerticalAlignment = "Center"; [Windows.Controls.Grid]::SetColumn($label, 1)
+    $slider = [Windows.Controls.Slider]::new()
+    $slider.Style = $window.FindResource("SizeRange"); $slider.Height = 36
+    $slider.Minimum = 10; $slider.Maximum = 100; $slider.Value = 100; $slider.TickFrequency = 5
+    $slider.IsSnapToTickEnabled = $true; $slider.SmallChange = 5; $slider.LargeChange = 10
+    $slider.FocusVisualStyle = $window.FindResource("Focus"); $slider.Tag = $name
+    [Windows.Automation.AutomationProperties]::SetName($slider, (L "Непрозрачность: ") + (L $IconNames[$name]))
+    [Windows.Controls.Grid]::SetColumn($slider, 2)
+    $value = [Windows.Controls.TextBlock]::new(); $value.Text = "100%"; $value.TextAlignment = "Right"
+    $value.VerticalAlignment = "Center"; $value.Foreground = $window.FindResource("SecondaryText"); [Windows.Controls.Grid]::SetColumn($value, 3)
+    foreach ($el in $img, $label, $slider, $value) { $row.Children.Add($el) | Out-Null }
+    if ($ui.IconRows.Children.Count) {
+        $sep = [Windows.Controls.Border]::new(); $sep.Height = 1; $sep.Margin = [Windows.Thickness]::new(16, 0, 16, 0)
+        $sep.Background = $window.FindResource("Separator"); $ui.IconRows.Children.Add($sep) | Out-Null
+    }
+    $ui.IconRows.Children.Add($row) | Out-Null
+    $big = [Windows.Controls.Image]::new(); $big.Width = 64; $big.Height = 64; $big.Margin = [Windows.Thickness]::new(18, 0, 18, 0)
+    $ui.IconPreview.Children.Add($big) | Out-Null
+    $iconSliders[$name] = $slider; $iconImages[$name] = $img; $iconPreviews[$name] = $big; $iconValues[$name] = $value
+    $slider.Add_ValueChanged({ param($s) Update-Icons })
+}
+function Selected-Icons {
+    $h = @{}
+    foreach ($name in $IconNames.Keys) { $h[$name] = [int]$iconSliders[$name].Value }
+    $h
+}
+function Update-Icons {
+    foreach ($name in $IconNames.Keys) {
+        $v = [int]$iconSliders[$name].Value
+        $iconValues[$name].Text = "$v%"
+        $iconPreviews[$name].Opacity = $v / 100
+        $iconImages[$name].Opacity = [math]::Max($v / 100, 0.35)
+    }
+    $changed = @($IconNames.Keys | Where-Object { [int]$iconSliders[$_].Value -lt 100 })
+    $ui.NavIconsValue.Text = $(if ($changed.Count) { (L "{0} изм.") -f $changed.Count } else { "" })
+    if (Get-Command Update-Summary -ErrorAction SilentlyContinue) { Update-Summary }
+}
+function Update-IconArt {
+    # The icons look like the chosen layout's (Zors.o and Minimalist redraw them).
+    $layout = Selected-Layout
+    foreach ($name in $IconNames.Keys) {
+        $bmp = Image-From "icon_${layout}_$name.png"
+        $iconImages[$name].Source = $bmp; $iconPreviews[$name].Source = $bmp
+    }
+}
+$ui.IconsReset.Add_Click({ foreach ($s in $iconSliders.Values) { $s.Value = 100 } })
+
 $script:gameSkin = $null
 function Selected-Skin {
     $k = ($skinChips.GetEnumerator() | Where-Object { $_.Value.IsChecked } | Select-Object -First 1).Key
@@ -135,7 +247,7 @@ function Show-Crosshair([string]$id) {
 }
 
 # ---------------------------------------------------------------- navigation
-$pages = "HudPage", "CrossPage", "BackupPage"
+$pages = "HudPage", "CrossPage", "IconsPage", "BackupPage"
 function Show-Page([string]$name) {
     foreach ($p in $pages + "WorkPage") { if ($p -ne $name) { $ui[$p].Visibility = "Collapsed" } }
     $page = $ui[$name]
@@ -144,10 +256,10 @@ function Show-Page([string]$name) {
     if ($page.RenderTransform -is [Windows.Media.TranslateTransform]) { Animate $page.RenderTransform "Y" 0 360 12 }
 }
 function Update-Footer([string]$name) {
-    # Steps: HUD -> crosshair -> install. Install only after the crosshair page has
-    # been seen; restore lives on the backup page.
+    # Steps: HUD -> crosshair -> icons -> install, so nothing is installed unseen;
+    # restore lives on the backup page.
     if ($name -eq "WorkPage") { return }
-    $ui.InstallBtn.Content = $(if ($name -eq "HudPage") { L "Далее" } else { L "Установить" })
+    $ui.InstallBtn.Content = $(if ($name -in "HudPage", "CrossPage") { L "Далее" } else { L "Установить" })
     $ui.InstallBtn.Visibility = $(if ($name -eq "BackupPage") { "Collapsed" } else { "Visible" })
     $ui.RestoreBtn.Visibility = $(if ($name -eq "BackupPage") { "Visible" } else { "Collapsed" })
     $ui.RestoreBtn.IsDefault = ($name -eq "BackupPage")
@@ -161,7 +273,7 @@ function Move-NavPill($item) {
     $y = $item.TranslatePoint([Windows.Point]::new(0, 0), $ui.Nav).Y
     Animate $ui.NavPillY "Y" $y 380 -Spring
 }
-foreach ($item in $ui.NavHud, $ui.NavCross, $ui.NavBackup) {
+foreach ($item in $ui.NavHud, $ui.NavCross, $ui.NavIcons, $ui.NavBackup) {
     $item.Add_Checked({ param($s) Show-Page $s.Tag; Update-Footer $s.Tag; Move-NavPill $s })
 }
 
@@ -178,13 +290,16 @@ function Set-Status([string]$text) {
 function Update-Summary {
     $cross = Selected-Crosshair
     $parts = @()
-    if ($ui.HudSwitch.IsChecked) { $parts += Lower-First (L "Компактный HUD") }
+    if ($ui.HudSwitch.IsChecked) { $parts += "HUD «" + (L $Layouts[(Selected-Layout)]) + "»" }
     if ($cross) {
         $colour = Selected-Colour
         $parts += ((L "прицел «{0}»") -f $crosshairNames[$cross]) + $(if ($colour -ne "white") { " " + $colourNames[$colour].ToLower() }) + " " + [int]$ui.SizeSlider.Value + "%"
     }
-    $ui.Summary.Text = $(if ($parts) { (L "Будет установлено: ") + ($parts -join (L " и ")) } else { L "Ничего не выбрано" })
-    $ui.NavHudValue.Text = $(if ($ui.HudSwitch.IsChecked) { L "Вкл." } else { L "Выкл." })
+    $icons = Selected-Icons
+    $dim = @($IconNames.Keys | Where-Object { $icons[$_] -lt 100 } | ForEach-Object { (Lower-First (L $IconNames[$_])) + " " + $icons[$_] + "%" })
+    if ($dim) { $parts += (L "иконки: ") + ($dim -join ", ") }
+    $ui.Summary.Text = $(if ($parts) { (L "Будет установлено: ") + ($parts -join "; ") } else { L "Ничего не выбрано" })
+    $ui.NavHudValue.Text = $(if ($ui.HudSwitch.IsChecked) { L $Layouts[(Selected-Layout)] } else { L "Выкл." })
     $ui.NavCrossValue.Text = $(if ($cross) { $crosshairNames[$cross] } else { L "Выкл." })
 }
 
@@ -193,8 +308,10 @@ function Update-InstallButton {
     $ui.SizeControls.IsEnabled = [bool]$ui.CrossSwitch.IsChecked
     $ui.ColourControls.IsEnabled = [bool]$ui.CrossSwitch.IsChecked
     $ui.Skins.IsEnabled = [bool]$ui.HudSwitch.IsChecked
+    $icons = Selected-Icons
+    $iconsChanged = @($IconNames.Keys | Where-Object { $icons[$_] -ne $(if ($script:status) { $script:status.Icons[$_] } else { 100 }) }).Count -gt 0
     $ui.InstallBtn.IsEnabled = ($script:game -and (Test-FortsFolder $script:game) -and
-        ($ui.HudSwitch.IsChecked -or (Selected-Crosshair)))
+        ($ui.HudSwitch.IsChecked -or (Selected-Crosshair) -or $iconsChanged -or (Current-Page) -ne "IconsPage"))
     Update-Summary
 }
 $ui.HudSwitch.Add_Click({ Update-InstallButton })
@@ -217,6 +334,11 @@ function Refresh {
     $pick = $(if ($script:gameSkin) { $script:gameSkin } elseif ($script:status.HudSkin) { $script:status.HudSkin } else { "dlc3" })
     $skinChips[$pick].IsChecked = $true
     Update-SkinNote
+    $script:settingUp = $true
+    $layout = $(if ($script:status.Layout) { $script:status.Layout } else { Selected-Layout })
+    if ($layoutSegs[$layout].IsChecked) { Show-Layout $layout } else { $layoutSegs[$layout].IsChecked = $true }
+    foreach ($name in $IconNames.Keys) { $iconSliders[$name].Value = $script:status.Icons[$name] }
+    $script:settingUp = $false
     $ui.HudSwitch.IsEnabled = $script:status.HudCompatible
     if (-not $script:status.HudCompatible) {
         $ui.HudSwitch.IsChecked = $false
@@ -324,17 +446,23 @@ $ui.DoneBtn.Add_Click({ $window.Close() })
 $progress = { param($step, $total, $text) Set-Progress $step $total $text }
 
 $ui.InstallBtn.Add_Click({
-    if ((Current-Page) -eq "HudPage") { $ui.NavCross.IsChecked = $true; return }
+    switch (Current-Page) {
+        "HudPage" { $ui.NavCross.IsChecked = $true; return }
+        "CrossPage" { $ui.NavIcons.IsChecked = $true; return }
+    }
     $hud = [bool]$ui.HudSwitch.IsChecked
     $cross = Selected-Crosshair
     $size = [int]$ui.SizeSlider.Value
+    $layout = Selected-Layout
     Show-Work (L "Устанавливаю…") (L "Сохраняю оригинальные файлы игры")
     Flush
     try {
-        Install-Pack -Game $script:game -Hud $hud -Crosshair $cross -CrosshairSize $size -CrosshairColor (Selected-Colour) -HudSkin (Selected-Skin) -Progress $progress
+        Install-Pack -Game $script:game -Hud $hud -Crosshair $cross -CrosshairSize $size -CrosshairColor (Selected-Colour) `
+            -HudSkin (Selected-Skin) -Layout $layout -Icons (Selected-Icons) -Progress $progress
         $parts = @()
-        if ($hud) { $parts += Lower-First (L "Компактный HUD") }
+        if ($hud) { $parts += "HUD «" + (L $Layouts[$layout]) + "»" }
         if ($cross) { $parts += (L "прицел «{0}»") -f $crosshairNames[$cross] }
+        if (@((Selected-Icons).Values | Where-Object { $_ -lt 100 }).Count) { $parts += L "полупрозрачные иконки" }
         Show-Done (L "Готово") ((L "Поставлено: {0}. Запускай Forts.") -f ($parts -join (L " и ")))
     } catch {
         Show-Failure $_.Exception.Message
@@ -418,6 +546,9 @@ $window.Add_Loaded({
     switch ($State) {
         "cross" { $ui.NavCross.IsChecked = $true }
         "backup" { $ui.NavBackup.IsChecked = $true }
+        "icons" { $ui.NavIcons.IsChecked = $true }
+        "minimalist" { $layoutSegs["minimalist"].IsChecked = $true }
+        "zors" { $layoutSegs["zors"].IsChecked = $true }
         "progress" { Show-Work (L "Устанавливаю…") ((L "Копирую {0}") -f "hud.lua"); $ui.BarFill.Width = 240 }
         "success" { Show-Work "" ""; Show-Done (L "Готово") ((L "Поставлено: {0}. Запускай Forts.") -f ((Lower-First (L "Компактный HUD")) + (L " и ") + ((L "прицел «{0}»") -f $crosshairNames["cross"]))) }
         "error" { Show-Work "" ""; Show-Failure (L "Закрой Forts и попробуй ещё раз.") }

@@ -110,6 +110,32 @@
         </Setter.Value>
       </Setter>
     </Style>
+    <!-- HUD layout picker: macOS segmented control -->
+    <Style x:Key="LayoutSeg" TargetType="RadioButton">
+      <Setter Property="GroupName" Value="Layout"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="FocusVisualStyle" Value="{StaticResource Focus}"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="RadioButton">
+            <Border x:Name="P" CornerRadius="8" Padding="16,5" Background="Transparent">
+              <TextBlock x:Name="L" Text="{TemplateBinding Content}" FontWeight="Medium" Foreground="{StaticResource SecondaryText}"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="L" Property="Foreground" Value="{StaticResource Label}"/></Trigger>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="P" Property="Background" Value="White"/>
+                <Setter TargetName="P" Property="Effect"><Setter.Value><DropShadowEffect BlurRadius="4" ShadowDepth="0.5" Direction="270" Opacity="0.18"/></Setter.Value></Setter>
+                <Setter TargetName="L" Property="Foreground" Value="{StaticResource Label}"/>
+                <Setter TargetName="L" Property="FontWeight" Value="SemiBold"/>
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
     <Style x:Key="LangSeg" TargetType="RadioButton">
       <Setter Property="GroupName" Value="Lang"/>
       <Setter Property="Cursor" Value="Hand"/>

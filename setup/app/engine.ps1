@@ -50,6 +50,15 @@ end
     @{ rel = $rel; bytes = [Text.UTF8Encoding]::new($false).GetBytes($text) }
 }
 
+# HUD layouts: our compact one, the same in Zors.o's purple theme, and nutellafish's
+# Minimalist HUD (Steam Workshop 3750502564, "you can copy anything in this mod").
+$script:Layouts = [ordered]@{ compact = "Компактный"; zors = "Zors.o"; minimalist = "Minimalist" }
+
+# World icons whose opacity can be set (the grey ones are their disabled look).
+$script:IconNames = [ordered]@{ extinguisher = "Тушение"; under_construction = "Строительство"; repair = "Ремонт" }
+$script:IconFiles = @("extinguisher", "under_construction", "under_construction_grey", "repair", "repair_grey") |
+    ForEach-Object { "data\ui\textures\$_.dds" }
+
 # Crosshair colours: white art times the colour, so the dark outline stays dark.
 $script:CrosshairColors = [ordered]@{
     white = "FFFFFF"; green = "5CFF6E"; yellow = "FFE04A"; red = "FF5A4E"; cyan = "46E6FF"
@@ -62,6 +71,12 @@ public static class FortsTint {
       throw new System.ArgumentException("not an uncompressed 32-bit DDS");
     var o = (byte[])dds.Clone();
     MultiplyBgra(o, 128, r, g, b);
+    return o;
+  }
+  // Same DDS with its alpha scaled to percent (icon opacity).
+  public static byte[] ScaleAlpha(byte[] dds, int percent) {
+    var o = Apply(dds, 255, 255, 255);
+    for (int i = 131; i < o.Length; i += 4) o[i] = (byte)(o[i] * percent / 100);
     return o;
   }
   public static void MultiplyBgra(byte[] px, int start, int r, int g, int b) {
@@ -166,9 +181,18 @@ function Read-State([string]$Game) {
     if (-not (Test-Path -LiteralPath $path)) { return @{} }
     $state = @{}
     foreach ($entry in (Get-Content -LiteralPath $path -Raw | ConvertFrom-Json)) {
-        $state[$entry.path] = @{ path = $entry.path; existed = [bool]$entry.existed; original = $entry.original; installed = $entry.installed }
+        $owner = $entry.owner
+        if (-not $owner) { $owner = Get-DefaultOwner $entry.path }  # state from before owners were recorded
+        $state[$entry.path] = @{ path = $entry.path; existed = [bool]$entry.existed; original = $entry.original
+            installed = $entry.installed; owner = $owner }
     }
     return $state
+}
+
+function Get-DefaultOwner([string]$Rel) {
+    if ($Rel -in $script:CrosshairFiles -or $Rel -eq 'data\db\constants_user.lua') { "crosshair" }
+    elseif ($Rel -in $script:IconFiles) { "icons" }
+    else { "hud" }
 }
 
 function Write-State([string]$Game, [hashtable]$State) {
@@ -189,11 +213,35 @@ function Get-PackStatus([string]$Game) {
         $previousHud = $previousHud -or ($rel -eq 'data\ui\screens\hud.lua' -and $current -eq 'EC8BF7E1BCB5923343A3C265DB7B0769A297A814472F482E1CD4F281F802105B') -or ($rel -eq 'data\ui\uisprites.lua' -and $current -eq '324F43C990EC0757B921A641670FF66A20CDE22BE9E5EBD1DBA8A61BB13F6FC4')
         # Any older build of this installer: the file still holds what it wrote.
         $previousHud = $previousHud -or ($state.ContainsKey($rel) -and $current -and $current -eq $state[$rel].installed)
+        # One of our other layouts (also when put in by hand, e.g. Minimalist from the Workshop).
+        $previousHud = $previousHud -or ($rel -eq 'data\ui\screens\hud.lua' -and $current -and $current -in @(
+            "zors", "minimalist" | ForEach-Object { Get-Sha (Join-Path $script:PackRoot "payload\layouts\$_\hud.lua") }))
         if ($current -ne $script:HudFiles[$rel] -and $current -ne $ours -and -not $previousHud) { $hudOk = $false }
     }
-    $hudInstalled = $true
-    foreach ($rel in $script:HudFiles.Keys) {
-        if ((Get-Sha (Join-Path $Game $rel)) -ne (Get-Sha (Join-Path $script:PackRoot "payload\hud\$rel"))) { $hudInstalled = $false }
+    # Which layout is in place, by its hud.lua.
+    $hudNow = Get-Sha (Join-Path $Game 'data\ui\screens\hud.lua')
+    $layout = $null
+    foreach ($key in $script:Layouts.Keys) {
+        $file = $(if ($key -eq "compact") { "payload\hud\data\ui\screens\hud.lua" } else { "payload\layouts\$key\hud.lua" })
+        if ($hudNow -and $hudNow -eq (Get-Sha (Join-Path $script:PackRoot $file))) { $layout = $key }
+    }
+    $hudInstalled = [bool]$layout
+    if ($layout -and $layout -ne "minimalist") {
+        foreach ($rel in @($script:HudFiles.Keys | Select-Object -Skip 1)) {
+            if ((Get-Sha (Join-Path $Game $rel)) -ne (Get-Sha (Join-Path $script:PackRoot "payload\hud\$rel"))) { $hudInstalled = $false }
+        }
+    }
+    # Icon opacity: what the last install recorded, while those files are still ours.
+    $icons = @{}
+    foreach ($name in $script:IconNames.Keys) { $icons[$name] = 100 }
+    $iconsFile = Join-Path $Game "$script:BackupName\icons.json"
+    if (Test-Path -LiteralPath $iconsFile) {
+        $saved = Get-Content -LiteralPath $iconsFile -Raw | ConvertFrom-Json
+        foreach ($name in $script:IconNames.Keys) {
+            $rel = "data\ui\textures\$name.dds"
+            if ($saved.$name -and $state.ContainsKey($rel) -and $state[$rel].owner -eq "icons" -and
+                (Get-Sha (Join-Path $Game $rel)) -eq $state[$rel].installed) { $icons[$name] = [int]$saved.$name }
+        }
     }
     # Which skin's button set is installed: compare one of our textures.
     $hudSkin = $null
@@ -234,6 +282,8 @@ function Get-PackStatus([string]$Game) {
     [pscustomobject]@{
         HudCompatible = $hudOk
         HudInstalled  = $hudInstalled
+        Layout        = $layout
+        Icons         = $icons
         HudSkin       = $hudSkin
         Crosshair     = $crosshair
         CrosshairSize = $crosshairSize
@@ -245,22 +295,60 @@ function Get-PackStatus([string]$Game) {
 function Install-Pack {
     <# Installs the HUD and/or a crosshair. $Progress gets (step, total, text). #>
     param([string]$Game, [bool]$Hud, [string]$Crosshair, [scriptblock]$Progress = {}, [int]$CrosshairSize = 100,
-          [string]$CrosshairColor = "white", [string]$HudSkin = "dlc3")
+          [string]$CrosshairColor = "white", [string]$HudSkin = "dlc3", [string]$Layout = "compact",
+          [hashtable]$Icons = $null)  # $Icons: extinguisher/under_construction/repair -> opacity %, $null = leave
 
     if (-not (Test-FortsFolder $Game)) { throw (L "В этой папке нет Forts.exe.") }
     if (Test-FortsRunning $Game) { throw (L "Закрой Forts и попробуй ещё раз.") }
-    if (-not $Hud -and -not $Crosshair) { throw (L "Ничего не выбрано.") }
+    if (-not $Hud -and -not $Crosshair -and -not $Icons) { throw (L "Ничего не выбрано.") }
 
-    $plan = @()  # @{ rel; source } ; source $null would mean delete
+    $plan = @()  # @{ rel; source | bytes; owner }
     if ($Hud) {
         $status = Get-PackStatus $Game
         if (-not $status.HudCompatible) {
             throw (L "HUD сделан для Forts 1.39.0 r22745, а файлы интерфейса у тебя другие (другая версия игры или чужой мод).")
         }
-        foreach ($rel in $script:HudFiles.Keys) { $plan += @{ rel = $rel; source = (Join-Path $script:PackRoot "payload\hud\$rel") } }
-        if (-not $script:HudSkins.Contains($HudSkin)) { throw (L "Неизвестный скин HUD.") }
-        foreach ($tex in Get-ChildItem -LiteralPath (Get-HudSkinTextures $HudSkin) -File) {
-            $plan += @{ rel = (Join-Path $script:HudTextureDir $tex.Name); source = $tex.FullName }
+        if (-not $script:Layouts.Contains($Layout)) { throw (L "Неизвестный HUD.") }
+        $layoutDir = Join-Path $script:PackRoot "payload\layouts\$Layout"
+        if ($Layout -eq "minimalist") {
+            # nutellafish's own hud.lua and textures; the game's uisprites and transaction stay.
+            $plan += @{ rel = 'data\ui\screens\hud.lua'; source = (Join-Path $layoutDir "hud.lua"); owner = "hud" }
+        } else {
+            foreach ($rel in $script:HudFiles.Keys) { $plan += @{ rel = $rel; source = (Join-Path $script:PackRoot "payload\hud\$rel"); owner = "hud" } }
+            if ($Layout -eq "zors") { $plan[0].source = Join-Path $layoutDir "hud.lua" }  # same layout, purple colours
+            if (-not $script:HudSkins.Contains($HudSkin)) { throw (L "Неизвестный скин HUD.") }
+            foreach ($tex in Get-ChildItem -LiteralPath (Get-HudSkinTextures $HudSkin) -File) {
+                $plan += @{ rel = (Join-Path $script:HudTextureDir $tex.Name); source = $tex.FullName; owner = "hud" }
+            }
+        }
+        $textures = Join-Path $layoutDir "textures"
+        if (Test-Path -LiteralPath $textures) {
+            foreach ($tex in Get-ChildItem -LiteralPath $textures -File -Recurse) {
+                $plan += @{ rel = (Join-Path "data\ui\textures" $tex.FullName.Substring($textures.Length + 1)); source = $tex.FullName; owner = "hud" }
+            }
+        }
+    }
+    if ($Icons) {
+        # Opacity is applied to the icons of the layout being installed (or the one in place).
+        $iconLayout = $(if ($Hud) { $Layout } else { $s = (Get-PackStatus $Game).Layout; if ($s) { $s } else { "compact" } })
+        foreach ($name in $script:IconNames.Keys) {
+            if (-not $Icons.ContainsKey($name)) { continue }
+            $percent = [int]$Icons[$name]
+            if ($percent -ge 100) {
+                # Fully opaque: the layout's own icon if it has one (Zors.o, Minimalist),
+                # otherwise the game's, which the revert below puts back.
+                foreach ($file in @($name, "${name}_grey")) {
+                    $own = Join-Path $script:PackRoot "payload\layouts\$iconLayout\textures\$file.dds"
+                    if (Test-Path -LiteralPath $own) { $plan += @{ rel = "data\ui\textures\$file.dds"; source = $own; owner = "hud" } }
+                }
+                continue
+            }
+            if ($percent -lt 10) { throw (L "Прозрачность иконок: от 10 до 100%.") }
+            foreach ($file in @($name, "${name}_grey")) {
+                $src = Join-Path $script:PackRoot "payload\icons\$iconLayout\$file.dds"
+                if (-not (Test-Path -LiteralPath $src)) { continue }
+                $plan += @{ rel = "data\ui\textures\$file.dds"; bytes = [FortsTint]::ScaleAlpha([IO.File]::ReadAllBytes($src), $percent); owner = "icons" }
+            }
         }
     }
     if ($Crosshair) {
@@ -274,22 +362,40 @@ function Install-Pack {
         }
         if (-not $script:CrosshairColors.Contains($CrosshairColor)) { throw (L "Неизвестный цвет прицела.") }
         if ($CrosshairColor -eq "white") {
-            foreach ($rel in $script:CrosshairFiles) { $plan += @{ rel = $rel; source = (Join-Path $dir (Split-Path $rel -Leaf)) } }
+            foreach ($rel in $script:CrosshairFiles) { $plan += @{ rel = $rel; source = (Join-Path $dir (Split-Path $rel -Leaf)); owner = "crosshair" } }
         } else {
             $tinted = Get-TintedCrosshair $dir $CrosshairColor  # normal and painted art are the same
-            foreach ($rel in $script:CrosshairFiles) { $plan += @{ rel = $rel; bytes = $tinted } }
+            foreach ($rel in $script:CrosshairFiles) { $plan += @{ rel = $rel; bytes = $tinted; owner = "crosshair" } }
         }
         $configPlan = Get-CursorConfigPlan $Game $CrosshairSize
-        if ($configPlan) { $plan += $configPlan }
+        if ($configPlan) { $configPlan.owner = "crosshair"; $plan += $configPlan }
     }
 
     $backup = Join-Path $Game $script:BackupName
     New-Item -ItemType Directory -Force -Path $backup | Out-Null
     $state = Read-State $Game
-    $total = $plan.Count + 1
+    # Files a previous layout (or icon setting) put in that this install does not:
+    # back to the game's own, so switching layouts leaves nothing of the old one.
+    $replacing = @()
+    if ($Hud) { $replacing += "hud" }
+    if ($Icons) { $replacing += "icons" }
+    $planned = @($plan | ForEach-Object { $_.rel })
+    $revert = @($state.Values | Where-Object { $_.owner -in $replacing -and $_.path -notin $planned })
+    $total = $revert.Count + $plan.Count + 1
     $step = 0
     $written = @()
     try {
+        foreach ($entry in $revert) {
+            $step++
+            & $Progress $step $total ((L "Возвращаю {0}") -f (Split-Path $entry.path -Leaf))
+            $target = Join-Path $Game $entry.path
+            if ((Get-Sha $target) -eq $entry.installed) {  # untouched since: put the game's file back
+                $written += @{ rel = $entry.path; before = [IO.File]::ReadAllBytes($target) }
+                if ($entry.existed) { Copy-Item -LiteralPath (Join-Path $backup $entry.path) -Destination $target -Force }
+                else { Remove-Item -LiteralPath $target }
+            }
+            $state.Remove($entry.path)
+        }
         foreach ($item in $plan) {
             $step++
             & $Progress $step $total ((L "Копирую {0}") -f (Split-Path $item.rel -Leaf))
@@ -302,8 +408,9 @@ function Install-Pack {
                     New-Item -ItemType Directory -Force -Path (Split-Path $saved) | Out-Null
                     Copy-Item -LiteralPath $target -Destination $saved -Force
                 }
-                $state[$item.rel] = @{ path = $item.rel; existed = $existed; original = (Get-Sha $target); installed = $null }
+                $state[$item.rel] = @{ path = $item.rel; existed = $existed; original = (Get-Sha $target); installed = $null; owner = $null }
             }
+            $state[$item.rel].owner = $item.owner
             $written += @{ rel = $item.rel; before = $(if (Test-Path -LiteralPath $target) { [IO.File]::ReadAllBytes($target) } else { $null }) }
             New-Item -ItemType Directory -Force -Path (Split-Path $target) | Out-Null
             if ($item.ContainsKey('bytes')) {
@@ -326,8 +433,12 @@ function Install-Pack {
                 hash = (Get-Sha (Join-Path $Game $script:CrosshairFiles[0])) } |
                 ConvertTo-Json | Set-Content -LiteralPath (Join-Path $backup "crosshair.json") -Encoding UTF8
         }
+        if ($Icons) {
+            [pscustomobject]$Icons | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $backup "icons.json") -Encoding UTF8
+        }
     } catch {
-        # Roll back this run's writes so the game is never left half-installed.
+        # Roll back this run's writes, newest first, so the game is never left half-installed.
+        [array]::Reverse($written)
         foreach ($w in $written) {
             $target = Join-Path $Game $w.rel
             if ($null -ne $w.before) { [IO.File]::WriteAllBytes($target, $w.before) } elseif (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target }

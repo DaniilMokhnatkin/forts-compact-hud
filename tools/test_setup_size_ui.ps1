@@ -44,6 +44,8 @@ foreach ($percent in @(50,75,100,150,200)) {
 }
 $ui.SizeSlider.Value = 200
 $ui.HudSwitch.IsChecked = $false
+$ui.NavIcons.IsChecked = $true  # install is the last step, on the icons page
+Flush
 $ui.InstallBtn.RaiseEvent([Windows.RoutedEventArgs]::new([Windows.Controls.Primitives.ButtonBase]::ClickEvent))
 $status = Get-PackStatus $script:game
 if ($status.Crosshair -ne 'fine_cross' -or $status.CrosshairSize -ne 200) { throw 'Install button did not apply slider value.' }
