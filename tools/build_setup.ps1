@@ -22,6 +22,13 @@ Copy-Item (Join-Path $root "build\hud.lua"), (Join-Path $root "build\transaction
 Copy-Item (Join-Path $root "build\uisprites.lua") "$hud\"
 Copy-Item (Join-Path $root "textures\HUD\custom\*.dds") "$hud\textures\HUD\custom\"
 
+# Button sets for the other HUD skins (dlc3 is the default set above).
+foreach ($dir in Get-ChildItem -LiteralPath (Join-Path $root "textures\HUD\skins") -Directory) {
+    $dest = Join-Path $payload "skins\$($dir.Name)"
+    New-Item -ItemType Directory -Force $dest | Out-Null
+    Copy-Item (Join-Path $dir.FullName "*.dds") $dest
+}
+
 $cross = Join-Path $root "textures\crosshairs"
 foreach ($dir in Get-ChildItem -LiteralPath $cross -Directory) {
     $dest = Join-Path $payload "crosshairs\$($dir.Name)"

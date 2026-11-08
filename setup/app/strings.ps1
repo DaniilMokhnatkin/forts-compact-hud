@@ -51,6 +51,9 @@ $script:English = @{
     "Файлы игры снова такие, какими были до установки." = "The game's files are back as they were before the install."
     "Не тронул изменившиеся после установки: {0}." = "Left alone files changed after the install: {0}."
     "Оригинал на месте" = "Original restored"
+    "Скин HUD в игре" = "HUD skin in the game"; "Кнопки рисуются под выбранный скин" = "Our buttons are drawn for the chosen skin"
+    "{0} · определён по настройкам игры" = "{0} · read from the game's settings"; "Стандартный" = "Default"
+    "Скин HUD: " = "HUD skin: "; "Фото {0}" = "Photo {0}"; "Неизвестный скин HUD." = "Unknown HUD skin."
     # update check
     "Доступна версия {0}" = "Version {0} is available"; "Скачать" = "Download"
     # engine

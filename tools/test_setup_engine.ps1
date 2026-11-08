@@ -73,6 +73,22 @@ Check "older build: restore gives vanilla hud.lua" ((Get-Sha "$game\data\ui\scre
 Set-Content "$game\data\ui\screens\hud.lua" "-- someone else's mod"
 Check "foreign hud.lua still refused" (-not (Get-PackStatus $game).HudCompatible)
 
+"== HUD skins"
+$game = New-FakeGame $vanilla
+New-Item -ItemType Directory -Force "$game\users\1" | Out-Null
+Set-Content "$game\users\1\settings.lua" "data = {`n`tCurrentHUDSkin = `"db/skins_hud_elite.lua`",`n}"
+Check "skin read from settings: elite" ((Get-GameHudSkin $game) -eq "elite")
+Set-Content "$game\users\1\settings.lua" "data = {`n`tCurrentHUDSkin = `"db/skins_hud_dlc2_tester.lua`",`n}"
+Check "tester skin maps to dlc2" ((Get-GameHudSkin $game) -eq "dlc2")
+Install-Pack -Game $game -Hud $true -Crosshair $null -HudSkin "pro"
+$st = Get-PackStatus $game
+Check "pro buttons installed and detected" ($st.HudInstalled -and $st.HudSkin -eq "pro")
+Check "pro pause texture in place" ((Get-Sha "$game\data\ui\textures\HUD\custom\Pause-A.dds") -eq (Get-Sha "$root\setup\payload\skins\pro\Pause-A.dds"))
+Install-Pack -Game $game -Hud $true -Crosshair $null -HudSkin "dlc3"
+Check "switch to dlc3" ((Get-PackStatus $game).HudSkin -eq "dlc3")
+Restore-Pack -Game $game | Out-Null
+Check "skins: restore removes custom textures" (-not (Test-Path "$game\data\ui\textures\HUD\custom"))
+
 "== screen check"
 $game = New-FakeGame $vanilla
 New-Item -ItemType Directory -Force "$game\users\1" | Out-Null

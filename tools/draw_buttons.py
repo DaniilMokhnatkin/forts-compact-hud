@@ -115,6 +115,110 @@ def main():
             sheet.paste(image, (10 + col * (SIZE + 10), 10 + row * (SIZE + 10)), image)
     sheet.resize((sheet.width * 3, sheet.height * 3), Image.NEAREST).save(os.path.join(ROOT, "textures", "preview.png"))
     print(f"wrote {OUT}")
+    draw_skins()
+
+
+# The other HUD skins. Each one's Grid button was cut from a 1440p screenshot to
+# textures/skins/grid_<skin>.png (64x64 at the texture's scale). Its glyph is
+# painted over with the face colour and our glyphs are drawn in the skin's glyph
+# colour, moved from the dlc3 glyph centre (32, 26) to this skin's. The skin set
+# is picked by the installer from the game's CurrentHUDSkin.
+SKINS = {
+    # shape (mask), glyph box to clean, glyph centre, glyph colours top/bottom
+    "base": {"mask": ("round", (2, 2, 62, 61), 8), "glyph": (15, 17, 48, 50), "centre": (31.5, 33.5),
+             "colour": ((226, 212, 196), (205, 188, 170))},
+    "dlc2": {"mask": ("round", (2, 2, 62, 61), 8), "glyph": (15, 17, 48, 50), "centre": (31.5, 33.5),
+             "colour": ((226, 212, 196), (205, 188, 170))},
+    "pro": {"mask": ("round", (7, 3, 58, 59), 12), "glyph": (18, 16, 46, 47), "centre": (32, 31.5), "scale": 0.9,
+            "colour": ((50, 235, 70), (25, 205, 45))},
+    "elite": {"mask": ("circle", (33.5, 35.5), 26.5), "glyph": None, "disc": ((34, 30), 14), "centre": (33.5, 30), "scale": 0.82,
+              "colour": ((222, 228, 236), (190, 198, 210))},
+    # High Seas: the whole face is cleaned, edge to edge, so no patch shows.
+    "dlc1": {"mask": ("rect", (0, 0, 64, 63), 0), "glyph": (6, 10, 58, 58), "flat": (12, 30), "centre": (33, 32),
+             "colour": ((70, 205, 255), (35, 175, 245))},
+}
+SKIN_OUT = os.path.join(ROOT, "textures", "HUD", "skins")
+
+
+def skin_mask(shape):
+    kind, box, radius = shape
+    mask = Image.new("L", (SIZE * SS, SIZE * SS), 0)
+    d = ImageDraw.Draw(mask)
+    if kind == "circle":
+        (cx, cy), r = box, radius
+        d.ellipse([(cx - r) * SS, (cy - r) * SS, (cx + r) * SS, (cy + r) * SS], fill=255)
+    else:
+        d.rounded_rectangle([c * SS for c in box], radius=radius * SS, fill=255)
+    return mask.resize((SIZE, SIZE), Image.LANCZOS)
+
+
+def clean_box(button, box):
+    """Rows across the glyph box take the face colour interpolated between its edges."""
+    px = button.load()
+    x0, y0, x1, y1 = box
+    for y in range(y0, y1):
+        left, right = px[x0 - 1, y][:3], px[x1, y][:3]
+        for x in range(x0, x1):
+            t = (x - x0 + 1) / (x1 - x0 + 1)
+            px[x, y] = tuple(round(a + (b - a) * t) for a, b in zip(left, right)) + (255,)
+
+
+def clean_disc(button, centre, radius):
+    """Elite knob: the dark centre disc filled with its own median colour."""
+    px = button.load()
+    cx, cy = centre
+    ring = sorted(px[round(cx + radius * 0.92 * c), round(cy + radius * 0.92 * s)][:3]
+                  for c, s in ((1, 0), (-1, 0), (0, 1), (0, -1), (0.7, 0.7), (-0.7, 0.7), (0.7, -0.7), (-0.7, -0.7)))
+    colour = ring[len(ring) // 2]
+    ImageDraw.Draw(button).ellipse([cx - radius, cy - radius, cx + radius, cy + radius], fill=colour + (255,))
+
+
+def skin_glyph_layer(shapes, centre, colours, scale=1.0):
+    moved = []
+    for kind, coords in shapes:  # scale about the dlc3 glyph centre, then move to this skin's
+        moved.append((kind, tuple((c - (32 if i % 2 == 0 else 26)) * scale + centre[i % 2] for i, c in enumerate(coords))))
+    mask = Image.new("L", (SIZE * SS, SIZE * SS), 0)
+    draw = ImageDraw.Draw(mask)
+    for kind, coords in moved:
+        pts = [c * SS for c in coords]
+        if kind == "rect":
+            draw.rounded_rectangle(pts, radius=SS, fill=255)
+        else:
+            draw.polygon(list(zip(pts[0::2], pts[1::2])), fill=255)
+    mask = mask.resize((SIZE, SIZE), Image.LANCZOS)
+    fill = Image.new("RGBA", (SIZE, SIZE))
+    top, bottom = colours
+    y0, y1 = centre[1] - 13, centre[1] + 13
+    for y in range(SIZE):
+        t = min(max((y - y0) / (y1 - y0), 0), 1)
+        colour = tuple(round(a + (b - a) * t) for a, b in zip(top, bottom))
+        for x in range(SIZE):
+            fill.putpixel((x, y), colour + (255,))
+    fill.putalpha(mask)
+    return fill
+
+
+def draw_skins():
+    sheet = Image.new("RGBA", (SIZE * len(glyphs()) + 10 * (len(glyphs()) + 1), (SIZE + 10) * len(SKINS) + 10), (70, 58, 40, 255))
+    for row, (skin, spec) in enumerate(SKINS.items()):
+        base = Image.open(os.path.join(ROOT, "textures", "skins", f"grid_{skin}.png")).convert("RGBA")
+        if spec.get("flat"):  # flat face: one sampled colour
+            colour = base.getpixel(spec["flat"])[:3] + (255,)
+            ImageDraw.Draw(base).rectangle([spec["glyph"][0], spec["glyph"][1], spec["glyph"][2] - 1, spec["glyph"][3] - 1], fill=colour)
+        elif spec["glyph"]:
+            clean_box(base, spec["glyph"])
+        else:
+            clean_disc(base, *spec["disc"])
+        base.putalpha(skin_mask(spec["mask"]))
+        out = os.path.join(SKIN_OUT, skin)
+        os.makedirs(out, exist_ok=True)
+        for col, (name, shapes) in enumerate(glyphs().items()):
+            button = Image.alpha_composite(base, skin_glyph_layer(shapes, spec["centre"], spec["colour"], spec.get("scale", 1.0)))
+            for state, image in states(button).items():
+                image.save(os.path.join(out, f"{name}-{state}.dds"), "DDS")
+            sheet.paste(button, (10 + col * (SIZE + 10), 10 + row * (SIZE + 10)), button)
+    sheet.resize((sheet.width * 2, sheet.height * 2), Image.NEAREST).save(os.path.join(ROOT, "textures", "preview_skins.png"))
+    print(f"wrote {SKIN_OUT}")
 
 
 if __name__ == "__main__":

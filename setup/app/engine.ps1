@@ -118,6 +118,26 @@ function Test-FortsRunning([string]$Game) {
     [bool](Get-Process Forts -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $exe })
 }
 
+# Our buttons (pause, menu, weapon facing) come in one set per HUD skin; dlc3 is the
+# set in payload\hud, the rest in payload\skins\<skin>.
+$script:HudSkins = [ordered]@{ dlc3 = "Firebird"; base = "Стандартный"; dlc1 = "High Seas"; dlc2 = "Moonshot"; pro = "PRO"; elite = "Elite" }
+
+function Get-GameHudSkin([string]$Game) {
+    <# The HUD skin chosen in the game (CurrentHUDSkin in users\<id>\settings.lua). #>
+    $file = Get-ChildItem -LiteralPath (Join-Path $Game "users") -Filter "settings.lua" -Recurse -Depth 1 -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if (-not $file) { return $null }
+    $m = [regex]::Match([IO.File]::ReadAllText($file.FullName), 'CurrentHUDSkin\s*=\s*"db/skins_hud_?([a-z0-9]*)')
+    if (-not $m.Success) { return $null }
+    $key = ($m.Groups[1].Value -replace '_tester$', '')
+    if ($script:HudSkins.Contains($key)) { $key } else { "base" }
+}
+
+function Get-HudSkinTextures([string]$Skin) {
+    if ($Skin -eq "dlc3") { Join-Path $script:PackRoot "payload\hud\$script:HudTextureDir" }
+    else { Join-Path $script:PackRoot "payload\skins\$Skin" }
+}
+
 function Get-GameScreen([string]$Game) {
     <# The game's resolution from the newest users\<id>\settings_hardware.lua; the
        compact HUD is laid out for 16:9. Returns $null when it cannot be read. #>
@@ -175,6 +195,12 @@ function Get-PackStatus([string]$Game) {
     foreach ($rel in $script:HudFiles.Keys) {
         if ((Get-Sha (Join-Path $Game $rel)) -ne (Get-Sha (Join-Path $script:PackRoot "payload\hud\$rel"))) { $hudInstalled = $false }
     }
+    # Which skin's button set is installed: compare one of our textures.
+    $hudSkin = $null
+    $pause = Get-Sha (Join-Path $Game "$script:HudTextureDir\Pause-A.dds")
+    foreach ($skin in $script:HudSkins.Keys) {
+        if ($pause -and $pause -eq (Get-Sha (Join-Path (Get-HudSkinTextures $skin) "Pause-A.dds"))) { $hudSkin = $skin }
+    }
     $crosshair = $null
     $crosshairSize = 100
     $current = Get-Sha (Join-Path $Game $script:CrosshairFiles[0])
@@ -208,6 +234,7 @@ function Get-PackStatus([string]$Game) {
     [pscustomobject]@{
         HudCompatible = $hudOk
         HudInstalled  = $hudInstalled
+        HudSkin       = $hudSkin
         Crosshair     = $crosshair
         CrosshairSize = $crosshairSize
         CrosshairColor = $crosshairColor
@@ -218,7 +245,7 @@ function Get-PackStatus([string]$Game) {
 function Install-Pack {
     <# Installs the HUD and/or a crosshair. $Progress gets (step, total, text). #>
     param([string]$Game, [bool]$Hud, [string]$Crosshair, [scriptblock]$Progress = {}, [int]$CrosshairSize = 100,
-          [string]$CrosshairColor = "white")
+          [string]$CrosshairColor = "white", [string]$HudSkin = "dlc3")
 
     if (-not (Test-FortsFolder $Game)) { throw (L "В этой папке нет Forts.exe.") }
     if (Test-FortsRunning $Game) { throw (L "Закрой Forts и попробуй ещё раз.") }
@@ -231,7 +258,8 @@ function Install-Pack {
             throw (L "HUD сделан для Forts 1.39.0 r22745, а файлы интерфейса у тебя другие (другая версия игры или чужой мод).")
         }
         foreach ($rel in $script:HudFiles.Keys) { $plan += @{ rel = $rel; source = (Join-Path $script:PackRoot "payload\hud\$rel") } }
-        foreach ($tex in Get-ChildItem -LiteralPath (Join-Path $script:PackRoot "payload\hud\$script:HudTextureDir") -File) {
+        if (-not $script:HudSkins.Contains($HudSkin)) { throw (L "Неизвестный скин HUD.") }
+        foreach ($tex in Get-ChildItem -LiteralPath (Get-HudSkinTextures $HudSkin) -File) {
             $plan += @{ rel = (Join-Path $script:HudTextureDir $tex.Name); source = $tex.FullName }
         }
     }

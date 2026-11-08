@@ -19,9 +19,6 @@ $window, $ui = Load-Window (Join-Path $PSScriptRoot "xaml") @{ SPRING = $(if ($r
 Enable-Glass $window $ui.Tint
 
 # ---------------------------------------------------------------- content
-$hudBrush = [Windows.Media.ImageBrush]::new((Image-From "hud_after.png"))
-$hudBrush.Stretch = "UniformToFill"
-$ui.HudShot.Background = $hudBrush
 $ui.BeforeImage.Source = Image-From "crosshair_vanilla.png"
 
 # Preview backgrounds: the crosshair has to read on all of them.
@@ -36,6 +33,45 @@ foreach ($file in $sceneNames.Keys) {
     $ui.Scenes.Children.Add($seg) | Out-Null
 }
 $ui.Scenes.Children[0].IsChecked = $true
+
+# HUD photos: our layout in different matches.
+$photos = "hud_after", "hud_photo_2", "hud_photo_3"
+for ($i = 0; $i -lt $photos.Count; $i++) {
+    $seg = [Windows.Controls.RadioButton]::new()
+    $seg.Style = $window.FindResource("SceneSeg")
+    $seg.GroupName = "Photo"
+    $seg.Content = [string]($i + 1)
+    $brush = [Windows.Media.ImageBrush]::new((Image-From "$($photos[$i]).png"))
+    $brush.Stretch = "UniformToFill"
+    $seg.Tag = $brush
+    [Windows.Automation.AutomationProperties]::SetName($seg, (L "Фото {0}") -f ($i + 1))
+    $seg.Add_Checked({ param($s) $ui.HudShot.Background = $s.Tag; Animate $ui.HudShot "Opacity" 1 240 0.4 })
+    $ui.Photos.Children.Add($seg) | Out-Null
+}
+$ui.Photos.Children[0].IsChecked = $true
+
+# HUD skin: our buttons are drawn per skin; the game's own choice is preselected.
+$skinChips = @{}
+foreach ($skin in $HudSkins.Keys) {
+    $chip = [Windows.Controls.RadioButton]::new()
+    $chip.Style = $window.FindResource("SkinChip")
+    $chip.Tag = Image-From "skin_$skin.png"
+    $chip.ToolTip = L $HudSkins[$skin]
+    [Windows.Automation.AutomationProperties]::SetName($chip, (L "Скин HUD: ") + (L $HudSkins[$skin]))
+    $chip.Add_Checked({ param($s) Update-SkinNote })
+    $ui.Skins.Children.Add($chip) | Out-Null
+    $skinChips[$skin] = $chip
+}
+$script:gameSkin = $null
+function Selected-Skin {
+    $k = ($skinChips.GetEnumerator() | Where-Object { $_.Value.IsChecked } | Select-Object -First 1).Key
+    if ($k) { $k } else { "dlc3" }
+}
+function Update-SkinNote {
+    $k = Selected-Skin
+    $ui.SkinNote.Text = $(if ($k -eq $script:gameSkin) { (L "{0} · определён по настройкам игры") -f (L $HudSkins[$k]) }
+                          else { L $HudSkins[$k] })
+}
 
 $colourNames = [ordered]@{ white = (L "Белый"); green = (L "Зелёный"); yellow = (L "Жёлтый"); red = (L "Красный"); cyan = (L "Бирюзовый") }
 $swatches = @{}
@@ -156,6 +192,7 @@ function Update-InstallButton {
     $ui.Tiles.IsEnabled = [bool]$ui.CrossSwitch.IsChecked
     $ui.SizeControls.IsEnabled = [bool]$ui.CrossSwitch.IsChecked
     $ui.ColourControls.IsEnabled = [bool]$ui.CrossSwitch.IsChecked
+    $ui.Skins.IsEnabled = [bool]$ui.HudSwitch.IsChecked
     $ui.InstallBtn.IsEnabled = ($script:game -and (Test-FortsFolder $script:game) -and
         ($ui.HudSwitch.IsChecked -or (Selected-Crosshair)))
     Update-Summary
@@ -176,6 +213,10 @@ function Refresh {
     $ui.GamePath.Text = $script:game
     $ui.GamePath.ToolTip = $script:game
     $script:status = Get-PackStatus $script:game
+    $script:gameSkin = Get-GameHudSkin $script:game
+    $pick = $(if ($script:gameSkin) { $script:gameSkin } elseif ($script:status.HudSkin) { $script:status.HudSkin } else { "dlc3" })
+    $skinChips[$pick].IsChecked = $true
+    Update-SkinNote
     $ui.HudSwitch.IsEnabled = $script:status.HudCompatible
     if (-not $script:status.HudCompatible) {
         $ui.HudSwitch.IsChecked = $false
@@ -290,7 +331,7 @@ $ui.InstallBtn.Add_Click({
     Show-Work (L "Устанавливаю…") (L "Сохраняю оригинальные файлы игры")
     Flush
     try {
-        Install-Pack -Game $script:game -Hud $hud -Crosshair $cross -CrosshairSize $size -CrosshairColor (Selected-Colour) -Progress $progress
+        Install-Pack -Game $script:game -Hud $hud -Crosshair $cross -CrosshairSize $size -CrosshairColor (Selected-Colour) -HudSkin (Selected-Skin) -Progress $progress
         $parts = @()
         if ($hud) { $parts += Lower-First (L "Компактный HUD") }
         if ($cross) { $parts += (L "прицел «{0}»") -f $crosshairNames[$cross] }
