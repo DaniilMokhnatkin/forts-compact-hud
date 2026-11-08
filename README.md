@@ -6,7 +6,7 @@
 
 ## Скачать
 
-[Releases](https://github.com/DaniilMokhnatkin/forts-compact-hud/releases/latest) → **Forts Setup.exe**
+[Releases](https://github.com/DaniilMokhnatkin/forts-compact-hud/releases/latest) → **Forts-Setup.exe**
 (один файл) или **Forts-Setup.zip** (папка, запуск через `Forts Setup.cmd`). Закрой Forts перед установкой.
 Windows может предупредить о неизвестном издателе: файл не подписан, «Подробнее → Выполнить в любом случае».
 
@@ -14,7 +14,7 @@ Windows может предупредить о неизвестном издат
 - 6 прицелов, 5 цветов, размер 50–200%, превью на фоне боя, неба, скал и огня;
 - проверка экрана (HUD рассчитан на 16:9), русский и английский, проверка обновлений через GitHub.
 
-*English:* a compact HUD and crosshair pack for Forts without mods. Download **Forts Setup.exe** from
+*English:* a compact HUD and crosshair pack for Forts without mods. Download **Forts-Setup.exe** from
 Releases, close the game, run it. The installer keeps the original files and can restore them.
 
 ## Сборка из исходников
