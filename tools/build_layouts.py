@@ -14,6 +14,9 @@ import sys
 
 from PIL import Image, DdsImagePlugin  # noqa: F401 (registers DDS)
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import zors_glyphs  # noqa: E402
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ICONS = ["extinguisher", "under_construction", "under_construction_grey", "repair", "repair_grey"]
 
@@ -80,6 +83,10 @@ def main(game, payload, assets):
         for t in targets:
             os.makedirs(os.path.dirname(t), exist_ok=True)
             shutil.copy2(src, t)
+    # Construction and upgrade get the extinguisher's light see-through glyph (asked by Zors.o).
+    for name in ("under_construction", "upgrade"):
+        path = os.path.join(zors, "textures", name + ".dds")
+        zors_glyphs.lighten(path, path)
     os.makedirs(mini)
     shutil.copy2(os.path.join(tp, "minimalist", "screens", "hud.lua"), os.path.join(mini, "hud.lua"))
     copy_tree(os.path.join(tp, "minimalist", "textures"), os.path.join(mini, "textures"))
