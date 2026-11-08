@@ -15,7 +15,7 @@ THEMES = {
                 "amount": [255, 255, 255, 255], "cap": [165, 172, 190, 255], "rate": [120, 230, 130, 255]},
     # Zors.o: the generated nebula plate (installed as HUD/custom/zors_plate.dds), lavender
     # cap and slash; the rate stays green.
-    "zors": {"plate": [255, 255, 255, 255], "plate_texture": "ui/textures/HUD/custom/zors_plate.dds",
+    "zors": {"plate": [255, 255, 255, 255], "plate_texture": "ui/textures/HUD/custom/zors_plate.dds", "tab_text_centred": True,
              "slash": [214, 170, 255, 190],
              "amount": [255, 255, 255, 255], "cap": [200, 165, 245, 255], "rate": [120, 230, 130, 255]},
 }
@@ -220,6 +220,13 @@ for i, name in enumerate(("Grid", "Autodoor", "AutoCrossBrace")):
     ui.control_part(button).set("Position", [ROW_X0 + STEP * i, ROW_Y])
 controls(RES + "/Pause")[0].set("Position", [ROW_X0 + STEP * 3, ROW_Y])
 controls(RES + "/Menu")[0].set("Position", [ROW_X0 + STEP * 4, ROW_Y])
+
+# Tab captions: the game lifts a released tab's caption by 4 units to suit its tab art
+# (raised face, pressed face lower). A theme with symmetric tabs keeps them centred.
+if THEME.get("tab_text_centred"):
+    for path, (_, _, ctl) in paths.items():
+        if path.endswith("/NewText") and "ParentPressed" in str(ctl.get("ScriptY")):
+            ctl.set("ScriptY", "ParentMiddleY")
 
 # Costs on the build cards: the bolder resource font, slightly smaller than the
 # vanilla size 8 so four digits still fit the narrower card.

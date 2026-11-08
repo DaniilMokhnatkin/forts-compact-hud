@@ -136,10 +136,23 @@ def sheet_pieces(skin_base):
     }
     for key, rel in simple.items():
         save(fit(piece(key), rel), os.path.join(skin_base, rel))
-    for key, rel in (("commander_button", "commander/COGauge_Button"), ("reactor_button", "Reactor")):
+    for key, rel in (("commander_button", "commander/COGauge_Button"), ("reactor_button", "Reactor"),
+                     ("commander_button", "commander/COGauge_Button_enemy")):
         a = fit(piece(key), rel + "-A.dds")
         for state, img in states(a).items():
             save(img, os.path.join(skin_base, f"{rel}-{state}.dds"))
+    # The enemy commander (spy panel) and the "ability ready" highlight in the same style.
+    for key, rel in (("commander_frame", "commander/COGauge_BG_enemy.dds"), ("commander_gauge", "commander/COGauge_Radial_enemy.dds")):
+        save(fit(piece(key), rel), os.path.join(skin_base, rel))
+    for rel in ("commander/COGauge_BG_HL.dds", "commander/COGauge_BG_HL_enemy.dds"):
+        lit = fit(piece("commander_frame"), rel)
+        bright = ImageEnhance.Brightness(ImageEnhance.Color(lit).enhance(1.4)).enhance(1.5)
+        bright.putalpha(lit.getchannel("A"))
+        save(Image.alpha_composite(glyph_glow(lit, (220, 120, 255), 6, 1.0), bright), os.path.join(skin_base, rel))
+    # The spy panel's magnifier button.
+    spy = clean(Image.open(os.path.join(GEN, "cosmic-purple-spy-button-1024.png")).convert("RGBA"))
+    for state, img in states(fit(spy, "HUD-Spy-A.dds")).items():
+        save(img, os.path.join(skin_base, f"HUD-Spy-{state}.dds"))
 
 
 def icons(out):
@@ -156,7 +169,7 @@ def icons(out):
 
 
 def crosshair(out):
-    im = clean(Image.open(os.path.join(GEN, "cosmic-purple-crosshair-1024.png")).convert("RGBA"))
+    im = clean(Image.open(os.path.join(GEN, "cosmic-purple-crosshair-thick-1024.png")).convert("RGBA"))
     side = max(im.size)
     sq = Image.new("RGBA", (side, side))
     sq.alpha_composite(im, ((side - im.width) // 2, (side - im.height) // 2))
