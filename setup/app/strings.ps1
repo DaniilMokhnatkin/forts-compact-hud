@@ -82,6 +82,8 @@ $script:English = @{
     "• Скин HUD «По умолчанию» — как нужно: вкладки, командир и реактор будут фиолетовыми." = '• The HUD skin is "Default", as needed: tabs, commander and reactor will be purple.'
     "Сейчас в игре скин меню «{0}», с ним фон Zors.o не виден: DLC-скины берут фон из своих файлов. Выбери в игре: Настройки → Игра → Скин меню → «По умолчанию», «Классика» или «Склад оружия»." = 'The game now uses the "{0}" menu skin, which does not show the Zors.o background: DLC skins use their own files. In the game choose Options → Game → Menu Skin → "Default", "Classic" or "Armoury".'
     "Виден со скинами меню «По умолчанию», «Классика» и «Склад оружия». У «Лунохода», High Seas и Firebird фон свой." = 'Shows with the "Default", "Classic" and "Armoury" menu skins. Moonshot, High Seas and Firebird keep their own.'
+    "← → листать · Esc закрыть" = "← → browse · Esc closes"; "⤢  На весь экран" = "⤢  Full screen"; "На весь экран" = "Full screen"
+    "Открыть на весь экран (Esc — закрыть)" = "Open full screen (Esc closes)"; "Открыть на весь экран" = "Open full screen"
     "Профиль Steam" = "Steam profile"; "Иконки и запуск" = "Icons and start-up"; "Запуск игры" = "Game start"
     "Пропускать заставку" = "Skip the intro"; "Логотипы при запуске Forts" = "The logos when Forts starts"
     "без заставки" = "no intro"; "с заставкой" = "with the intro"

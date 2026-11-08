@@ -80,15 +80,7 @@ function Show-Layout([string]$key) {
     }
     # Zors.o and Minimalist bring their own buttons, so there is no skin set to pick.
     foreach ($n in "SkinRow", "SkinSep") { $ui[$n].Visibility = $(if ($key -in "minimalist", "zors") { "Collapsed" } else { "Visible" }) }
-    $ui.PhotosBox.Visibility = $(if ($key -eq "compact") { "Visible" } else { "Collapsed" })
-    if ($info.preview) {
-        $brush = [Windows.Media.ImageBrush]::new((Image-From $info.preview))
-        $brush.Stretch = "UniformToFill"
-        $ui.HudShot.Background = $brush
-    } else {
-        ($ui.Photos.Children | Where-Object { $_.IsChecked } | Select-Object -First 1) | ForEach-Object { $ui.HudShot.Background = $_.Tag }
-    }
-    Animate $ui.HudShot "Opacity" 1 240 0.4
+    Show-Gallery $key
     if ($key -eq "minimalist") {
         $ui.MiniSkin.Text = $(if ($script:gameSkin -and $script:gameSkin -ne "base") {
             (L "• Сейчас в игре скин «{0}». Для этого HUD выбери в игре: Настройки → Игра → Скин HUD → «По умолчанию».") -f (L $HudSkins[$script:gameSkin]) }
@@ -105,21 +97,98 @@ function Show-Layout([string]$key) {
 }
 $ui.LayoutLink.Add_Click({ if ($ui.LayoutLink.Tag -like "https://steamcommunity.com/*") { Start-Process $ui.LayoutLink.Tag } })
 
-# HUD photos: our layout in different matches.
-$photos = "hud_after", "hud_photo_2", "hud_photo_3"
-for ($i = 0; $i -lt $photos.Count; $i++) {
-    $seg = [Windows.Controls.RadioButton]::new()
-    $seg.Style = $window.FindResource("SceneSeg")
-    $seg.GroupName = "Photo"
-    $seg.Content = [string]($i + 1)
-    $brush = [Windows.Media.ImageBrush]::new((Image-From "$($photos[$i]).png"))
-    $brush.Stretch = "UniformToFill"
-    $seg.Tag = $brush
-    [Windows.Automation.AutomationProperties]::SetName($seg, (L "Фото {0}") -f ($i + 1))
-    $seg.Add_Checked({ param($s) $ui.HudShot.Background = $s.Tag; Animate $ui.HudShot "Opacity" 1 240 0.4 })
-    $ui.Photos.Children.Add($seg) | Out-Null
+# Screenshots per HUD: assets\gallery\<layout>\NN Caption.jpg (made by tools\import_screens.py).
+# Without them the old preview strips are used.
+function Get-Gallery([string]$key) {
+    $dir = Join-Path $assets "gallery\$key"
+    $files = @(Get-ChildItem -LiteralPath $dir -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -in ".jpg", ".png" } | Sort-Object Name)
+    if ($files) {
+        return @($files | ForEach-Object { @{ path = $_.FullName; caption = ($_.BaseName -replace '^\d+\s*', '') } })
+    }
+    $fallback = @{ compact = @("hud_after.png", "hud_photo_2.png", "hud_photo_3.png"); zors = @("preview_zors.png"); minimalist = @("minimalist_preview.jpg") }
+    @($fallback[$key] | ForEach-Object { @{ path = (Join-Path $assets $_); caption = "" } })
 }
-$ui.Photos.Children[0].IsChecked = $true
+function Load-Bitmap([string]$path) {
+    $bmp = [Windows.Media.Imaging.BitmapImage]::new()
+    $bmp.BeginInit(); $bmp.CacheOption = "OnLoad"; $bmp.UriSource = [Uri]::new($path); $bmp.EndInit(); $bmp.Freeze()
+    $bmp
+}
+$script:gallery = @()
+$script:galleryIndex = 0
+function Show-Gallery([string]$key) {
+    $script:gallery = Get-Gallery $key
+    $ui.Photos.Children.Clear()
+    for ($i = 0; $i -lt $script:gallery.Count; $i++) {
+        $seg = [Windows.Controls.RadioButton]::new()
+        $seg.Style = $window.FindResource("SceneSeg")
+        $seg.GroupName = "Photo"
+        $seg.Content = [string]($i + 1)
+        $seg.Tag = $i
+        $seg.ToolTip = $script:gallery[$i].caption
+        [Windows.Automation.AutomationProperties]::SetName($seg, (L "Фото {0}") -f ($i + 1))
+        $seg.Add_Checked({ param($s) Show-Shot $s.Tag })
+        $ui.Photos.Children.Add($seg) | Out-Null
+    }
+    $ui.PhotosBox.Visibility = $(if ($script:gallery.Count -gt 1) { "Visible" } else { "Collapsed" })
+    if ($ui.Photos.Children.Count) { $ui.Photos.Children[0].IsChecked = $true } else { Show-Shot 0 }
+}
+function Show-Shot([int]$i) {
+    if (-not $script:gallery.Count) { return }
+    $script:galleryIndex = $i
+    $shot = $script:gallery[$i]
+    $bmp = Load-Bitmap $shot.path
+    $brush = [Windows.Media.ImageBrush]::new($bmp)
+    $brush.Stretch = "UniformToFill"
+    if ($bmp.PixelWidth / $bmp.PixelHeight -lt 3) {
+        # a whole screenshot: the frame shows its bottom, where the HUD is
+        $brush.Viewbox = [Windows.Rect]::new(0, 0.66, 1, 0.34)
+    }
+    $ui.HudShot.Background = $brush
+    $ui.ShotCaption.Text = $shot.caption
+    $ui.ShotCaptionBox.Visibility = $(if ($shot.caption) { "Visible" } else { "Collapsed" })
+    Animate $ui.HudShot "Opacity" 1 240 0.4
+}
+
+function Open-Viewer {
+    <# The chosen HUD's screenshots full screen: arrows or click to go on, Esc to close. #>
+    if (-not $script:gallery.Count) { return }
+    $v = [Windows.Window]::new()
+    $v.WindowStyle = "None"; $v.ResizeMode = "NoResize"; $v.WindowState = "Maximized"; $v.Topmost = $true
+    $v.Background = [Windows.Media.Brushes]::Black; $v.Owner = $window; $v.ShowInTaskbar = $false; $v.Title = "Forts Setup"
+    $grid = [Windows.Controls.Grid]::new()
+    $img = [Windows.Controls.Image]::new(); $img.Stretch = "Uniform"
+    [Windows.Media.RenderOptions]::SetBitmapScalingMode($img, "HighQuality")
+    $bar = [Windows.Controls.Border]::new()
+    $bar.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#B01C1C1E"); $bar.CornerRadius = [Windows.CornerRadius]::new(14)
+    $bar.Padding = [Windows.Thickness]::new(18, 8, 18, 8); $bar.Margin = [Windows.Thickness]::new(24)
+    $bar.HorizontalAlignment = "Center"; $bar.VerticalAlignment = "Bottom"
+    $text = [Windows.Controls.TextBlock]::new(); $text.Foreground = [Windows.Media.Brushes]::White; $text.FontSize = 15
+    $bar.Child = $text
+    $grid.Children.Add($img) | Out-Null; $grid.Children.Add($bar) | Out-Null
+    $v.Content = $grid
+    $script:viewer = @{ window = $v; image = $img; text = $text; i = $script:galleryIndex }
+    Step-Viewer 0
+    $v.Add_KeyDown({ param($s, $e)
+        switch ($e.Key) { "Escape" { $script:viewer.window.Close() } "Left" { Step-Viewer -1 } "Right" { Step-Viewer 1 } "Space" { Step-Viewer 1 } }
+    })
+    $v.Add_MouseLeftButtonUp({ Step-Viewer 1 })
+    $v.Add_MouseRightButtonUp({ $script:viewer.window.Close() })
+    $v.ShowDialog() | Out-Null
+    if ($ui.Photos.Children.Count) { $ui.Photos.Children[$script:viewer.i].IsChecked = $true }
+}
+$ui.FullScreenBtn.Add_Click({ Open-Viewer })
+$ui.HudShot.Add_MouseLeftButtonUp({ Open-Viewer })
+
+function Step-Viewer([int]$d) {
+    $n = $script:gallery.Count
+    $script:viewer.i = ($script:viewer.i + $d + $n) % $n
+    $shot = $script:gallery[$script:viewer.i]
+    $script:viewer.image.Source = Load-Bitmap $shot.path
+    $parts = @((L $Layouts[(Selected-Layout)]) + " · $($script:viewer.i + 1) / $n")
+    if ($shot.caption) { $parts += $shot.caption }
+    $parts += L "← → листать · Esc закрыть"
+    $script:viewer.text.Text = $parts -join "   ·   "
+}
 
 # HUD skin: our buttons are drawn per skin; the game's own choice is preselected.
 $skinChips = @{}
