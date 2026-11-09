@@ -29,9 +29,20 @@ class TacticalLayoutTests(unittest.TestCase):
             self.assertEqual(p[RES+'/Readout'+res+'/'+res+'Cap/'+res+'MaxLabel'][1].get('Text'),'$Maximum')
 
     def test_background_does_not_reactivate_baked_vanilla_frames(self):
-        p=self.make(tactical=False)
+        p=self.make()
         for key in ('PanelCenter','PanelCenterL','PanelCenterR','ResourcePanel'):
             self.assertEqual(p[PANEL+'/'+key][1].get('Colour').array()[3],0)
+
+    def test_starkoff_keeps_original_panel_art(self):
+        original=ui.unique_paths(ui.find_root(self.original))
+        for placement in ('corner','center'):
+            g=copy.deepcopy(self.original);customize(g,placement,80,0,True,False,True)
+            p=ui.unique_paths(ui.find_root(g))
+            for name in ('PanelLeft','PanelCenter','PanelCenterL','PanelCenterR','ResourcePanel'):
+                path=PANEL+'/'+name
+                for key in ('Texture','Colour','ColourLower'):
+                    before=original[path][1].get(key);after=p[path][1].get(key)
+                    self.assertEqual(after.array() if isinstance(after,ui.Table) else after,before.array() if isinstance(before,ui.Table) else before)
 
     def test_enemy_uses_matching_tactical_art(self):
         p=self.make()
