@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.3 — 2026-11-09
+
+- Replaced all seven Zors.o action icons with the new dark horizontal purple
+  nebula backgrounds and light translucent symbols. Updated construction/repair
+  disabled states and the installer's icon previews from the same artwork.
+- Synchronized Windows executable version metadata with the release version.
+
 ## 1.8.2 — 2026-11-09
 
 - Tactical HUD: the panel behind the bottom-right icons now fits the icons

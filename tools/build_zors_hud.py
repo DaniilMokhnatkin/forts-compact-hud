@@ -32,11 +32,10 @@ PIECES = {
     "reactor_bar": (12, 324, 356, 376), "reactor_gauge": (428, 328, 824, 376),
     "reactor_button": (848, 324, 1116, 464), "spy_panel": (428, 636, 776, 844),
 }
-ICONS = {  # world icons on the icon sheet (4096 x 2048)
-    "extinguisher": (24, 24, 1000, 1000), "under_construction": (1052, 24, 2024, 1000),
-    "upgrade": (2072, 24, 3048, 1000), "repair": (3100, 24, 4072, 1000),
-    "reload": (24, 1052, 1000, 2024), "reload_banked_ammo": (1052, 1052, 2024, 2024),
-    "scrap": (2072, 1048, 3048, 2024),
+ICONS = {  # (column, row) on the dark-nebula sheet's four-by-two grid
+    "extinguisher": (0, 0), "under_construction": (1, 0),
+    "upgrade": (2, 0), "repair": (3, 0),
+    "reload": (0, 1), "reload_banked_ammo": (1, 1), "scrap": (2, 1),
 }
 GLYPH = ((240, 232, 255), (212, 196, 246))  # light lavender, as the icons' glyphs
 
@@ -156,8 +155,10 @@ def sheet_pieces(skin_base):
 
 
 def icons(out):
-    sheet = Image.open(os.path.join(GEN, "cosmic-purple-action-icons-sheet.png")).convert("RGBA")
-    for name, box in ICONS.items():
+    sheet = Image.open(os.path.join(GEN, "cosmic-purple-action-icons-dark-nebula.png")).convert("RGBA")
+    for name, (column, row) in ICONS.items():
+        box = (round(column * sheet.width / 4), round(row * sheet.height / 2),
+               round((column + 1) * sheet.width / 4), round((row + 1) * sheet.height / 2))
         icon = clean(sheet.crop(box)).resize((126, 126), Image.LANCZOS)
         img = Image.new("RGBA", (128, 128))
         img.alpha_composite(icon, (1, 1))
