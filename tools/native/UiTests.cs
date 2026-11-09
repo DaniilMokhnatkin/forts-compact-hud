@@ -80,7 +80,7 @@ static class NativeUiTests {
             Wait(()=>c.UI<Button>("CheckUpdateBtn").IsEnabled);
             c.UI<Button>("CheckUpdateBtn").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
             Check(c.UI<ProgressBar>("UpdateProgress").Visibility==Visibility.Visible&&!c.UI<Button>("CheckUpdateBtn").IsEnabled,"manual update check animates and prevents duplicate requests");
-            Wait(()=>c.UI<Button>("CheckUpdateBtn").IsEnabled);Check(!String.IsNullOrWhiteSpace(c.UI<TextBlock>("UpdateStatus").Text)&&c.UI<ProgressBar>("UpdateProgress").Visibility==Visibility.Collapsed,"manual update check ends with an explicit result");
+            Wait(()=>c.UI<Button>("CheckUpdateBtn").IsEnabled);Check(!String.IsNullOrWhiteSpace(c.UI<TextBlock>("UpdateStatus").Text)&&!c.UI<TextBlock>("UpdateStatus").Text.Contains("Не удалось")&&c.UI<ProgressBar>("UpdateProgress").Visibility==Visibility.Collapsed,"manual update check ends with an explicit result");
             var feedback=new FeedbackDialog(c.Window,Path.Combine(game,"unconfigured-feedback"),"version=test; layout=zors",false);feedback.Show();Pump(80);
             feedback.Description.Text="Ошибка при установке";Check(!feedback.SendButton.IsEnabled,"unconfigured feedback cannot claim to send");Render(feedback,Path.Combine(root,@"build\native-feedback.png"));feedback.Close();
             if(FeedbackClient.Endpoint(Path.Combine(root,"setup"))!=null){

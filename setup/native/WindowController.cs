@@ -51,6 +51,8 @@ namespace FortsSetup {
     }
 
     public sealed class WindowController {
+        // .NET Framework without a targetFramework attribute still defaults to TLS 1.0; GitHub and Cloudflare require TLS 1.2.
+        static WindowController(){System.Net.ServicePointManager.SecurityProtocol|=(System.Net.SecurityProtocolType)3072;}
         public readonly Window Window;
         public readonly ThemeAnimator Theme;
         public Task Ready {get;private set;}

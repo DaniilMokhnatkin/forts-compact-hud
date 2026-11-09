@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.1 — 2026-11-09
+
+- Fixed "Could not check for updates": the installer now enables TLS 1.2 for
+  GitHub and the feedback relay, which .NET Framework did not use by default.
+
 ## 1.6.0 — 2026-11-09
 
 - The compact HUD is now called **Starkoff**. It only offers the resource
