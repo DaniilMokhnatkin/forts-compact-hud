@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.8.0 — 2026-11-09
+
+- Tactical HUD can now be white: a white swatch next to the hue slider turns
+  the buttons white with dark icons, keeps panels graphite and gives them a
+  white border. Moving the hue slider switches back to a colour.
+- "Download" in the update banner now downloads the new installer inside Forts
+  Setup, with a progress bar and into Downloads, instead of opening GitHub.
+  Releases carry a SHA256SUMS.txt that the installer checks.
+- The About page shows the new Matchroom Next icon.
+
 ## 1.7.0 — 2026-11-09
 
 - 12 new crosshairs, 19 in total: an upside-down V (Chevron and Double chevron),
