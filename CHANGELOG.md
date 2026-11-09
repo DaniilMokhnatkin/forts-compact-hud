@@ -2,6 +2,9 @@
 
 ## 1.6.1 — 2026-11-09
 
+- New "About the developer" page with the author and Matchroom Next. The
+  download button fetches the latest Matchroom release from GitHub directly
+  into Downloads and verifies its SHA-256 checksum; no browser is opened.
 - Fixed "Could not check for updates": the installer now enables TLS 1.2 for
   GitHub and the feedback relay, which .NET Framework did not use by default.
 

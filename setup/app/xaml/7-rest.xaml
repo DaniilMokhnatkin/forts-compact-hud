@@ -1,4 +1,50 @@
 
+          <!-- about the developer -->
+          <StackPanel x:Name="AboutPage" Visibility="Collapsed">
+            <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
+            <TextBlock Text="О разработчике" Style="{StaticResource PageTitle}"/>
+            <TextBlock Style="{StaticResource PageNote}" Text="Forts Setup делаю я. Установщик бесплатный и без модов."/>
+            <Border CornerRadius="12" Background="{DynamicResource Group}" Margin="0,18,0,0">
+              <Grid Margin="16,14">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <Border Width="46" Height="46" CornerRadius="23">
+                  <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#3A3A40" Offset="0"/><GradientStop Color="#141416" Offset="1"/></LinearGradientBrush></Border.Background>
+                  <TextBlock Text="S" Foreground="White" FontFamily="{StaticResource Display}" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                  <TextBlock Text="Даниил · Starkoff" FontFamily="{StaticResource Display}" FontSize="16" FontWeight="SemiBold"/>
+                  <TextBlock Text="Автор Forts Setup и компактного HUD Starkoff" Foreground="{StaticResource SecondaryText}" FontSize="12"/>
+                </StackPanel>
+                <Button x:Name="AuthorLink" Grid.Column="2" Style="{StaticResource Link}" Content="GitHub" VerticalAlignment="Center"/>
+              </Grid>
+            </Border>
+            <TextBlock Text="Ещё для Forts" Foreground="{StaticResource SecondaryText}" FontSize="12" FontWeight="Medium" Margin="4,22,0,8"/>
+            <Border CornerRadius="12" Background="{DynamicResource Group}">
+              <StackPanel Margin="16,14">
+                <Grid>
+                  <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                  <Border Width="46" Height="46" CornerRadius="11">
+                    <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#5AC8FA" Offset="0"/><GradientStop Color="#1E6FD9" Offset="1"/></LinearGradientBrush></Border.Background>
+                    <Canvas Width="46" Height="46">
+                      <Path Data="M13,31 L13,15 L23,26 L33,15 L33,31" Stroke="White" StrokeThickness="3" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                    </Canvas>
+                  </Border>
+                  <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Matchroom Next" FontFamily="{StaticResource Display}" FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="Программа для Forts: история матчей и рейтинг 1v1 по реплеям, аватарки и ники Steam, радар сильных игроков." Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap"/>
+                  </StackPanel>
+                </Grid>
+                <Border Height="1" Background="{DynamicResource Separator}" Margin="0,14,0,12"/>
+                <StackPanel Orientation="Horizontal">
+                  <Button x:Name="MatchroomDownload" Style="{StaticResource Primary}" Content="Скачать последнюю версию"/>
+                  <Button x:Name="MatchroomPage" Style="{StaticResource Link}" Content="Страница на GitHub" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+                <ProgressBar x:Name="MatchroomProgress" Height="4" Minimum="0" Maximum="100" Margin="0,12,0,0" Visibility="Collapsed"/>
+                <TextBlock x:Name="MatchroomStatus" Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"/>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+
           <!-- backup -->
           <StackPanel x:Name="BackupPage" Visibility="Collapsed">
             <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>

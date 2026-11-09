@@ -94,6 +94,19 @@
               <TextBlock x:Name="NavBackupValue" Grid.Column="2" Opacity="0.6" FontSize="12" FontWeight="Normal" VerticalAlignment="Center"/>
             </Grid>
           </RadioButton>
+          <RadioButton x:Name="NavAbout" Style="{StaticResource Nav}" Tag="AboutPage" AutomationProperties.Name="О разработчике">
+            <Grid>
+              <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+              <Border Width="22" Height="22" CornerRadius="6">
+                <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#8E8CF5" Offset="0"/><GradientStop Color="#5856D6" Offset="1"/></LinearGradientBrush></Border.Background>
+                <Canvas Width="22" Height="22">
+                  <Ellipse Canvas.Left="8" Canvas.Top="4.5" Width="6" Height="6" Fill="White"/>
+                  <Path Data="M5.5,17.5 C5.5,13.5 16.5,13.5 16.5,17.5 Z" Fill="White"/>
+                </Canvas>
+              </Border>
+              <TextBlock Grid.Column="1" Text="О разработчике" Margin="10,0,0,0" VerticalAlignment="Center"/>
+            </Grid>
+          </RadioButton>
         </StackPanel>
       </Grid>
 

@@ -118,7 +118,7 @@ namespace FortsSetup {
             foreach(var pair in crossNames){if(!engine.Crosshairs.Contains(pair.Key))continue;string key=pair.Key;var b=Choice(UI<WrapPanel>("Tiles"),"Tile",L(pair.Value),"Crosshair",key,()=>{cross=key;UpdateCross();UpdateSummary();});b.Tag=Image("crosshair_"+key+".png");tiles[key]=b;}
             foreach(var pair in Engine.Colors){string key=pair.Key;var b=Choice(UI<StackPanel>("Swatches"),"Swatch",null,"Colour",key,()=>{color=key;UpdateCross();});b.Background=(Brush)new BrushConverter().ConvertFrom("#"+pair.Value);b.ToolTip=L(colorNames[key]);AutomationProperties.SetName(b,L("Цвет: ")+L(colorNames[key]));swatches[key]=b;}
             MakeIcons();
-            foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackup"}) {var b=UI<RadioButton>(nav);b.Checked+=(s,e)=>ShowPage((string)b.Tag);}
+            foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackup","NavAbout"}) {var b=UI<RadioButton>(nav);b.Checked+=(s,e)=>ShowPage((string)b.Tag);}
             UI<Slider>("SizeSlider").ValueChanged+=(s,e)=>UpdateCross();
             UI<CheckBox>("HudSwitch").Click+=(s,e)=>UpdateSummary();UI<CheckBox>("CrossSwitch").Click+=(s,e)=>UpdateCross();UI<CheckBox>("IntroSwitch").Click+=(s,e)=>UpdateSummary();
             UI<Button>("IconsReset").Click+=(s,e)=>{foreach(var slider in iconSliders.Values)slider.Value=100;};
@@ -131,6 +131,13 @@ namespace FortsSetup {
             UI<Button>("PhotoPrevious").Click+=(s,e)=>StepShot(-1);UI<Button>("PhotoNext").Click+=(s,e)=>StepShot(1);
             UI<Button>("LayoutLink").Click+=(s,e)=>OpenUrl(Layout=="tactical"?"https://www.youtube.com/@robber_fox/videos":Layout=="zors"?"https://steamcommunity.com/profiles/76561199099877561":"https://steamcommunity.com/sharedfiles/filedetails/?id=3750502564");
             UI<Button>("CustomizationBtn").Click+=(s,e)=>{var dialog=new CustomizationDialog(Window,customization,Layout,lang=="en");if(dialog.ShowDialog()==true){customization=dialog.Value.Clone();customizationChosen=true;UpdateSummary();}};
+            UI<Button>("AuthorLink").Click+=(s,e)=>OpenUrl(Matchroom.Author);UI<Button>("MatchroomPage").Click+=(s,e)=>OpenUrl(Matchroom.Page);
+            UI<Button>("MatchroomDownload").Click+=async(s,e)=>{
+                var button=UI<Button>("MatchroomDownload");var bar=UI<ProgressBar>("MatchroomProgress");button.IsEnabled=false;bar.Value=0;bar.Visibility=Visibility.Visible;Text("MatchroomStatus",L("Скачиваю…"));
+                try{string file=await Matchroom.Download(p=>Window.Dispatcher.BeginInvoke(new Action(()=>bar.Value=p)));Text("MatchroomStatus",L("Скачано в «Загрузки»: ")+Path.GetFileName(file));Process.Start("explorer.exe","/select,\""+file+"\"");}
+                catch(Exception ex){Text("MatchroomStatus",L(ex.Message));}
+                finally{button.IsEnabled=true;bar.Visibility=Visibility.Collapsed;}
+            };
             UI<Button>("UpdateLink").Click+=(s,e)=>{if(updateUrl!=null)OpenUrl(updateUrl);};
             UI<Button>("CheckUpdateBtn").Content=lang=="en"?"Check for updates":"Проверить обновления";
             UI<Button>("FeedbackBtn").Content=lang=="en"?"Report a bug":"Сообщить об ошибке";
@@ -223,10 +230,10 @@ namespace FortsSetup {
         }
         public Options Selection() {return new Options{Hud=On("HudSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=cross=="zors"?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
         public void ShowPage(string name) {
-            Page=name;foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackupPage","WorkPage"})Visible(page,page==name);
+            Page=name;foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackupPage","AboutPage","WorkPage"})Visible(page,page==name);
             if(name!="WorkPage"){
-                bool backup=name=="BackupPage";UI<Button>("InstallBtn").Content=L(name=="HudPage"||name=="CrossPage"?"Далее":"Установить");Visible("InstallBtn",!backup);Visible("RestoreBtn",backup);UI<Button>("InstallBtn").IsDefault=!backup;UI<Button>("RestoreBtn").IsDefault=backup;UI<TextBlock>("Summary").Opacity=backup?0:1;
-                foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackup"}){var item=UI<RadioButton>(nav);if((string)item.Tag==name){Window.UpdateLayout();Animate(UI<TranslateTransform>("NavPillY"),TranslateTransform.YProperty,item.TranslatePoint(new Point(0,0),UI<StackPanel>("Nav")).Y,220);break;}}
+                bool backup=name=="BackupPage",about=name=="AboutPage";UI<Button>("InstallBtn").Content=L(name=="HudPage"||name=="CrossPage"?"Далее":"Установить");Visible("InstallBtn",!backup&&!about);Visible("RestoreBtn",backup);UI<Button>("InstallBtn").IsDefault=!backup;UI<Button>("RestoreBtn").IsDefault=backup;UI<TextBlock>("Summary").Opacity=backup||about?0:1;
+                foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackup","NavAbout"}){var item=UI<RadioButton>(nav);if((string)item.Tag==name){Window.UpdateLayout();Animate(UI<TranslateTransform>("NavPillY"),TranslateTransform.YProperty,item.TranslatePoint(new Point(0,0),UI<StackPanel>("Nav")).Y,220);break;}}
             }
             UpdateSummary();
         }

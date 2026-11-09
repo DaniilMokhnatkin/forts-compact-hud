@@ -8,6 +8,14 @@ $script:English = @{
     "Компактный HUD" = "Compact HUD"; "Вкл." = "On"; "Выкл." = "Off"; "Прицел" = "Crosshair"
     "Резервная копия" = "Backup"; "Папка игры" = "Game folder"; "Изменить…" = "Change…"; "Выбрать папку игры" = "Choose the game folder"
     "Есть" = "Saved"; "Язык" = "Language"
+    # About
+    "О разработчике" = "About the developer"; "Forts Setup делаю я. Установщик бесплатный и без модов." = "I make Forts Setup. The installer is free and mod-free."
+    "Даниил · Starkoff" = "Daniil · Starkoff"; "Автор Forts Setup и компактного HUD Starkoff" = "Author of Forts Setup and the Starkoff compact HUD"
+    "Ещё для Forts" = "More for Forts"; "Программа для Forts: история матчей и рейтинг 1v1 по реплеям, аватарки и ники Steam, радар сильных игроков." = "A Forts app: match history and 1v1 rating from replays, Steam avatars and names, a radar for strong players."
+    "Скачать последнюю версию" = "Download the latest version"; "Страница на GitHub" = "GitHub page"; "Скачиваю…" = "Downloading…"; "Скачано в «Загрузки»: " = "Saved to Downloads: "
+    "Не удалось получить последнюю версию. Проверьте подключение." = "Could not get the latest version. Check your connection."
+    "Не удалось скачать файл. Проверьте подключение и повторите позже." = "Could not download the file. Check your connection and try later."
+    "Контрольная сумма не совпала. Файл удалён, попробуйте ещё раз." = "Checksum mismatch. The file was deleted, please try again."
     # HUD page
     "Меньше места внизу экрана, ресурсы всегда перед глазами. Без модов: меняются только файлы интерфейса." =
         "Less space at the bottom of the screen, resources always in sight. No mods: only interface files change."

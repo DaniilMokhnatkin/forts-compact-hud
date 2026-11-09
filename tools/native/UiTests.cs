@@ -55,6 +55,12 @@ static class NativeUiTests {
             {var sd=new CustomizationDialog(c.Window,new HudCustomization{Background=100},"compact",false);sd.Show();Pump(60);Render(sd,Path.Combine(root,@"build\native-starkoff.png"));sd.Close();}
             {var c1=new HudCustomization{Resources="corner",Cards=65,Background=100,Hue=90,Indicators=false}.For("compact");var c2=new HudCustomization{Resources="center",Background=100}.For("compact");Check(c1.Cards==80&&c1.Hue==0&&c1.Indicators&&c1.Background==0&&c2.Background==0,"Starkoff only varies resource position");}
             Render(c.Window,Path.Combine(root,@"build\native-compact.png"));
+            c.UI<RadioButton>("NavAbout").IsChecked=true;Pump(300);
+            Check(c.UI<StackPanel>("AboutPage").Visibility==Visibility.Visible&&c.UI<Button>("InstallBtn").Visibility==Visibility.Collapsed&&c.UI<Button>("MatchroomDownload")!=null,"About page shows the developer and Matchroom download without the install button");
+            Render(c.Window,Path.Combine(root,@"build\native-about.png"));
+            {var pick=Matchroom.Pick("{\"tag_name\":\"v1.2.3\",\"assets\":[{\"name\":\"Matchroom.Next.v1.2.3.exe\",\"browser_download_url\":\"https://github.com/DaniilMokhnatkin/MatchroomNext/releases/download/v1.2.3/Matchroom.Next.v1.2.3.exe\"},{\"name\":\"x.sha256.txt\",\"browser_download_url\":\"https://github.com/DaniilMokhnatkin/MatchroomNext/releases/download/v1.2.3/x.sha256.txt\"},{\"name\":\"evil.exe\",\"browser_download_url\":\"https://evil.example/evil.exe\"}]}");
+             Check(pick.Name=="Matchroom.Next.v1.2.3.exe"&&pick.HashUrl!=null&&pick.Url.StartsWith("https://github.com/DaniilMokhnatkin/MatchroomNext/releases/download/"),"Matchroom download picks the installer and its checksum from the official repository only");
+             Check(Matchroom.ExpectedHash("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef  file.exe")!=null&&Matchroom.ExpectedHash("nonsense")==null,"checksum file is parsed strictly");}
             c.UI<RadioButton>("NavCross").IsChecked=true;c.UI<Slider>("SizeSlider").Value=75;
             Check(c.UI<TextBlock>("SizeValue").Text=="75%","native slider updates preview");
             c.UI<CheckBox>("CrossSwitch").IsChecked=false;
