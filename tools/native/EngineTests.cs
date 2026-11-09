@@ -51,6 +51,10 @@ static class EngineTests {
             custom.Resources="center";custom.Cards=100;custom.Background=50;custom.Indicators=false;
             engine.Install(game,new Options{Hud=true,Layout="tactical",Customization=custom},null);
             Check(Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"))!=cornerHash&&engine.Status(game).Customization.Resources=="center","resource placement is selectable, not hardcoded");
+            custom.White=true;engine.Install(game,new Options{Hud=true,Layout="tactical",Customization=custom},null);
+            byte[] play=File.ReadAllBytes(Path.Combine(game,@"data\ui\textures\HUD\custom\Play-A.dds"));int playStart=HudCustomization.BgraPixelOffset(play);
+            Check(engine.Status(game).Customization.White&&Enumerable.Range(0,(play.Length-playStart)/4).All(i=>{int o=playStart+i*4,mx=Math.Max(play[o],Math.Max(play[o+1],play[o+2])),mn=Math.Min(play[o],Math.Min(play[o+1],play[o+2]));return play[o+3]==0||mx-mn<=7;}),"white HUD installs neutral button textures and persists");
+            custom.White=false;
             byte[] sample=File.ReadAllBytes(engine.Payload(@"layouts\tactical\textures\HUD\custom\Pause-A.dds"));
             var shifted=HudCustomization.ShiftHue(sample,90);
             Check(!sample.SequenceEqual(shifted)&&Enumerable.Range(0,(sample.Length-128)/4).All(i=>sample[131+i*4]==shifted[131+i*4]),"hue changes texture pixels and preserves alpha");

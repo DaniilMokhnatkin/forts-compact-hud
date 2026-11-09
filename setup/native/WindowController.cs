@@ -61,7 +61,7 @@ namespace FortsSetup {
         public PackStatus Installed {get;private set;}
         readonly Engine engine;
         readonly string assets,lang;
-        string game,skin="dlc3",cross="cross",color="white",updateUrl,lastPage="HudPage";
+        string game,skin="dlc3",cross="cross",color="white",updateRepo,lastPage="HudPage";
         readonly bool noMotion;
         bool initializing=true,busy,statusReady;
         bool checkingUpdates;
@@ -142,13 +142,19 @@ namespace FortsSetup {
                     finally{button.IsEnabled=true;bar.Visibility=Visibility.Collapsed;}
                 };
             }
-            UI<Button>("UpdateLink").Click+=(s,e)=>{if(updateUrl!=null)OpenUrl(updateUrl);};
+            UI<Button>("UpdateLink").Click+=async(s,e)=>{
+                if(updateRepo==null)return;
+                var button=UI<Button>("UpdateLink");var bar=UI<ProgressBar>("UpdateDownload");button.IsEnabled=false;bar.Value=0;bar.Visibility=Visibility.Visible;Visible("UpdateDownloadStatus",true);Text("UpdateDownloadStatus",L("Скачиваю…"));
+                try{string file=await Matchroom.Download(p=>Window.Dispatcher.BeginInvoke(new Action(()=>bar.Value=p)),null,updateRepo);Text("UpdateDownloadStatus",L("Скачано в «Загрузки»: ")+Path.GetFileName(file)+". "+L("Закрой этот установщик и запусти новый."));Process.Start("explorer.exe","/select,\""+file+"\"");}
+                catch(Exception ex){Text("UpdateDownloadStatus",L(ex.Message));}
+                finally{button.IsEnabled=true;bar.Visibility=Visibility.Collapsed;}
+            };
             UI<Button>("CheckUpdateBtn").Content=lang=="en"?"Check for updates":"Проверить обновления";
             UI<Button>("FeedbackBtn").Content=lang=="en"?"Report a bug":"Сообщить об ошибке";
             UI<Button>("CheckUpdateBtn").Click+=(s,e)=>CheckUpdates(true);
             UI<Button>("FeedbackBtn").Click+=(s,e)=>{
                 var o=Selection();string info="version="+typeof(Program).Assembly.GetName().Version+"; layout="+Layout+"; language="+lang;
-                if(o.Customization!=null)info+="; resources="+o.Customization.Resources+"; cards="+o.Customization.Cards+"; background="+o.Customization.Background+"; hue="+o.Customization.Hue;
+                if(o.Customization!=null)info+="; resources="+o.Customization.Resources+"; cards="+o.Customization.Cards+"; background="+o.Customization.Background+"; hue="+o.Customization.Hue+"; white="+o.Customization.White;
                 new FeedbackDialog(Window,engine.PackRoot,info,lang=="en").ShowDialog();
             };
             UI<RadioButton>(lang=="en"?"LangEn":"LangRu").IsChecked=true;
@@ -246,7 +252,7 @@ namespace FortsSetup {
             var o=Selection();var parts=new List<string>();if(o.Hud)parts.Add("HUD «"+L(layoutNames[Layout])+"»");if(o.Crosshair!=null)parts.Add(L("Прицел")+" «"+L(crossNames[cross])+"» "+o.Size+"%");
             foreach(var p in o.Icons)if(p.Value<100)parts.Add(L(iconNames[p.Key])+" "+p.Value+"%");if(Installed!=null&&o.SkipIntro!=Installed.SkipIntro)parts.Add(L(o.SkipIntro==true?"без заставки":"с заставкой"));
             Text("Summary",parts.Count>0?L("Будет установлено: ")+String.Join("; ",parts):L("Ничего не выбрано"));Text("NavHudValue",o.Hud?L(layoutNames[Layout]):L("Выкл."));Text("NavCrossValue",o.Crosshair==null?L("Выкл."):L(crossNames[cross]));Text("NavIconsValue",o.Icons.Count(p=>p.Value<100)>0?o.Icons.Count(p=>p.Value<100)+" изм.":"");
-            UI<Button>("CustomizationBtn").ToolTip=(customization.Resources=="corner"?L("Ресурсы справа внизу"):L("Ресурсы по центру"))+" · "+customization.Cards+"% · "+CustomizationDialog.HueLabel(Layout,customization.Hue,lang=="en");
+            UI<Button>("CustomizationBtn").ToolTip=(customization.Resources=="corner"?L("Ресурсы справа внизу"):L("Ресурсы по центру"))+" · "+customization.Cards+"% · "+CustomizationDialog.ColourLabel(Layout,customization,lang=="en");
             UI<WrapPanel>("Tiles").IsEnabled=o.Crosshair!=null;UI<Grid>("SizeControls").IsEnabled=o.Crosshair!=null;UI<Grid>("ColourControls").IsEnabled=o.Crosshair!=null&&cross!="zors";UI<StackPanel>("Skins").IsEnabled=o.Hud;
             bool changes=Installed!=null&&(o.Icons.Any(p=>p.Value!=Installed.Icons[p.Key])||o.SkipIntro!=Installed.SkipIntro);
             UI<Button>("InstallBtn").IsEnabled=!busy&&statusReady&&Engine.IsGame(game)&&(o.Hud||o.Crosshair!=null||changes||Page!="IconsPage");
@@ -298,7 +304,7 @@ namespace FortsSetup {
             try {var data=new JavaScriptSerializer().Deserialize<Dictionary<string,string>>(File.ReadAllText(Path.Combine(engine.PackRoot,"app","version.json")));if(!data.ContainsKey("repo"))return;
                 using(var http=new System.Net.Http.HttpClient{Timeout=TimeSpan.FromSeconds(8)}){http.DefaultRequestHeaders.UserAgent.ParseAdd("FortsSetup/"+data["version"]);string text=await http.GetStringAsync("https://api.github.com/repos/"+data["repo"]+"/releases/latest");var release=new JavaScriptSerializer().Deserialize<Dictionary<string,object>>(text);Version latest;string url=release["html_url"] as string;
                     if(!Version.TryParse(((string)release["tag_name"]).TrimStart('v'),out latest))throw new IOException("Invalid version");
-                    if(latest>new Version(data["version"])&&url.StartsWith("https://github.com/",StringComparison.Ordinal)){updateUrl=url;Text("UpdateText",String.Format(L("Доступна версия {0}"),latest));Visible("Update",true);Text("UpdateStatus",lang=="en"?"Update available":"Есть обновление");}
+                    if(latest>new Version(data["version"])&&url.StartsWith("https://github.com/",StringComparison.Ordinal)){updateRepo=data["repo"];Visible("UpdateDownloadStatus",false);Text("UpdateText",String.Format(L("Доступна версия {0}"),latest));Visible("Update",true);Text("UpdateStatus",lang=="en"?"Update available":"Есть обновление");}
                     else {Visible("Update",false);if(manual)Text("UpdateStatus",(lang=="en"?"Up to date · ":"Установлена актуальная версия · ")+data["version"]);}
                 }
             } catch(Exception e) {Trace.WriteLine("Update check: "+e.Message);if(manual)Text("UpdateStatus",lang=="en"?"Could not check. Try again later.":"Не удалось проверить. Повторите позже.");}

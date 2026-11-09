@@ -188,14 +188,15 @@ namespace FortsSetup {
                     }
                 }
                 if(o.Crosshair==null&&File.Exists(Payload(@"layouts\"+o.Layout+@"\textures\mouse_target.dds")))cursor=100;
-                if(customization!=null&&customization.Hue!=0){
+                if(customization!=null&&(customization.Hue!=0||customization.White)){
                     string extras=Payload(@"customization\skins\"+o.Skin);
                     if(Directory.Exists(extras))foreach(string file in Directory.GetFiles(extras,"*.dds",SearchOption.AllDirectories)){
                         string rel=@"data\ui\textures\"+file.Substring(extras.Length+1);if(!plan.ContainsKey(rel))add(rel,file,"hud");
                     }
                     foreach(var p in plan.Values.Where(p=>p.Rel.StartsWith(@"data\ui\textures\HUD\",StringComparison.OrdinalIgnoreCase)&&p.Rel.EndsWith(".dds",StringComparison.OrdinalIgnoreCase))){
                         string name=Path.GetFileName(p.Rel).ToLowerInvariant();if(name.Contains("reactor")||name.Contains("radial")||name.Contains("star"))continue;
-                        p.Bytes=HudCustomization.ShiftHue(File.ReadAllBytes(p.Source),customization.Hue);
+                        byte[] source=File.ReadAllBytes(p.Source);
+                        p.Bytes=customization.White?HudCustomization.Whiten(source,!name.StartsWith("customization_")):HudCustomization.ShiftHue(source,customization.Hue);
                     }
                 }
             }

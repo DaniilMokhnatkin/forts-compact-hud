@@ -51,6 +51,9 @@ static class NativeUiTests {
             dialog.Show();Pump(60);Render(dialog,Path.Combine(root,@"build\native-customization.png"));
             dialog.ResourcesChoice.SelectedIndex=1;dialog.CardsChoice.SelectedIndex=0;dialog.BackgroundChoice.SelectedIndex=2;dialog.HueSlider.Value=90;
             Check(dialog.Value.Resources=="center"&&dialog.Value.Cards==65&&dialog.Value.Background==100&&dialog.Value.Hue==90,"settings controls update live customization independently");
+            dialog.WhiteChoice.IsChecked=true;Pump(60);Check(dialog.Value.White&&CustomizationDialog.ColourLabel("tactical",dialog.Value,false)=="Белый"&&CustomizationDialog.ColourLabel("tactical",dialog.Value,true)=="White","white HUD choice is stored and named");
+            Render(dialog,Path.Combine(root,@"build\native-customization-white.png"));
+            dialog.HueSlider.Value=0;Check(!dialog.Value.White&&dialog.WhiteChoice.IsChecked!=true,"moving the hue slider replaces white");
             dialog.ResourcesChoice.SelectedIndex=0;Check(dialog.Value.Resources=="corner","resources can be switched back to the corner");dialog.Close();
             {var sd=new CustomizationDialog(c.Window,new HudCustomization{Background=100},"compact",false);sd.Show();Pump(60);Render(sd,Path.Combine(root,@"build\native-starkoff.png"));sd.Close();}
             {var c1=new HudCustomization{Resources="corner",Cards=65,Background=100,Hue=90,Indicators=false}.For("compact");var c2=new HudCustomization{Resources="center",Background=100}.For("compact");Check(c1.Cards==80&&c1.Hue==0&&c1.Indicators&&c1.Background==0&&c2.Background==0,"Starkoff only varies resource position");}
@@ -62,6 +65,7 @@ static class NativeUiTests {
              {var kadr=Matchroom.Pick("{\"tag_name\":\"v1.0.15\",\"assets\":[{\"name\":\"Kadr-Setup.exe\",\"browser_download_url\":\"https://github.com/DaniilMokhnatkin/Kadr/releases/download/v1.0.15/Kadr-Setup.exe\"},{\"name\":\"SHA256SUMS.txt\",\"browser_download_url\":\"https://github.com/DaniilMokhnatkin/Kadr/releases/download/v1.0.15/SHA256SUMS.txt\"}]}",Matchroom.KadrRepo);Check(kadr.Name=="Kadr-Setup.exe"&&kadr.HashUrl!=null,"Kadr download picks its installer and SHA256SUMS");}
              Check(pick.Name=="Matchroom.Next.v1.2.3.exe"&&pick.HashUrl!=null&&pick.Url.StartsWith("https://github.com/DaniilMokhnatkin/MatchroomNext/releases/download/"),"Matchroom download picks the installer and its checksum from the official repository only");
              Check(Matchroom.ExpectedHash("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef  file.exe")!=null&&Matchroom.ExpectedHash("nonsense")==null,"checksum file is parsed strictly");}
+            {string rel="https://github.com/DaniilMokhnatkin/forts-compact-hud/releases/download/v1.7.1/";var own=Matchroom.Pick("{\"tag_name\":\"v1.7.1\",\"assets\":[{\"name\":\"Forts-Setup.zip\",\"browser_download_url\":\""+rel+"Forts-Setup.zip\"},{\"name\":\"Forts.Setup.exe\",\"browser_download_url\":\""+rel+"Forts.Setup.exe\"},{\"name\":\"SHA256SUMS.txt\",\"browser_download_url\":\""+rel+"SHA256SUMS.txt\"}]}","DaniilMokhnatkin/forts-compact-hud");Check(own.Name=="Forts.Setup.exe"&&own.HashUrl!=null,"in-app update picks the installer exe and checksum, not the zip");}
             c.UI<RadioButton>("NavCross").IsChecked=true;c.UI<Slider>("SizeSlider").Value=75;
             Check(c.UI<TextBlock>("SizeValue").Text=="75%","native slider updates preview");
             c.UI<CheckBox>("CrossSwitch").IsChecked=false;
