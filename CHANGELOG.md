@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.8.2 — 2026-11-09
 
 - Tactical HUD: the panel behind the bottom-right icons now fits the icons
   exactly (no empty slot on the left, no extra margin below). With resources in
