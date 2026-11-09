@@ -7,10 +7,12 @@
             <Border CornerRadius="12" Background="{DynamicResource Group}" Margin="0,18,0,0">
               <Grid Margin="16,14">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <Border Width="46" Height="46" CornerRadius="23">
-                  <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#3A3A40" Offset="0"/><GradientStop Color="#141416" Offset="1"/></LinearGradientBrush></Border.Background>
-                  <TextBlock Text="S" Foreground="White" FontFamily="{StaticResource Display}" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
+                <Grid Width="46" Height="46">
+                  <Image x:Name="AuthorAvatar" Width="46" Height="46" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="Даниил">
+                    <Image.Clip><EllipseGeometry Center="23,23" RadiusX="23" RadiusY="23"/></Image.Clip>
+                  </Image>
+                  <Ellipse Width="46" Height="46" Stroke="#1F000000" StrokeThickness="0.5"/>
+                </Grid>
                 <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
                   <TextBlock Text="Даниил · Starkoff" FontFamily="{StaticResource Display}" FontSize="16" FontWeight="SemiBold"/>
                   <TextBlock Text="Автор Forts Setup и компактного HUD Starkoff" Foreground="{StaticResource SecondaryText}" FontSize="12"/>
@@ -23,15 +25,10 @@
               <StackPanel Margin="16,14">
                 <Grid>
                   <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
-                  <Border Width="46" Height="46" CornerRadius="11">
-                    <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#5AC8FA" Offset="0"/><GradientStop Color="#1E6FD9" Offset="1"/></LinearGradientBrush></Border.Background>
-                    <Canvas Width="46" Height="46">
-                      <Path Data="M13,31 L13,15 L23,26 L33,15 L33,31" Stroke="White" StrokeThickness="3" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                    </Canvas>
-                  </Border>
+                  <Image x:Name="MatchroomIcon" Width="46" Height="46" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="Matchroom Next"/>
                   <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="Matchroom Next" FontFamily="{StaticResource Display}" FontSize="16" FontWeight="SemiBold"/>
-                    <TextBlock Text="Программа для Forts: история матчей и рейтинг 1v1 по реплеям, аватарки и ники Steam, радар сильных игроков." Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap"/>
+                    <TextBlock Text="Программа для Forts: история матчей и рейтинг 1v1 по реплеям, твоя эффективность в каждом матче, аватарки и ники Steam, радар сильных игроков." Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap"/>
                   </StackPanel>
                 </Grid>
                 <Border Height="1" Background="{DynamicResource Separator}" Margin="0,14,0,12"/>
@@ -48,12 +45,7 @@
               <StackPanel Margin="16,14">
                 <Grid>
                   <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
-                  <Border Width="46" Height="46" CornerRadius="11">
-                    <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#FF9F43" Offset="0"/><GradientStop Color="#E5372E" Offset="1"/></LinearGradientBrush></Border.Background>
-                    <Canvas Width="46" Height="46">
-                      <Path Data="M13,19 V14 H18 M28,14 H33 V19 M33,27 V32 H28 M18,32 H13 V27" Stroke="White" StrokeThickness="3" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                    </Canvas>
-                  </Border>
+                  <Image x:Name="KadrIcon" Width="46" Height="46" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="Kadr"/>
                   <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="Kadr" FontFamily="{StaticResource Display}" FontSize="16" FontWeight="SemiBold"/>
                     <TextBlock Text="Очень быстрый скриншотер на Rust: запись экрана, мгновенный перевод текста на экране, блюр важных данных. Помнит 25 последних снимков и 50 скопированных текстов, вызов по Win+V." Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap"/>

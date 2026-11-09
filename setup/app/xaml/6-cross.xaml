@@ -40,7 +40,9 @@
                             VerticalAlignment="Center" AutomationProperties.Name="Менять прицел"/>
                 </Grid>
                 <Border Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
-                <WrapPanel x:Name="Tiles" Margin="20,16,6,12" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                <ScrollViewer MaxHeight="232" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                  <WrapPanel x:Name="Tiles" Margin="20,16,6,12" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                </ScrollViewer>
                 <Border Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
                 <Grid x:Name="ColourControls" Margin="16,6">
                   <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>

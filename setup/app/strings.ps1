@@ -11,7 +11,7 @@ $script:English = @{
     # About
     "О разработчике" = "About the developer"; "Forts Setup делаю я. Установщик бесплатный и без модов." = "I make Forts Setup. The installer is free and mod-free."
     "Даниил · Starkoff" = "Daniil · Starkoff"; "Автор Forts Setup и компактного HUD Starkoff" = "Author of Forts Setup and the Starkoff compact HUD"
-    "Ещё для Forts" = "More for Forts"; "Программа для Forts: история матчей и рейтинг 1v1 по реплеям, аватарки и ники Steam, радар сильных игроков." = "A Forts app: match history and 1v1 rating from replays, Steam avatars and names, a radar for strong players."
+    "Ещё для Forts" = "More for Forts"; "Программа для Forts: история матчей и рейтинг 1v1 по реплеям, твоя эффективность в каждом матче, аватарки и ники Steam, радар сильных игроков." = "A Forts app: match history and 1v1 rating from replays, your own performance in every match, Steam avatars and names, a radar for strong players."
     "А ещё у меня есть крутой скриншотер!" = "I also made a great screenshot tool!"; "Скачать Kadr" = "Download Kadr"
     "Очень быстрый скриншотер на Rust: запись экрана, мгновенный перевод текста на экране, блюр важных данных. Помнит 25 последних снимков и 50 скопированных текстов, вызов по Win+V." = "A very fast screenshot tool written in Rust: screen recording, instant translation of on-screen text, blur for sensitive data. Remembers the last 25 screenshots and 50 copied texts, opened with Win+V."
     "Скачать последнюю версию" = "Download the latest version"; "Страница на GitHub" = "GitHub page"; "Скачиваю…" = "Downloading…"; "Скачано в «Загрузки»: " = "Saved to Downloads: "
@@ -39,6 +39,9 @@ $script:English = @{
     "Цвет" = "Colour"; "Размер" = "Size"; "Размер прицела в процентах" = "Crosshair size in percent"
     "От 50 до 200%. Стрелки: шаг 5%." = "From 50 to 200%. Arrow keys: 5% steps."
     "Крест" = "Cross"; "Разрыв" = "Gap"; "Тонкий" = "Fine"; "Кольцо" = "Ring"; "Рамка" = "Brackets"; "Оптика" = "Scope"
+    "Жирный" = "Bold"; "Точка" = "Dot"; "Два кольца" = "Double ring"; "Квадрат" = "Square"; "Ромб" = "Diamond"
+    "Шеврон" = "Chevron"; "Два шеврона" = "Double chevron"; "Икс" = "X"; "Т-образный" = "T-shape"
+    "Снайпер" = "Sniper"; "Мил-дот" = "Mil-dot"; "Аркада" = "Arcade"
     "Бой" = "Match"; "Небо" = "Sky"; "Скалы" = "Rocks"; "Огонь" = "Fire"; "Фон: " = "Background: "
     "Белый" = "White"; "Зелёный" = "Green"; "Жёлтый" = "Yellow"; "Красный" = "Red"; "Бирюзовый" = "Cyan"; "Цвет: " = "Colour: "
     "Прицел: " = "Crosshair: "; "Не меняется" = "Unchanged"; "Сейчас стоит: {0}, {1}%" = "Installed now: {0}, {1}%"

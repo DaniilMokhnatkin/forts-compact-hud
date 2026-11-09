@@ -74,12 +74,111 @@ def fine_cross(d):
         line(d, C + dx * 3.5, C + dy * 3.5, C + dx * 24, C + dy * 24, 1.6)
 
 
+ARMS = ((1, 0), (-1, 0), (0, 1), (0, -1))
+
+
+def polyline(draw, points, w, closed=False):
+    pts = [(s(x), s(y)) for x, y in points]
+    if closed:
+        pts.append(pts[0])
+    draw.line(pts, fill=255, width=round(s(w)), joint="curve")
+
+
+def bold_cross(d):
+    for dx, dy in ARMS:
+        line(d, C + dx * 5, C + dy * 5, C + dx * 20, C + dy * 20, 4.2)
+
+
+def small_dot(d):
+    dot(d, 3.2)
+
+
+def double_ring(d):
+    ring(d, 8, 2)
+    ring(d, 16, 1.6)
+    dot(d, 1.4)
+
+
+def square(d):
+    h = 10
+    polyline(d, [(C - h, C - h), (C + h, C - h), (C + h, C + h), (C - h, C + h)], 2.2, closed=True)
+    dot(d, 1.8)
+
+
+def diamond(d):
+    h = 14
+    polyline(d, [(C, C - h), (C + h, C), (C, C + h), (C - h, C)], 2.2, closed=True)
+    dot(d, 1.8)
+
+
+def x_cross(d):
+    for dx, dy in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
+        line(d, C + dx * 5, C + dy * 5, C + dx * 16, C + dy * 16, 2.4)
+    dot(d, 1.6)
+
+
+def t_cross(d):
+    # CS "T" crosshair: no top arm, so nothing covers the target above the aim point.
+    for dx, dy in ((1, 0), (-1, 0), (0, 1)):
+        line(d, C + dx * 5, C + dy * 5, C + dx * 18, C + dy * 18, 2.6)
+    dot(d, 1.8)
+
+
+def chevron(d):
+    # An upside-down V (^): its tip is the aim point.
+    a = 15
+    polyline(d, [(C - a, C + a), (C, C), (C + a, C + a)], 3.2)
+
+
+def chevron_double(d):
+    a, step = 12, 9
+    for i in range(2):
+        y = C + i * step
+        polyline(d, [(C - a, y + a), (C, y), (C + a, y + a)], 2.6)
+
+
+def sniper(d):
+    # Thin ring crossed by hairlines, like a tank's sniper view.
+    ring(d, 17, 1.6)
+    for dx, dy in ARMS:
+        line(d, C + dx * 4, C + dy * 4, C + dx * 24, C + dy * 24, 1.4)
+    dot(d, 1.1)
+
+
+def mildot(d):
+    for dx, dy in ARMS:
+        line(d, C + dx * 4, C + dy * 4, C + dx * 24, C + dy * 24, 1.4)
+        for r in (12, 19):
+            d.ellipse([s(C + dx * r - 2), s(C + dy * r - 2), s(C + dx * r + 2), s(C + dy * r + 2)], fill=255)
+
+
+def arcade(d):
+    # World of Tanks arcade gun marker: small ring with wings left and right.
+    ring(d, 8, 2)
+    for dx in (1, -1):
+        line(d, C + dx * 8, C, C + dx * 22, C, 2.2)
+    line(d, C, C + 8, C, C + 14, 2.2)
+    dot(d, 1.5)
+
+
 VARIANTS = {
     "dot_ring": ("Кольцо", dot_ring),
     "gap_cross": ("Разрыв", gap_cross),
     "brackets": ("Рамка", brackets),
     "scope": ("Прицел", scope),
     "fine_cross": ("Тонкий", fine_cross),
+    "bold_cross": ("Жирный", bold_cross),
+    "dot": ("Точка", small_dot),
+    "double_ring": ("Два кольца", double_ring),
+    "square": ("Квадрат", square),
+    "diamond": ("Ромб", diamond),
+    "x_cross": ("Икс", x_cross),
+    "t_cross": ("Т-образный", t_cross),
+    "chevron": ("Шеврон", chevron),
+    "chevron_double": ("Два шеврона", chevron_double),
+    "sniper": ("Снайпер", sniper),
+    "mildot": ("Мил-дот", mildot),
+    "arcade": ("Аркада", arcade),
 }
 
 

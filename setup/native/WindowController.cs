@@ -75,7 +75,7 @@ namespace FortsSetup {
         readonly Dictionary<string,TextBlock> iconValues=new Dictionary<string,TextBlock>();
         static readonly ConcurrentDictionary<string,BitmapSource> Bitmaps=new ConcurrentDictionary<string,BitmapSource>(StringComparer.OrdinalIgnoreCase);
         readonly Dictionary<string,string> layoutNames=new Dictionary<string,string>{{"compact","Starkoff"},{"zors","Zors.o"},{"minimalist","Minimalist"},{"tactical","Тактический"}};
-        readonly Dictionary<string,string> crossNames=new Dictionary<string,string>{{"cross","Крест"},{"gap_cross","Разрыв"},{"fine_cross","Тонкий"},{"dot_ring","Кольцо"},{"brackets","Рамка"},{"scope","Оптика"},{"zors","Zors.o"}};
+        readonly Dictionary<string,string> crossNames=new Dictionary<string,string>{{"cross","Крест"},{"gap_cross","Разрыв"},{"fine_cross","Тонкий"},{"bold_cross","Жирный"},{"dot","Точка"},{"dot_ring","Кольцо"},{"double_ring","Два кольца"},{"brackets","Рамка"},{"square","Квадрат"},{"diamond","Ромб"},{"chevron","Шеврон"},{"chevron_double","Два шеврона"},{"x_cross","Икс"},{"t_cross","Т-образный"},{"scope","Оптика"},{"sniper","Снайпер"},{"mildot","Мил-дот"},{"arcade","Аркада"},{"zors","Zors.o"}};
         readonly Dictionary<string,string> skinNames=new Dictionary<string,string>{{"dlc3","Firebird"},{"base","По умолчанию"},{"dlc1","High Seas"},{"dlc2","Луноход"},{"pro","PRO"},{"elite","Elite"}};
         readonly Dictionary<string,string> iconNames=new Dictionary<string,string>{{"extinguisher","Тушение"},{"under_construction","Строительство"},{"repair","Ремонт"}};
         readonly Dictionary<string,string> colorNames=new Dictionary<string,string>{{"white","Белый"},{"green","Зелёный"},{"yellow","Жёлтый"},{"red","Красный"},{"cyan","Бирюзовый"}};
@@ -111,7 +111,7 @@ namespace FortsSetup {
                 SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Window.Dispatcher));
             Theme=new ThemeAnimator(Window,UI<Border>("Tint"),UI<Border>("Card"),UI<Image>("ThemeArt"),noMotion);
             Window.SourceInitialized+=(s,e)=>Glass.Apply(Window);
-            UI<Image>("ThemeArt").Source=Image("theme_zors.jpg");UI<Image>("BeforeImage").Source=Image("crosshair_vanilla.png");UI<Image>("IconScene").Source=Image("scene.png");
+            UI<Image>("ThemeArt").Source=Image("theme_zors.jpg");UI<Image>("BeforeImage").Source=Image("crosshair_vanilla.png");UI<Image>("IconScene").Source=Image("scene.png");UI<Image>("AuthorAvatar").Source=Image("author.png");UI<Image>("MatchroomIcon").Source=Image("app_matchroom.png");UI<Image>("KadrIcon").Source=Image("app_kadr.png");
             foreach(string id in Engine.LayoutIds){string key=id;layouts[id]=Choice(UI<StackPanel>("LayoutPicker"),"LayoutSeg",L(layoutNames[id]),"HUD",id,()=>SelectLayout(key));}
             foreach(string id in Engine.SkinIds){string key=id;var b=Choice(UI<StackPanel>("Skins"),"SkinChip",L(skinNames[id]),"Skin",id,()=>{skin=key;UpdateSkinNote();});b.Tag=Image("skin_"+id+".png");b.ToolTip=L(skinNames[id]);skins[id]=b;}
             foreach(var pair in new Dictionary<string,string>{{"scene","Бой"},{"bg_sky","Небо"},{"bg_rocks","Скалы"},{"bg_fire","Огонь"}}){string key=pair.Key;var b=Choice(UI<StackPanel>("Scenes"),"SceneSeg",L(pair.Value),"Scene",key,()=>{UI<Image>("SceneBefore").Source=Image(key+".png");UI<Image>("SceneAfter").Source=Image(key+".png");});if(key=="scene")b.IsChecked=true;}

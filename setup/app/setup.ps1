@@ -11,8 +11,11 @@ if (-not $Lang) { $script:Lang = Get-DefaultLang $(if ($Game) { $Game } else { F
 $reduceMotion = $NoMotion -or -not [System.Windows.SystemParameters]::ClientAreaAnimation
 
 $crosshairNames = [ordered]@{
-    cross = (L "Крест"); gap_cross = (L "Разрыв"); fine_cross = (L "Тонкий")
-    dot_ring = (L "Кольцо"); brackets = (L "Рамка"); scope = (L "Оптика"); zors = "Zors.o"
+    cross = (L "Крест"); gap_cross = (L "Разрыв"); fine_cross = (L "Тонкий"); bold_cross = (L "Жирный")
+    dot = (L "Точка"); dot_ring = (L "Кольцо"); double_ring = (L "Два кольца")
+    brackets = (L "Рамка"); square = (L "Квадрат"); diamond = (L "Ромб")
+    chevron = (L "Шеврон"); chevron_double = (L "Два шеврона"); x_cross = (L "Икс"); t_cross = (L "Т-образный")
+    scope = (L "Оптика"); sniper = (L "Снайпер"); mildot = (L "Мил-дот"); arcade = (L "Аркада"); zors = "Zors.o"
 }
 
 $window, $ui = Load-Window (Join-Path $PSScriptRoot "xaml") @{ SPRING = $(if ($reduceMotion) { "0:0:0" } else { "0:0:0.32" }) }
