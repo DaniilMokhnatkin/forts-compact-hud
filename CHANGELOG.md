@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Tactical HUD: the panel behind the bottom-right icons now fits the icons
+  exactly (no empty slot on the left, no extra margin below). With resources in
+  the bottom-right corner the icon strip is as wide as the resource panel, never
+  shorter; with centred resources it hugs the icons.
+- White and hue colours no longer touch the pause menu, victory/defeat screens,
+  achievements, fire alarms or the replay controls; only the HUD is recoloured.
+
 ## 1.8.1 — 2026-11-09
 
 - Reworked the white Tactical HUD, which looked grey and lost its icons in game.

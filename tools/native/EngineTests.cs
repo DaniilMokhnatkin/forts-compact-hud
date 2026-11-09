@@ -57,6 +57,12 @@ static class EngineTests {
             Check(Engine.Hash(Path.Combine(game,@"data\ui\textures\HUD\custom\Play-A.dds"))==Engine.Hash(engine.Payload(@"customization\white\HUD\custom\Play-A.dds")),"white HUD icon buttons use the generated art byte for byte");
             Check(Engine.Hash(Path.Combine(game,@"data\ui\textures\HUD\custom\tactical_panel.dds"))!=Engine.Hash(engine.Payload(@"layouts\tactical\textures\HUD\custom\tactical_panel.dds")),"white HUD still recolours panels");
             custom.White=false;
+            foreach(bool white in new[]{true,false}){
+                custom.White=white;custom.Hue=white?0:90;engine.Install(game,new Options{Hud=true,Layout="tactical",Skin="base",Customization=custom},null);
+                string chrome=Path.Combine(game,@"data\ui\textures\HUD\skin_base");
+                Check(!File.Exists(Path.Combine(chrome,"pausebg.dds"))&&!File.Exists(Path.Combine(chrome,"UI-Victory.dds"))&&!Directory.Exists(Path.Combine(chrome,"replay"))&&Engine.KeepsOriginalColours(@"data\ui\textures\HUD\skin_base\pausebg.dds"),(white?"white":"hue")+" HUD leaves the pause menu, end screens and replay UI untouched");
+            }
+            custom.White=false;custom.Hue=90;
             byte[] sample=File.ReadAllBytes(engine.Payload(@"layouts\tactical\textures\HUD\custom\Pause-A.dds"));
             var shifted=HudCustomization.ShiftHue(sample,90);
             Check(!sample.SequenceEqual(shifted)&&Enumerable.Range(0,(sample.Length-128)/4).All(i=>sample[131+i*4]==shifted[131+i*4]),"hue changes texture pixels and preserves alpha");

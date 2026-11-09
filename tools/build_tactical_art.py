@@ -51,6 +51,15 @@ def main():
     for prefix in ('COGauge_Button','COGauge_Button_enemy'):
         for state,img in states(fit(star,'commander/'+prefix+'-A.dds')).items():save(img,out/'skin_base/commander'/f'{prefix}-{state}.dds')
     flat=Image.open(ROOT/'textures/tactical/flat-hud-v3.png').convert('RGBA')
+    def nine_slice(im,size,margin=8):
+        """Resize keeping the border (corners and edges) at its original thickness."""
+        w,h=im.size;W,H=size;m=margin;canvas=Image.new('RGBA',size)
+        xs=[(0,m,0,m),(m,w-m,m,W-m),(w-m,w,W-m,W)];ys=[(0,m,0,m),(m,h-m,m,H-m),(h-m,h,H-m,H)]
+        for sy0,sy1,dy0,dy1 in ys:
+            for sx0,sx1,dx0,dx1 in xs:
+                part=im.crop((sx0,sy0,sx1,sy1)).resize((dx1-dx0,dy1-dy0),Image.Resampling.LANCZOS)
+                canvas.alpha_composite(part,(dx0,dy0))
+        return canvas
     for name,box,size in (
         ('tactical_detail',(82,110,713,543),(320,230)),
         ('tactical_resource',(858,110,1454,543),(264,230)),
@@ -58,6 +67,11 @@ def main():
         ('tactical_reactor_fill',(350,860,1426,955),(256,32)),
     ):
         save(flat.crop(box).resize(size,Image.Resampling.LANCZOS),out/'custom'/(name+'.dds'))
+    # Panel behind the resource readouts (132x81 in game) and the strip behind the icon row (132x26 or
+    # tighter): the same artwork, but sliced so the border keeps its thickness at these proportions.
+    resource=flat.crop((858,110,1454,543)).resize((264,230),Image.Resampling.LANCZOS)
+    save(nine_slice(resource,(264,162)),out/'custom'/'tactical_resource.dds')
+    save(nine_slice(resource,(264,52)),out/'custom'/'tactical_strip.dds')
     buttons=Image.open(ROOT/'textures/tactical/flat-buttons-v3.png').convert('RGBA')
     def button_piece(box):
         im=buttons.crop(tuple(round(v*s) for v,s in zip(box,(buttons.width,buttons.height,buttons.width,buttons.height))))

@@ -110,7 +110,8 @@ def main(game):
             g,f32=ui.load(str(source),game)
             customize(g,placement,scale,bg,indicators,layout=='tactical',layout=='compact')
             paths=ui.unique_paths(ui.find_root(g))
-            expected=original_names|({RES+'/CustomizationBackdrop'} if layout=='tactical' else set())
+            added=({RES+'/CustomizationStrip'}|({RES+'/CustomizationBackdrop'} if placement=='corner' else set())) if layout=='tactical' else set()
+            expected=original_names|added
             if layout=='tactical':
                 old=RES+'/AssistantSettingsPanel/WeaponLeft'
                 expected={p.replace(old,PANEL+'/ItemDetail/WeaponLeft') if p==old or p.startswith(old+'/') else p for p in expected}
@@ -121,6 +122,17 @@ def main(game):
             for n in ('Grid','Autodoor','AutoCrossBrace'):
                 p=RES+'/'+n
                 if p in paths and indicators: assert paths[p][2].get('Position').array()[1]<120
+            if layout=='tactical':
+                strip=paths[RES+'/CustomizationStrip'][2];sx,sy=strip.get('Position').array()[:2];sw,sh=strip.get('Size').array()[:2]
+                shown=[paths[RES+'/'+n][2] for n in ('Grid','Autodoor','AutoCrossBrace','Pause','Menu') if RES+'/'+n in paths and paths[RES+'/'+n][2].get('Position').array()[1]<300]
+                assert shown, 'Pause and Menu must stay visible'
+                for ic in shown:
+                    ix,iy=ic.get('Position').array()[:2];iw,ih=ic.get('Size').array()[:2]
+                    assert sx<=ix and ix+iw<=sx+sw and sy<=iy and iy+ih<=sy+sh, 'Icon outside its strip'
+                # Icons are evenly spread and the strip hugs them vertically (3 units above and below).
+                assert abs((shown[0].get('Position').array()[1]-sy)-(sy+sh-shown[0].get('Position').array()[1]-shown[0].get('Size').array()[1]))<0.01
+                if placement=='corner':
+                    assert sw>=paths[RES+'/ReadoutMetal'][2].get('Size').array()[0], 'Icon strip is shorter than the resource panel'
             if placement=='corner':
                 enemy=paths[ITEMS+'/ResourcePanelEnemy'][2]
                 assert paths[ITEMS][2].get('Position').array()[1]+enemy.get('Position').array()[1]+enemy.get('Size').array()[1]<=485-8
@@ -144,7 +156,9 @@ def main(game):
             folder=Path(game)/'data/ui/textures/HUD/skin_base'
             for p in folder.rglob('*.dds'):
                 rel=p.relative_to(folder)
-                if any(x in p.name.lower() for x in ('reactor','radial','star')): continue
+                # Not HUD chrome: the pause menu plate, end screens, achievements, fire alarms and the replay UI
+                # keep their original colours.
+                if any(x in p.name.lower() for x in ('reactor','radial','star','pausebg','ui-defeat','ui-victory','achievementspanel','firealarm')) or 'replay' in rel.parts: continue
                 src=vanilla_texture(game,str(Path('HUD/skin_base')/rel))
                 dest=out/'HUD/skin_base'/rel;dest.parent.mkdir(parents=True,exist_ok=True)
                 open_image(src).save(dest,'DDS')

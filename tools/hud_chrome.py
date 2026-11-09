@@ -33,12 +33,28 @@ def apply_chrome(globals_,placement,background,tactical):
     n(ITEMS).set('Texture',neutral);rgba(ITEMS,0 if tactical else alpha)
     # A separate small backing follows the NEW fields. It is rendered first,
     # behind all existing buttons/text, and does not change their engine paths.
-    frame=ui.Table()
-    backdrop='ui/textures/HUD/custom/tactical_resource.dds' if tactical else neutral
-    for key,value in {'Type':'Static','Name':'CustomizationBackdrop','Style':'Normal','Texture':backdrop,'Colour':[255,255,255,alpha],'ColourLower':[255,255,255,alpha]}.items():frame.set(key,value)
-    control=ui.Table();control.set('Position',[60,0 if placement=='corner' else 80]);control.set('Size',[132,114 if placement=='corner' else 34]);frame.set('Control',control)
+    # The icon row gets its own strip, exactly as tall as the icons. In corner mode it is as wide as the
+    # resource panel above it (132) so it is never shorter than that panel; in centre mode it hugs the icons.
+    # The row never reserves a slot for hidden buttons.
+    SIZE,TOP,STRIP_H=20,84,26
+    row=[name for name in ('Grid','Autodoor','AutoCrossBrace','Pause','Menu') if RES+'/'+name in paths and c(RES+'/'+name).get('Position').array()[1]<=300]
+    if not tactical and RES+'/AssistantSettingsToggle' in paths and c(RES+'/AssistantSettingsToggle').get('Position').array()[1]<=300:row.insert(0,'AssistantSettingsToggle')
+    gap=5 if placement=='corner' else 1.5
+    group=len(row)*SIZE+(len(row)-1)*gap
+    strip_w=132 if placement=='corner' else group+8
+    strip_x=60 if placement=='corner' else 192-strip_w
+    first_x=strip_x+(strip_w-group)/2
+    def backing(name,texture,pos,size):
+        frame=ui.Table()
+        for key,value in {'Type':'Static','Name':name,'Style':'Normal','Texture':texture,'Colour':[255,255,255,alpha],'ColourLower':[255,255,255,alpha]}.items():frame.set(key,value)
+        control=ui.Table();control.set('Position',pos);control.set('Size',size);frame.set('Control',control)
+        return frame
+    frames=[backing('CustomizationStrip','ui/textures/HUD/custom/tactical_strip.dds' if tactical else neutral,[strip_x,TOP-3],[strip_w,STRIP_H])]
+    if placement=='corner':
+        # Panel behind the two resource readouts, ending where the icon strip starts.
+        frames.insert(0,backing('CustomizationBackdrop','ui/textures/HUD/custom/tactical_resource.dds' if tactical else neutral,[60,0],[132,TOP-3]))
     children=c(RES).get('Children').array()
-    c(RES).set('Children',ui.Table.of([frame]+children))
+    c(RES).set('Children',ui.Table.of(frames+children))
     # Start from the game's proven dense amount/maximum/rate layout in corner
     # mode. The large centre "amount / cap" boxes are kept for centre mode.
     for i,res in enumerate(('Metal','Energy')):
@@ -58,11 +74,12 @@ def apply_chrome(globals_,placement,background,tactical):
             c(box).set('Position',[60,12+i*36]);c(box).set('Size',[132,30.49])
         n(box).set('Texture','ui/textures/HUD/custom/customization_readout.dds');rgba(box,alpha)
     # One tight row fits the same 132-unit column at the screen's right edge.
-    for i,name in enumerate(('AssistantSettingsToggle','Grid','Autodoor','AutoCrossBrace','Pause','Menu')):
+    for name in ('AssistantSettingsToggle','Grid','Autodoor','AutoCrossBrace','Pause','Menu'):
         path=RES+'/'+name
         if path not in paths:continue
-        pos=c(path).get('Position').array();hidden=pos[1]>300
-        c(path).set('Position',[60+i*21.5,84+(400 if hidden else 0)]);c(path).set('Size',[20,20])
+        if name in row:c(path).set('Position',[first_x+row.index(name)*(SIZE+gap),TOP])
+        else:c(path).set('Position',[60,TOP+400])  # hidden (or moved off screen later)
+        c(path).set('Size',[SIZE,SIZE])
     rgba(ITEMS+'/ResourcePanelEnemy',alpha)
     enemy=ITEMS+'/ResourcePanelEnemy'
     # Forts positions this control itself. Keep its native horizontal layout;

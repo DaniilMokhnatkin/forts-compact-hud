@@ -145,6 +145,9 @@ namespace FortsSetup {
             return s;
         }
         string LayoutHud(string layout) {return layout=="compact"?Payload(@"hud\data\ui\screens\hud.lua"):Payload(@"layouts\"+layout+@"\hud.lua");}
+        // Not HUD chrome: the pause menu plate, end screens, achievements, fire alarms and the replay UI are never
+        // recoloured, whatever colour or hue the HUD uses.
+        public static bool KeepsOriginalColours(string rel){string r=rel.ToLowerInvariant();return r.Contains("pausebg")||r.Contains("ui-defeat")||r.Contains("ui-victory")||r.Contains("achievementspanel")||r.Contains("firealarm")||r.Contains(@"\replay\");}
         string SkinDir(string skin) {return skin=="dlc3"?Payload(@"hud\"+TextureDir):Payload(@"skins\"+skin);}
         string CrossDir(string id,int size) {return Payload(@"crosshairs\"+id+(size!=100&&size<=110?@"\sizes\"+size:""));}
         public static byte[] Tint(byte[] dds,string hex,int opacity) {
@@ -191,7 +194,7 @@ namespace FortsSetup {
                 if(customization!=null&&(customization.Hue!=0||customization.White)){
                     string extras=Payload(@"customization\skins\"+o.Skin);
                     if(Directory.Exists(extras))foreach(string file in Directory.GetFiles(extras,"*.dds",SearchOption.AllDirectories)){
-                        string rel=@"data\ui\textures\"+file.Substring(extras.Length+1);if(!plan.ContainsKey(rel))add(rel,file,"hud");
+                        string rel=@"data\ui\textures\"+file.Substring(extras.Length+1);if(!plan.ContainsKey(rel)&&!KeepsOriginalColours(rel))add(rel,file,"hud");
                     }
                     foreach(var p in plan.Values.Where(p=>p.Rel.StartsWith(@"data\ui\textures\HUD\",StringComparison.OrdinalIgnoreCase)&&p.Rel.EndsWith(".dds",StringComparison.OrdinalIgnoreCase))){
                         string name=Path.GetFileName(p.Rel).ToLowerInvariant();if((name.Contains("reactor")&&!customization.White)||name.Contains("radial")||name.Contains("star"))continue;
