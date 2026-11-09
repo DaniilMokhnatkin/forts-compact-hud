@@ -53,6 +53,9 @@ if ($LASTEXITCODE -ne 0) { throw "assets failed" }
 if ($LASTEXITCODE -ne 0) { throw 'tactical art failed' }
 & $Python (Join-Path $PSScriptRoot 'build_customization.py') $Game
 if ($LASTEXITCODE -ne 0) { throw 'HUD customization variants failed' }
+# White Tactical HUD: the generated icon buttons (textures\white_hud\sheet.webp) in all four states.
+& $Python (Join-Path $PSScriptRoot 'build_white_hud.py') (Join-Path $payload 'customization\white')
+if ($LASTEXITCODE -ne 0) { throw 'white HUD buttons failed' }
 
 # The development pipeline may use scripts. The shipped installer is a native
 # C# WPF application with embedded assets/payload and no interpreter dependency.

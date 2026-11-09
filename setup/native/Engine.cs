@@ -194,9 +194,14 @@ namespace FortsSetup {
                         string rel=@"data\ui\textures\"+file.Substring(extras.Length+1);if(!plan.ContainsKey(rel))add(rel,file,"hud");
                     }
                     foreach(var p in plan.Values.Where(p=>p.Rel.StartsWith(@"data\ui\textures\HUD\",StringComparison.OrdinalIgnoreCase)&&p.Rel.EndsWith(".dds",StringComparison.OrdinalIgnoreCase))){
-                        string name=Path.GetFileName(p.Rel).ToLowerInvariant();if(name.Contains("reactor")||name.Contains("radial")||name.Contains("star"))continue;
+                        string name=Path.GetFileName(p.Rel).ToLowerInvariant();if((name.Contains("reactor")&&!customization.White)||name.Contains("radial")||name.Contains("star"))continue;
+                        if(customization.White){
+                            // Icon buttons ship as ready-made white art (all four states); only the rest is recoloured.
+                            string art=Payload(@"customization\white\"+p.Rel.Substring(@"data\ui\textures\".Length));
+                            if(File.Exists(art)){p.Source=art;p.Bytes=null;continue;}
+                        }
                         byte[] source=File.ReadAllBytes(p.Source);
-                        p.Bytes=customization.White?HudCustomization.Whiten(source,!name.StartsWith("customization_")):HudCustomization.ShiftHue(source,customization.Hue);
+                        p.Bytes=customization.White?HudCustomization.Whiten(source,p.Rel):HudCustomization.ShiftHue(source,customization.Hue);
                     }
                 }
             }

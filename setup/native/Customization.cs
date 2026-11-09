@@ -32,18 +32,39 @@ namespace FortsSetup {
             return data;
         }
         static double Smooth(double a,double b,double x){double t=Math.Min(1,Math.Max(0,(x-a)/(b-a)));return t*t*(3-2*t);}
-        // White HUD: coloured pixels lose their hue. Button faces turn white and their icons dark; dark
-        // shading and panel fills stay graphite (so white numbers remain readable) and panel borders turn white.
-        // Neutral metal and glyphs are untouched, like in ShiftHue.
-        public static byte[] Whiten(byte[] input,bool button){
-            int start=BgraPixelOffset(input);
+        static bool IsIconButton(string name){foreach(string p in new[]{"facing","menu","play","pause","grid","autodoors","crossbrace","hud-spy"})if(name.StartsWith(p,StringComparison.Ordinal))return true;return false;}
+        // White HUD (Tactical). Icon buttons become white plates with dark icons: the plate level follows the
+        // state (hover brightest, selected dimmer) and the old blue frame becomes a grey bezel. Disabled buttons
+        // only lose their colour. Panels, tabs and the commander circles stay graphite with a white border so the
+        // numbers and labels the game draws in white remain readable. Vivid gauge colours are left alone.
+        public static byte[] Whiten(byte[] input,string fileName){
+            string name=Path.GetFileName(fileName).ToLowerInvariant();
+            bool button=IsIconButton(name)&&!name.EndsWith("-d.dds",StringComparison.Ordinal),plain=IsIconButton(name)&&!button,reactor=name.Contains("reactor");
+            int start=BgraPixelOffset(input),width=(int)BitConverter.ToUInt32(input,16),height=(int)BitConverter.ToUInt32(input,12);
             byte[] data=(byte[])input.Clone();
+            double face=0.25,plate=0.85;
+            if(button){
+                var levels=new System.Collections.Generic.List<double>();
+                for(int i=start;i+3<data.Length;i+=4){
+                    int pixel=(i-start)/4,x=pixel%width,y=pixel/width;
+                    if(data[i+3]<200||Math.Min(Math.Min(x,y),Math.Min(width-1-x,height-1-y))<=2)continue;
+                    levels.Add(0.299*data[i+2]/255.0+0.587*data[i+1]/255.0+0.114*data[i]/255.0);
+                }
+                if(levels.Count>0){levels.Sort();face=levels[levels.Count/2];}
+                plate=Math.Min(0.97,0.80+(face-0.20)*1.2);
+            }
             for(int i=start;i+3<data.Length;i+=4){
-                double r=data[i+2]/255.0,g=data[i+1]/255.0,b=data[i]/255.0,d=Math.Max(r,Math.Max(g,b))-Math.Min(r,Math.Min(g,b));
-                if(d<0.025||data[i+3]==0)continue;
-                double l=0.299*r+0.587*g+0.114*b,o;
-                if(button){o=l+(0.93-l)*Smooth(0.33,0.45,l);o=o+(0.22-o)*Smooth(0.56,0.64,l);}
-                else o=l+(0.92-l)*Smooth(0.40,0.52,l);
+                if(data[i+3]==0)continue;
+                double r=data[i+2]/255.0,g=data[i+1]/255.0,b=data[i]/255.0,d=Math.Max(r,Math.Max(g,b))-Math.Min(r,Math.Min(g,b)),l=0.299*r+0.587*g+0.114*b,o;
+                if(button){
+                    int pixel=(i-start)/4,x=pixel%width,y=pixel/width;
+                    if(Math.Min(Math.Min(x,y),Math.Min(width-1-x,height-1-y))<=2)o=0.58;
+                    else{double shade=plate+(l-face),icon=Smooth(0.14,0.22,Math.Abs(l-face));o=shade+(0.14-shade)*icon;}
+                }
+                else{
+                    if(d<0.025||(reactor&&d>=0.35))continue;
+                    o=plain?l:l+(0.96-l)*Smooth(0.38,0.5,l);
+                }
                 byte v=(byte)Math.Round(Math.Min(1,Math.Max(0,o))*255);
                 data[i]=v;data[i+1]=v;data[i+2]=v;
             }

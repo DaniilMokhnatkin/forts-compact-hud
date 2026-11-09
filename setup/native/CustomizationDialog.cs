@@ -59,12 +59,12 @@ namespace FortsSetup {
         void Draw(){
             if(ResourcesChoice==null||CardsChoice==null||BackgroundChoice==null||HueSlider==null||IndicatorsChoice==null||WhiteChoice==null)return;Read();preview.Children.Clear();preview.Background=new LinearGradientBrush(Color.FromRgb(58,64,78),Color.FromRgb(26,28,36),90);
             double hue=((layout=="zors"?275:230)+Value.Hue+360)%360;Color c=Hue(hue);var solid=new SolidColorBrush(c);var backing=new SolidColorBrush(Color.FromArgb((byte)(Value.Background*255/100),c.R,c.G,c.B));
-            // White HUD: buttons turn white with dark icons; panels and number readouts stay graphite.
+            // White HUD: icon buttons turn white with dark icons; panels, tabs and number readouts stay graphite.
             Brush ink=Brushes.White,readout=solid;
             if(Value.White){c=Color.FromRgb(238,238,242);solid=new SolidColorBrush(c);readout=new SolidColorBrush(Color.FromRgb(52,52,58));backing=new SolidColorBrush(Color.FromArgb((byte)(Value.Background*255/100),40,40,46));ink=Brushes.Black;}
             if(layout=="tactical")Box(6,99,112,90,backing,null);if(layout=="tactical")Box(598,96,116,93,backing,null);
             double card=36*Value.Cards/100.0;for(int i=0;i<7;i++)Box(236+i*(card+4),154-card,card,card,solid,null);
-            Box(230,160,286,23,solid,L("Категории строительства","Build categories"),ink);
+            Box(230,160,286,23,readout,L("Категории строительства","Build categories"));
             double rx=Value.Resources=="corner"?605:275,ry=Value.Resources=="corner"?103:91;
             Box(rx,ry,102,23,readout,"600 / 600");Box(rx+(Value.Resources=="center"?108:0),ry+(Value.Resources=="corner"?28:0),102,23,readout,"3000 / 3000");
             if(Value.Indicators)for(int i=0;i<3;i++)Box(603+i*26,163,22,20,solid,new[]{"#","|","×"}[i],ink);

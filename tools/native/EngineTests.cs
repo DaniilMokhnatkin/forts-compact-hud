@@ -54,6 +54,8 @@ static class EngineTests {
             custom.White=true;engine.Install(game,new Options{Hud=true,Layout="tactical",Customization=custom},null);
             byte[] play=File.ReadAllBytes(Path.Combine(game,@"data\ui\textures\HUD\custom\Play-A.dds"));int playStart=HudCustomization.BgraPixelOffset(play);
             Check(engine.Status(game).Customization.White&&Enumerable.Range(0,(play.Length-playStart)/4).All(i=>{int o=playStart+i*4,mx=Math.Max(play[o],Math.Max(play[o+1],play[o+2])),mn=Math.Min(play[o],Math.Min(play[o+1],play[o+2]));return play[o+3]==0||mx-mn<=7;}),"white HUD installs neutral button textures and persists");
+            Check(Engine.Hash(Path.Combine(game,@"data\ui\textures\HUD\custom\Play-A.dds"))==Engine.Hash(engine.Payload(@"customization\white\HUD\custom\Play-A.dds")),"white HUD icon buttons use the generated art byte for byte");
+            Check(Engine.Hash(Path.Combine(game,@"data\ui\textures\HUD\custom\tactical_panel.dds"))!=Engine.Hash(engine.Payload(@"layouts\tactical\textures\HUD\custom\tactical_panel.dds")),"white HUD still recolours panels");
             custom.White=false;
             byte[] sample=File.ReadAllBytes(engine.Payload(@"layouts\tactical\textures\HUD\custom\Pause-A.dds"));
             var shifted=HudCustomization.ShiftHue(sample,90);
