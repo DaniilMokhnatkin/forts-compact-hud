@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.7.0 — 2026-11-09
+
+- 12 new crosshairs, 19 in total: an upside-down V (Chevron and Double chevron),
+  CS-style Bold, Dot, Double ring, Square, Diamond, X and T-shape, and tank-style
+  Sniper, Mil-dot and Arcade. Colour and size work for all of them.
+- The crosshair list scrolls inside its card, with a thin macOS-style scrollbar
+  that is now used across the whole window.
+- The About page shows the author's avatar and the original Matchroom Next and
+  Kadr icons. Matchroom's description now mentions that you can check your own
+  performance in every match.
+
 ## 1.6.1 — 2026-11-09
 
 - New "About the developer" page with the author and Matchroom Next. The
