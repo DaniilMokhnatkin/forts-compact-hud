@@ -56,7 +56,7 @@
                   </Border>
                   <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="Kadr" FontFamily="{StaticResource Display}" FontSize="16" FontWeight="SemiBold"/>
-                    <TextBlock Text="Скриншотер для Windows: снимок по PrtSc за миллисекунды и редактор прямо на экране, чтобы пометить важное, скрыть лишнее и отправить." Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap"/>
+                    <TextBlock Text="Очень быстрый скриншотер на Rust: запись экрана, мгновенный перевод текста на экране, блюр важных данных. Помнит 25 последних снимков и 50 скопированных текстов, вызов по Win+V." Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap"/>
                   </StackPanel>
                 </Grid>
                 <Border Height="1" Background="{DynamicResource Separator}" Margin="0,14,0,12"/>

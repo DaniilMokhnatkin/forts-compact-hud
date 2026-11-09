@@ -13,7 +13,7 @@ $script:English = @{
     "Даниил · Starkoff" = "Daniil · Starkoff"; "Автор Forts Setup и компактного HUD Starkoff" = "Author of Forts Setup and the Starkoff compact HUD"
     "Ещё для Forts" = "More for Forts"; "Программа для Forts: история матчей и рейтинг 1v1 по реплеям, аватарки и ники Steam, радар сильных игроков." = "A Forts app: match history and 1v1 rating from replays, Steam avatars and names, a radar for strong players."
     "А ещё у меня есть крутой скриншотер!" = "I also made a great screenshot tool!"; "Скачать Kadr" = "Download Kadr"
-    "Скриншотер для Windows: снимок по PrtSc за миллисекунды и редактор прямо на экране, чтобы пометить важное, скрыть лишнее и отправить." = "A Windows screenshot tool: capture with PrtSc in milliseconds and edit right on screen to mark what matters, hide the rest and send."
+    "Очень быстрый скриншотер на Rust: запись экрана, мгновенный перевод текста на экране, блюр важных данных. Помнит 25 последних снимков и 50 скопированных текстов, вызов по Win+V." = "A very fast screenshot tool written in Rust: screen recording, instant translation of on-screen text, blur for sensitive data. Remembers the last 25 screenshots and 50 copied texts, opened with Win+V."
     "Скачать последнюю версию" = "Download the latest version"; "Страница на GitHub" = "GitHub page"; "Скачиваю…" = "Downloading…"; "Скачано в «Загрузки»: " = "Saved to Downloads: "
     "Не удалось получить последнюю версию. Проверьте подключение." = "Could not get the latest version. Check your connection."
     "Не удалось скачать файл. Проверьте подключение и повторите позже." = "Could not download the file. Check your connection and try later."
