@@ -43,6 +43,31 @@
                 <TextBlock x:Name="MatchroomStatus" Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"/>
               </StackPanel>
             </Border>
+            <TextBlock Text="А ещё у меня есть крутой скриншотер!" Foreground="{StaticResource SecondaryText}" FontSize="12" FontWeight="Medium" Margin="4,22,0,8"/>
+            <Border CornerRadius="12" Background="{DynamicResource Group}">
+              <StackPanel Margin="16,14">
+                <Grid>
+                  <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                  <Border Width="46" Height="46" CornerRadius="11">
+                    <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#FF9F43" Offset="0"/><GradientStop Color="#E5372E" Offset="1"/></LinearGradientBrush></Border.Background>
+                    <Canvas Width="46" Height="46">
+                      <Path Data="M13,19 V14 H18 M28,14 H33 V19 M33,27 V32 H28 M18,32 H13 V27" Stroke="White" StrokeThickness="3" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                    </Canvas>
+                  </Border>
+                  <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Kadr" FontFamily="{StaticResource Display}" FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="Скриншотер для Windows: снимок по PrtSc за миллисекунды и редактор прямо на экране, чтобы пометить важное, скрыть лишнее и отправить." Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap"/>
+                  </StackPanel>
+                </Grid>
+                <Border Height="1" Background="{DynamicResource Separator}" Margin="0,14,0,12"/>
+                <StackPanel Orientation="Horizontal">
+                  <Button x:Name="KadrDownload" Style="{StaticResource Primary}" Content="Скачать Kadr"/>
+                  <Button x:Name="KadrPage" Style="{StaticResource Link}" Content="Страница на GitHub" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+                <ProgressBar x:Name="KadrProgress" Height="4" Minimum="0" Maximum="100" Margin="0,12,0,0" Visibility="Collapsed"/>
+                <TextBlock x:Name="KadrStatus" Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"/>
+              </StackPanel>
+            </Border>
           </StackPanel>
 
           <!-- backup -->

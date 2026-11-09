@@ -132,12 +132,16 @@ namespace FortsSetup {
             UI<Button>("LayoutLink").Click+=(s,e)=>OpenUrl(Layout=="tactical"?"https://www.youtube.com/@robber_fox/videos":Layout=="zors"?"https://steamcommunity.com/profiles/76561199099877561":"https://steamcommunity.com/sharedfiles/filedetails/?id=3750502564");
             UI<Button>("CustomizationBtn").Click+=(s,e)=>{var dialog=new CustomizationDialog(Window,customization,Layout,lang=="en");if(dialog.ShowDialog()==true){customization=dialog.Value.Clone();customizationChosen=true;UpdateSummary();}};
             UI<Button>("AuthorLink").Click+=(s,e)=>OpenUrl(Matchroom.Author);UI<Button>("MatchroomPage").Click+=(s,e)=>OpenUrl(Matchroom.Page);
-            UI<Button>("MatchroomDownload").Click+=async(s,e)=>{
-                var button=UI<Button>("MatchroomDownload");var bar=UI<ProgressBar>("MatchroomProgress");button.IsEnabled=false;bar.Value=0;bar.Visibility=Visibility.Visible;Text("MatchroomStatus",L("Скачиваю…"));
-                try{string file=await Matchroom.Download(p=>Window.Dispatcher.BeginInvoke(new Action(()=>bar.Value=p)));Text("MatchroomStatus",L("Скачано в «Загрузки»: ")+Path.GetFileName(file));Process.Start("explorer.exe","/select,\""+file+"\"");}
-                catch(Exception ex){Text("MatchroomStatus",L(ex.Message));}
-                finally{button.IsEnabled=true;bar.Visibility=Visibility.Collapsed;}
-            };
+            UI<Button>("KadrPage").Click+=(s,e)=>OpenUrl(Matchroom.KadrPage);
+            foreach(var app in new[]{Tuple.Create("MatchroomDownload","MatchroomProgress","MatchroomStatus",Matchroom.Repo),Tuple.Create("KadrDownload","KadrProgress","KadrStatus",Matchroom.KadrRepo)}){
+                var item=app;
+                UI<Button>(item.Item1).Click+=async(s,e)=>{
+                    var button=UI<Button>(item.Item1);var bar=UI<ProgressBar>(item.Item2);button.IsEnabled=false;bar.Value=0;bar.Visibility=Visibility.Visible;Text(item.Item3,L("Скачиваю…"));
+                    try{string file=await Matchroom.Download(p=>Window.Dispatcher.BeginInvoke(new Action(()=>bar.Value=p)),null,item.Item4);Text(item.Item3,L("Скачано в «Загрузки»: ")+Path.GetFileName(file));Process.Start("explorer.exe","/select,\""+file+"\"");}
+                    catch(Exception ex){Text(item.Item3,L(ex.Message));}
+                    finally{button.IsEnabled=true;bar.Visibility=Visibility.Collapsed;}
+                };
+            }
             UI<Button>("UpdateLink").Click+=(s,e)=>{if(updateUrl!=null)OpenUrl(updateUrl);};
             UI<Button>("CheckUpdateBtn").Content=lang=="en"?"Check for updates":"Проверить обновления";
             UI<Button>("FeedbackBtn").Content=lang=="en"?"Report a bug":"Сообщить об ошибке";
