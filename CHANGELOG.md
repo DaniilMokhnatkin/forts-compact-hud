@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.8.1 — 2026-11-09
+
+- Reworked the white Tactical HUD, which looked grey and lost its icons in game.
+  Icon buttons (grid, doors, cross bracing, spy, gun facing, play, pause, menu)
+  are now white plates with dark icons in all four states: idle, hover,
+  selected and disabled. Panels, tabs and the commander circles stay graphite
+  with a white border, the reactor panel is recoloured too, and the gauge keeps
+  its colours.
+
 ## 1.8.0 — 2026-11-09
 
 - Tactical HUD can now be white: a white swatch next to the hue slider turns
