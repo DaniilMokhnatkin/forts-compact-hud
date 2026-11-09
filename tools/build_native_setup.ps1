@@ -17,6 +17,10 @@ $refs=@('/r:System.Web.Extensions.dll','/r:System.Net.Http.dll','/r:System.Xaml.
     "/r:$wpf\PresentationFramework.dll","/r:$wpf\PresentationCore.dll","/r:$wpf\WindowsBase.dll")
 $sources=@(Get-ChildItem -LiteralPath $native -Filter '*.cs' | ForEach-Object FullName)
 if ($Test) {
+    & $csc /nologo /target:exe "/out:$build\NativeDownloadTests.exe" /r:System.Net.Http.dll /r:System.Web.Extensions.dll (Join-Path $PSScriptRoot 'native\DownloadTests.cs') (Join-Path $native 'About.cs')
+    if ($LASTEXITCODE -ne 0) { throw 'Native download tests did not compile' }
+    & (Join-Path $build 'NativeDownloadTests.exe') $root
+    if ($LASTEXITCODE -ne 0) { throw 'Native download tests failed' }
     & $csc /nologo /target:exe "/out:$build\NativeEngineTests.exe" /r:System.Web.Extensions.dll (Join-Path $PSScriptRoot 'native\EngineTests.cs') (Join-Path $native 'Engine.cs') (Join-Path $native 'Customization.cs')
     if ($LASTEXITCODE -ne 0) { throw 'Native engine tests did not compile' }
     & (Join-Path $build 'NativeEngineTests.exe') $root

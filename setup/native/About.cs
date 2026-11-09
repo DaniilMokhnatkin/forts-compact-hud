@@ -43,6 +43,23 @@ namespace FortsSetup {
             return null;
         }
         public static string DownloadsFolder(){return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),"Downloads");}
+        public static string DownloadName(Asset asset){
+            string version=(asset.Tag??"").TrimStart('v','V');
+            if(!System.Text.RegularExpressions.Regex.IsMatch(version,@"^\d+(?:\.\d+){1,3}(?:[-.][A-Za-z0-9.-]+)?$"))throw new InvalidDataException("Некорректная версия релиза GitHub.");
+            string name=Path.GetFileName(asset.Name),stem=Path.GetFileNameWithoutExtension(name);
+            if(System.Text.RegularExpressions.Regex.IsMatch(stem,@"(?<!\d)"+System.Text.RegularExpressions.Regex.Escape(version)+@"(?![\d.])",System.Text.RegularExpressions.RegexOptions.IgnoreCase))return name;
+            return stem+"-"+version+Path.GetExtension(name);
+        }
+        public static string CompleteDownload(string part,string folder,string name){
+            string stem=Path.GetFileNameWithoutExtension(name),extension=Path.GetExtension(name);
+            for(int i=0;i<10000;i++){
+                string target=Path.Combine(folder,i==0?name:stem+" ("+i+")"+extension);
+                if(File.Exists(target)||Directory.Exists(target))continue;
+                try{File.Move(part,target);return target;}
+                catch(IOException){if(!File.Exists(target)&&!Directory.Exists(target))throw;}
+            }
+            throw new IOException("Не удалось подобрать свободное имя файла в «Загрузках».");
+        }
         // Returns the saved file. Progress is 0..100. Throws IOException with a user-readable message.
         public static async Task<string> Download(Action<int> progress,string folder=null,string repo=Repo){
             folder=folder??DownloadsFolder();Directory.CreateDirectory(folder);
@@ -53,7 +70,7 @@ namespace FortsSetup {
                 catch(Exception e){throw new IOException("Не удалось получить последнюю версию. Проверьте подключение.",e);}
                 string expected=null;
                 if(asset.HashUrl!=null)try{expected=ExpectedHash(await http.GetStringAsync(asset.HashUrl),asset.Name);}catch{}
-                string target=Path.Combine(folder,asset.Name),part=target+".part";
+                string name=DownloadName(asset),part=Path.Combine(folder,"."+name+"."+Guid.NewGuid().ToString("N")+".part");
                 try{
                     using(var response=await http.GetAsync(asset.Url,HttpCompletionOption.ResponseHeadersRead)){
                         response.EnsureSuccessStatusCode();long total=response.Content.Headers.ContentLength??-1,done=0;
@@ -65,7 +82,7 @@ namespace FortsSetup {
                         string actual;using(var sha=SHA256.Create())using(var stream=File.OpenRead(part))actual=BitConverter.ToString(sha.ComputeHash(stream)).Replace("-","").ToLowerInvariant();
                         if(actual!=expected)throw new IOException("Контрольная сумма не совпала. Файл удалён, попробуйте ещё раз.");
                     }
-                    if(File.Exists(target))File.Delete(target);File.Move(part,target);progress(100);return target;
+                    string target=CompleteDownload(part,folder,name);progress(100);return target;
                 }catch(IOException){TryDelete(part);throw;}
                 catch(Exception e){TryDelete(part);throw new IOException("Не удалось скачать файл. Проверьте подключение и повторите позже.",e);}
             }

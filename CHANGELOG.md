@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.8.4 — 2026-11-09
+
+- Downloads include the GitHub release version in their filename. Existing
+  installers are preserved, including running/locked files; repeated downloads
+  use a numbered suffix. Each download uses its own temporary file.
+- After a successful self-update download and checksum verification, the new
+  installer is highlighted in Downloads and the old installer window closes.
+  Failed downloads keep the old window open and show the error.
+
 ## 1.8.3 — 2026-11-09
 
 - Replaced all seven Zors.o action icons with the new dark horizontal purple

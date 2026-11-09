@@ -145,7 +145,7 @@ namespace FortsSetup {
             UI<Button>("UpdateLink").Click+=async(s,e)=>{
                 if(updateRepo==null)return;
                 var button=UI<Button>("UpdateLink");var bar=UI<ProgressBar>("UpdateDownload");button.IsEnabled=false;bar.Value=0;bar.Visibility=Visibility.Visible;Visible("UpdateDownloadStatus",true);Text("UpdateDownloadStatus",L("Скачиваю…"));
-                try{string file=await Matchroom.Download(p=>Window.Dispatcher.BeginInvoke(new Action(()=>bar.Value=p)),null,updateRepo);Text("UpdateDownloadStatus",L("Скачано в «Загрузки»: ")+Path.GetFileName(file)+". "+L("Закрой этот установщик и запусти новый."));Process.Start("explorer.exe","/select,\""+file+"\"");}
+                try{string file=await Matchroom.Download(p=>Window.Dispatcher.BeginInvoke(new Action(()=>bar.Value=p)),null,updateRepo);CompleteSelfUpdate(file);}
                 catch(Exception ex){Text("UpdateDownloadStatus",L(ex.Message));}
                 finally{button.IsEnabled=true;bar.Visibility=Visibility.Collapsed;}
             };
@@ -296,6 +296,11 @@ namespace FortsSetup {
             finally {busy=false;UI<RadioButton>("LangRu").IsEnabled=true;UI<RadioButton>("LangEn").IsEnabled=true;Visible("DoneBtn",true);UI<Button>("DoneBtn").Focus();}
         }
         void SwitchLanguage(string to) {if(lang==to||busy)return;var next=new WindowController(engine.PackRoot,game,to,noMotion,Selection());Application.Current.MainWindow=next.Window;next.Window.Show();Window.Close();}
+        public void CompleteSelfUpdate(string file,Action<string> reveal=null){
+            try{if(reveal!=null)reveal(file);else Process.Start("explorer.exe","/select,\""+file+"\"");}
+            catch(Exception e){Trace.WriteLine("Reveal downloaded update: "+e.Message);}
+            Window.Close();
+        }
         static void OpenUrl(string url) {Process.Start(new ProcessStartInfo(url){UseShellExecute=true});}
         async void CheckUpdates(bool manual=false) {
             if(checkingUpdates)return;checkingUpdates=true;

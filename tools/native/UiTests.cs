@@ -112,6 +112,9 @@ static class NativeUiTests {
             var reduced=new WindowController(Path.Combine(root,"setup"),game,"en",true);reduced.Window.Show();Wait(()=>reduced.Ready!=null&&reduced.Ready.IsCompleted);reduced.SelectLayout("zors");
             Check(!((SolidColorBrush)reduced.Window.Resources["Accent"]).HasAnimatedProperties,"reduced motion applies theme immediately");
             Check(reduced.UI<Button>("InstallBtn").Content.ToString()=="Next","English UI translated");reduced.Window.Close();
+            var updater=new WindowController(Path.Combine(root,"setup"),game,"ru",true);updater.Window.Show();Wait(()=>updater.Ready!=null&&updater.Ready.IsCompleted);bool revealed=false;
+            updater.CompleteSelfUpdate("Forts.Setup-1.8.4.exe",file=>{Check(updater.Window.IsVisible&&file=="Forts.Setup-1.8.4.exe","new update is revealed before closing the old installer");revealed=true;});
+            Check(revealed&&!updater.Window.IsVisible,"old installer closes after a successful update download");
             engine.Restore(game,null);Console.WriteLine(checks+" UI CHECKS PASSED");return 0;
         }catch(Exception e){Console.Error.WriteLine(e);return 1;}
         finally{if(c!=null)c.Window.Close();app.Shutdown();if(game.StartsWith(Path.Combine(root,"build")+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase))Directory.Delete(game,true);}
