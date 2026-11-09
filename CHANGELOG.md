@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.0 — 2026-11-09
+
+- The compact HUD is now called **Starkoff**. It only offers the resource
+  position (centre or bottom-right) and keeps its original panels and colours.
+- Colour, card size, panel background and indicator options are Tactical-only.
+- Bug-report and HUD settings windows redesigned in the Tahoe style
+  (shared sheet, grouped cards, rounded fields, capsule buttons).
+- The HUD page title shows the selected HUD name.
+- Added a bottom-right gameplay screenshot to the Starkoff gallery.
+
 ## 1.5.1 — 2026-11-09
 
 - Quote multipart field names and filenames from the .NET Framework client so
