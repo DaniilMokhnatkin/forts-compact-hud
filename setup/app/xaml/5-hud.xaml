@@ -11,7 +11,7 @@
             <ScrollViewer.RenderTransform><TranslateTransform/></ScrollViewer.RenderTransform>
             <StackPanel>
             <Grid>
-              <TextBlock Text="HUD" Style="{StaticResource PageTitle}"/>
+              <TextBlock x:Name="HudTitle" Text="HUD" Style="{StaticResource PageTitle}"/>
               <Button x:Name="CustomizationBtn" Content="Настроить HUD" Style="{StaticResource Secondary}" HorizontalAlignment="Right" VerticalAlignment="Center" AutomationProperties.Name="Настроить HUD"/>
             </Grid>
             <TextBlock Style="{StaticResource PageNote}" Text="Выбери вид интерфейса. Без модов: меняются только файлы интерфейса, оригиналы сохраняются."/>

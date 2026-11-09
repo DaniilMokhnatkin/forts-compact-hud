@@ -31,7 +31,7 @@ $stage=Join-Path $build ('native-pack-'+[guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force "$stage\app" | Out-Null
 try {
     foreach ($dir in @('assets','xaml')) { Copy-Item -LiteralPath (Join-Path $root "setup\app\$dir") -Destination "$stage\app\$dir" -Recurse }
-    foreach ($file in @('en.json','version.json')) { Copy-Item -LiteralPath (Join-Path $root "setup\app\$file") -Destination "$stage\app\$file" }
+    foreach ($file in @('en.json','version.json','feedback.json')) { Copy-Item -LiteralPath (Join-Path $root "setup\app\$file") -Destination "$stage\app\$file" }
     Copy-Item -LiteralPath (Join-Path $root 'setup\payload') -Destination "$stage\payload" -Recurse
     # Archive destination must be outside its source tree.
     $archive=Join-Path $build ('native-pack-'+[guid]::NewGuid().ToString('N')+'.zip')

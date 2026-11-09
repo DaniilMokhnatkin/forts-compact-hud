@@ -99,6 +99,10 @@
 
       <!-- game folder -->
       <StackPanel Grid.Row="3" Margin="8,0,0,0">
+        <Button x:Name="FeedbackBtn" Style="{StaticResource Link}" Content="Сообщить об ошибке" HorizontalAlignment="Left" FontSize="12" Margin="0,0,0,4"/>
+        <Button x:Name="CheckUpdateBtn" Style="{StaticResource Link}" Content="Проверить обновления" HorizontalAlignment="Left" FontSize="12"/>
+        <ProgressBar x:Name="UpdateProgress" IsIndeterminate="True" Height="3" Margin="0,3,8,4" Visibility="Collapsed"/>
+        <TextBlock x:Name="UpdateStatus" FontSize="11" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,0,0,8"/>
         <Border x:Name="Update" CornerRadius="10" Background="#1A0A7AFF" Padding="12,9" Margin="-8,0,0,14" Visibility="Collapsed">
           <StackPanel>
             <TextBlock x:Name="UpdateText" FontWeight="SemiBold" FontSize="12"/>

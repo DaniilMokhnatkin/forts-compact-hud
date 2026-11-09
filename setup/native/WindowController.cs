@@ -62,6 +62,7 @@ namespace FortsSetup {
         string game,skin="dlc3",cross="cross",color="white",updateUrl,lastPage="HudPage";
         readonly bool noMotion;
         bool initializing=true,busy,statusReady;
+        bool checkingUpdates;
         HudCustomization customization=new HudCustomization();
         bool customizationChosen;
         int refreshVersion,galleryVersion;
@@ -71,7 +72,7 @@ namespace FortsSetup {
         readonly Dictionary<string,Image> iconImages=new Dictionary<string,Image>(),iconPreviews=new Dictionary<string,Image>();
         readonly Dictionary<string,TextBlock> iconValues=new Dictionary<string,TextBlock>();
         static readonly ConcurrentDictionary<string,BitmapSource> Bitmaps=new ConcurrentDictionary<string,BitmapSource>(StringComparer.OrdinalIgnoreCase);
-        readonly Dictionary<string,string> layoutNames=new Dictionary<string,string>{{"compact","Компактный"},{"zors","Zors.o"},{"minimalist","Minimalist"},{"tactical","Тактический"}};
+        readonly Dictionary<string,string> layoutNames=new Dictionary<string,string>{{"compact","Starkoff"},{"zors","Zors.o"},{"minimalist","Minimalist"},{"tactical","Тактический"}};
         readonly Dictionary<string,string> crossNames=new Dictionary<string,string>{{"cross","Крест"},{"gap_cross","Разрыв"},{"fine_cross","Тонкий"},{"dot_ring","Кольцо"},{"brackets","Рамка"},{"scope","Оптика"},{"zors","Zors.o"}};
         readonly Dictionary<string,string> skinNames=new Dictionary<string,string>{{"dlc3","Firebird"},{"base","По умолчанию"},{"dlc1","High Seas"},{"dlc2","Луноход"},{"pro","PRO"},{"elite","Elite"}};
         readonly Dictionary<string,string> iconNames=new Dictionary<string,string>{{"extinguisher","Тушение"},{"under_construction","Строительство"},{"repair","Ремонт"}};
@@ -129,6 +130,14 @@ namespace FortsSetup {
             UI<Button>("LayoutLink").Click+=(s,e)=>OpenUrl(Layout=="tactical"?"https://www.youtube.com/@robber_fox/videos":Layout=="zors"?"https://steamcommunity.com/profiles/76561199099877561":"https://steamcommunity.com/sharedfiles/filedetails/?id=3750502564");
             UI<Button>("CustomizationBtn").Click+=(s,e)=>{var dialog=new CustomizationDialog(Window,customization,Layout,lang=="en");if(dialog.ShowDialog()==true){customization=dialog.Value.Clone();customizationChosen=true;UpdateSummary();}};
             UI<Button>("UpdateLink").Click+=(s,e)=>{if(updateUrl!=null)OpenUrl(updateUrl);};
+            UI<Button>("CheckUpdateBtn").Content=lang=="en"?"Check for updates":"Проверить обновления";
+            UI<Button>("FeedbackBtn").Content=lang=="en"?"Report a bug":"Сообщить об ошибке";
+            UI<Button>("CheckUpdateBtn").Click+=(s,e)=>CheckUpdates(true);
+            UI<Button>("FeedbackBtn").Click+=(s,e)=>{
+                var o=Selection();string info="version="+typeof(Program).Assembly.GetName().Version+"; layout="+Layout+"; language="+lang;
+                if(o.Customization!=null)info+="; resources="+o.Customization.Resources+"; cards="+o.Customization.Cards+"; background="+o.Customization.Background+"; hue="+o.Customization.Hue;
+                new FeedbackDialog(Window,engine.PackRoot,info,lang=="en").ShowDialog();
+            };
             UI<RadioButton>(lang=="en"?"LangEn":"LangRu").IsChecked=true;
             UI<RadioButton>("LangEn").Click+=(s,e)=>SwitchLanguage("en");UI<RadioButton>("LangRu").Click+=(s,e)=>SwitchLanguage("ru");
             Window.KeyDown+=(s,e)=>{if(e.Key==Key.Escape)Window.Close();};
@@ -154,9 +163,9 @@ namespace FortsSetup {
         }
         public void SelectLayout(string key) {
             if(layouts[key].IsChecked!=true){layouts[key].IsChecked=true;return;}
-            Layout=key;Theme.Apply(key=="zors");
+            Layout=key;Theme.Apply(key=="zors");Text("HudTitle","HUD · "+L(layoutNames[key]));Visible("CustomizationBtn",Engine.CanCustomize(key));
             if(!customizationChosen)customization=new HudCustomization{Background=key=="tactical"?100:0};
-            Text("LayoutTitle",L(key=="compact"?"Компактный · наш":key=="zors"?"Zors.o · фиолетовая тема":"Minimalist · автор nutellafish"));
+            Text("LayoutTitle",L(key=="compact"?"Starkoff · наш":key=="zors"?"Zors.o · фиолетовая тема":"Minimalist · автор nutellafish"));
             Text("LayoutText",L(key=="compact"?"Ресурсы «запас / лимит» по центру, кнопки в один ряд, иконки на 20% меньше.":key=="zors"?"Наш компактный HUD в космическом фиолетовом: кнопки, вкладки, командир, реактор, иконки и прицел; фон меню и заставка от Zors.o.":"Прозрачный минимальный интерфейс; убранные кнопки нажимаются горячими клавишами."));
             if(key=="compact")Text("LayoutText",L("Кнопки в один ряд. Расположение ресурсов, размер карточек, фон и цвет выбираются в настройках HUD."));
             Visible("SkinRow",key=="compact");Visible("SkinSep",key=="compact");Visible("ZorsWarn",key=="zors");Visible("MiniWarn",key=="minimalist");Visible("LayoutLink",key!="compact");
@@ -165,7 +174,7 @@ namespace FortsSetup {
                 Text("LayoutTitle",L("Тактический · по HUD RobberFox"));
                 Text("LayoutText",L("Плоские тёмно-синие боковые панели, свободный центр. Расположение ресурсов, фон, масштаб и оттенок настраиваются."));
                 UI<Button>("LayoutLink").Content="RobberFox · YouTube";
-                Visible("ZorsWarn",true);Text("ZorsMenuText",L("Тема по HUD RobberFox. Превью — исходный референс."));
+                Visible("ZorsWarn",true);Text("ZorsMenuText",L("Тема по HUD RobberFox. Скриншоты из игры."));
             }
             foreach(string id in Engine.IconIds){var bmp=Image("icon_"+key+"_"+id+".png");iconImages[id].Source=bmp;iconPreviews[id].Source=bmp;}
             if(!initializing&&key!="compact") {UI<CheckBox>("CrossSwitch").IsChecked=key=="zors";if(key=="zors")tiles["zors"].IsChecked=true;}
@@ -178,14 +187,13 @@ namespace FortsSetup {
             Text("ZorsHudText",current!=null&&current!="base"?L("• Нужен скин HUD «По умолчанию» (Настройки → Игра → Скин HUD)."):L("• Скин HUD «По умолчанию» — как нужно: вкладки, командир и реактор будут фиолетовыми."));
             Text("ZorsMenuText",new[]{"dlc1","dlc2","dlc3"}.Contains(menu)?L("• Фон меню Zors.o виден только со скинами «По умолчанию», «Классика» и «Склад оружия». Выбери один из них в настройках игры."):L("• Фон меню виден со скинами меню «По умолчанию», «Классика» и «Склад оружия»."));
             Text("MiniSkin",L("• Нужен скин HUD «По умолчанию» (Настройки → Игра → Скин HUD)."));
-            if(Layout=="tactical")Text("ZorsMenuText",L("Тема по HUD RobberFox. Превью — исходный референс."));
+            if(Layout=="tactical")Text("ZorsMenuText",L("Тема по HUD RobberFox. Скриншоты из игры."));
         }
         async void LoadGallery(string key) {
             int version=++galleryVersion;
             string dir=Path.Combine(assets,"gallery",key);
             gallery=Directory.Exists(dir)?Directory.GetFiles(dir).Where(p=>new[]{".jpg",".png"}.Contains(Path.GetExtension(p).ToLowerInvariant())).OrderBy(p=>p).ToArray():new string[0];
-            if(key=="tactical")gallery=new[]{Path.Combine(assets,"tactical_reference.png")};
-            if(gallery.Length==0)gallery=(key=="compact"?new[]{"hud_after.png","hud_photo_2.png","hud_photo_3.png"}:new[]{key=="zors"?"preview_zors.png":"minimalist_preview.jpg"}).Select(p=>Path.Combine(assets,p)).ToArray();
+            if(gallery.Length==0)gallery=(key=="compact"?new[]{"hud_after.png","hud_photo_2.png","hud_photo_3.png","hud_photo_4.png"}:new[]{key=="zors"?"preview_zors.png":"minimalist_preview.jpg"}).Select(p=>Path.Combine(assets,p)).ToArray();
             UI<Button>("PhotoPrevious").IsEnabled=gallery.Length>1;UI<Button>("PhotoNext").IsEnabled=gallery.Length>1;
             try {string path=gallery[0];await Task.Run(()=>Bitmap(path));if(version!=galleryVersion)return;ShowShot(0);}
             catch(Exception e){if(version==galleryVersion)Text("ShotCaption",e.Message);}
@@ -194,7 +202,7 @@ namespace FortsSetup {
             if(index<0||index>=gallery.Length)return;shotIndex=index;int version=galleryVersion;string path=gallery[index];Text("PhotoCount",(index+1)+" / "+gallery.Length);
             try {var bmp=await Task.Run(()=>Bitmap(path));if(version!=galleryVersion||shotIndex!=index)return;
                 var brush=new ImageBrush(bmp){Stretch=Stretch.Uniform};var target=UI<Border>("HudShot");target.Background=brush;target.BeginAnimation(UIElement.OpacityProperty,null);target.Opacity=noMotion?1:0.35;Animate(target,UIElement.OpacityProperty,1,180);
-                string caption=System.Text.RegularExpressions.Regex.Replace(Path.GetFileNameWithoutExtension(path),@"^\d+\s*","");if(Layout=="tactical")caption=L("Референс · HUD RobberFox");Text("ShotCaption",caption);Visible("ShotCaptionBox",Layout=="tactical"||Path.GetDirectoryName(path)!=assets);
+                string caption=System.Text.RegularExpressions.Regex.Replace(Path.GetFileNameWithoutExtension(path),@"^\d+\s*","");Text("ShotCaption",caption);Visible("ShotCaptionBox",Layout=="tactical"||Path.GetDirectoryName(path)!=assets);
             }catch(Exception e){Text("ShotCaption",e.Message);}
         }
         void OpenViewer() {
@@ -211,7 +219,7 @@ namespace FortsSetup {
             image.Source=enabled?Tinted(Image("crosshair_"+cross+"_"+size+".png"),Engine.Colors[cross=="zors"?"white":color]):Image("crosshair_vanilla.png");
             Text("AfterLabel",enabled?L(crossNames[cross])+" · "+size+"%":L("Не меняется"));UpdateSummary();
         }
-        public Options Selection() {return new Options{Hud=On("HudSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=cross=="zors"?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=customization.Clone()};}
+        public Options Selection() {return new Options{Hud=On("HudSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=cross=="zors"?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
         public void ShowPage(string name) {
             Page=name;foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackupPage","WorkPage"})Visible(page,page==name);
             if(name!="WorkPage"){
@@ -270,10 +278,18 @@ namespace FortsSetup {
         }
         void SwitchLanguage(string to) {if(lang==to||busy)return;var next=new WindowController(engine.PackRoot,game,to,noMotion,Selection());Application.Current.MainWindow=next.Window;next.Window.Show();Window.Close();}
         static void OpenUrl(string url) {Process.Start(new ProcessStartInfo(url){UseShellExecute=true});}
-        async void CheckUpdates() {
+        async void CheckUpdates(bool manual=false) {
+            if(checkingUpdates)return;checkingUpdates=true;
+            UI<Button>("CheckUpdateBtn").IsEnabled=false;
+            if(manual){Visible("UpdateProgress",true);Text("UpdateStatus",lang=="en"?"Checking…":"Проверяю…");}
             try {var data=new JavaScriptSerializer().Deserialize<Dictionary<string,string>>(File.ReadAllText(Path.Combine(engine.PackRoot,"app","version.json")));if(!data.ContainsKey("repo"))return;
-                using(var http=new System.Net.Http.HttpClient{Timeout=TimeSpan.FromSeconds(6)}){http.DefaultRequestHeaders.UserAgent.ParseAdd("FortsSetup/"+data["version"]);string text=await http.GetStringAsync("https://api.github.com/repos/"+data["repo"]+"/releases/latest");var release=new JavaScriptSerializer().Deserialize<Dictionary<string,object>>(text);Version latest;string url=release["html_url"] as string;if(Version.TryParse(((string)release["tag_name"]).TrimStart('v'),out latest)&&latest>new Version(data["version"])&&url.StartsWith("https://github.com/",StringComparison.Ordinal)){updateUrl=url;Text("UpdateText",String.Format(L("Доступна версия {0}"),latest));Visible("Update",true);}}
-            } catch(Exception e) {Trace.WriteLine("Update check: "+e.Message);}
+                using(var http=new System.Net.Http.HttpClient{Timeout=TimeSpan.FromSeconds(8)}){http.DefaultRequestHeaders.UserAgent.ParseAdd("FortsSetup/"+data["version"]);string text=await http.GetStringAsync("https://api.github.com/repos/"+data["repo"]+"/releases/latest");var release=new JavaScriptSerializer().Deserialize<Dictionary<string,object>>(text);Version latest;string url=release["html_url"] as string;
+                    if(!Version.TryParse(((string)release["tag_name"]).TrimStart('v'),out latest))throw new IOException("Invalid version");
+                    if(latest>new Version(data["version"])&&url.StartsWith("https://github.com/",StringComparison.Ordinal)){updateUrl=url;Text("UpdateText",String.Format(L("Доступна версия {0}"),latest));Visible("Update",true);Text("UpdateStatus",lang=="en"?"Update available":"Есть обновление");}
+                    else {Visible("Update",false);if(manual)Text("UpdateStatus",(lang=="en"?"Up to date · ":"Установлена актуальная версия · ")+data["version"]);}
+                }
+            } catch(Exception e) {Trace.WriteLine("Update check: "+e.Message);if(manual)Text("UpdateStatus",lang=="en"?"Could not check. Try again later.":"Не удалось проверить. Повторите позже.");}
+            finally {checkingUpdates=false;Visible("UpdateProgress",false);UI<Button>("CheckUpdateBtn").IsEnabled=true;}
         }
     }
 }

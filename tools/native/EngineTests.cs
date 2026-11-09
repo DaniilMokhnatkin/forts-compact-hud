@@ -55,6 +55,18 @@ static class EngineTests {
             var shifted=HudCustomization.ShiftHue(sample,90);
             Check(!sample.SequenceEqual(shifted)&&Enumerable.Range(0,(sample.Length-128)/4).All(i=>sample[131+i*4]==shifted[131+i*4]),"hue changes texture pixels and preserves alpha");
             Reject(()=>engine.Install(game,new Options{Hud=true,Customization=new HudCustomization{Resources="../bad"}},null),"reject invalid customization values");
+            var mini=new Options{Hud=true,Layout="minimalist",Customization=new HudCustomization{Hue=-15,Resources="corner",Cards=80,Background=0}};
+            mini.Icons["extinguisher"]=50;mini.Icons["under_construction"]=70;mini.Icons["repair"]=70;
+            engine.Install(game,mini,null);
+            Check(engine.Status(game).Layout=="minimalist"&&engine.Status(game).Icons["extinguisher"]==50,"Minimalist installs with separately selected icon opacity");
+            Check(engine.Status(game).Customization==null&&Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"))==Engine.Hash(engine.Payload(@"layouts\minimalist\hud.lua")),"Minimalist ignores inherited HUD customization and uses original layout");
+            Check(Engine.Hash(Path.Combine(game,@"data\ui\textures\HUD\skin_base\PanelSpy.dds"))==Engine.Hash(engine.Payload(@"layouts\minimalist\textures\HUD\skin_base\PanelSpy.dds")),"Minimalist texture is byte-identical and not tinted");
+            Check(!File.Exists(Path.Combine(game,@"data\ui\textures\HUD\custom\customization_panel.dds")),"switching away removes custom backdrops");
+            engine.Install(game,new Options{Hud=true,Layout="zors",Customization=custom},null);
+            Check(engine.Status(game).Customization==null&&Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"))==Engine.Hash(engine.Payload(@"layouts\zors\hud.lua")),"Zors ignores inherited HUD customization and uses ready-made layout");
+            byte[] dx10=File.ReadAllBytes(engine.Payload(@"layouts\minimalist\textures\HUD\skin_base\PanelSpy.dds"));
+            byte[] rotated=HudCustomization.ShiftHue(dx10,30);
+            Check(dx10.Take(148).SequenceEqual(rotated.Take(148))&&Enumerable.Range(0,(dx10.Length-148)/4).All(i=>dx10[151+i*4]==rotated[151+i*4]),"DX10 hue preserves its full header and alpha");
             var skipped=engine.Restore(game,null);
             Check(skipped.Count==0 && Same(initial,Snapshot(game)),"restore byte-identical originals after switching layouts");
             engine.Install(game,new Options{Hud=true,Layout="zors"},null);

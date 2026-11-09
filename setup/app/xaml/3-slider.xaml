@@ -200,6 +200,23 @@
         </Grid>
       </ControlTemplate></Setter.Value></Setter>
     </Style>
+    <Style x:Key="TahoeField" TargetType="TextBox">
+      <Setter Property="Foreground" Value="{StaticResource Label}"/>
+      <Setter Property="CaretBrush" Value="{StaticResource Label}"/>
+      <Setter Property="SelectionBrush" Value="{DynamicResource Accent}"/>
+      <Setter Property="Padding" Value="11,8"/>
+      <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+      <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TextBox">
+        <Border x:Name="B" CornerRadius="10" Background="White" BorderBrush="#26000000" BorderThickness="1">
+          <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" Focusable="False" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}"/>
+        </Border>
+        <ControlTemplate.Triggers>
+          <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="B" Property="BorderBrush" Value="#44000000"/></Trigger>
+          <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="B" Property="BorderBrush" Value="{DynamicResource Accent}"/></Trigger>
+          <Trigger Property="IsReadOnly" Value="True"><Setter TargetName="B" Property="Opacity" Value="0.6"/></Trigger>
+        </ControlTemplate.Triggers>
+      </ControlTemplate></Setter.Value></Setter>
+    </Style>
     <Style x:Key="HueRange" TargetType="Slider" BasedOn="{StaticResource SizeRange}">
       <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Slider">
         <Grid Background="Transparent" Margin="10,0"><Track x:Name="PART_Track" Height="36" VerticalAlignment="Center">

@@ -11,8 +11,8 @@ using System.Linq;
 [assembly:AssemblyTitle("Forts Setup")]
 [assembly:AssemblyProduct("Forts Setup")]
 [assembly:AssemblyDescription("Native HUD and crosshair installer for Forts")]
-[assembly:AssemblyVersion("1.4.0.0")]
-[assembly:AssemblyFileVersion("1.4.0.0")]
+[assembly:AssemblyVersion("1.5.1.0")]
+[assembly:AssemblyFileVersion("1.5.1.0")]
 namespace FortsSetup {
     public static class EmbeddedPack {
         public static string Extract() {
@@ -54,8 +54,13 @@ namespace FortsSetup {
         [StructLayout(LayoutKind.Sequential)] struct Margins {public int L,R,T,B;}
         [DllImport("dwmapi.dll")]static extern int DwmSetWindowAttribute(IntPtr hwnd,int attribute,ref int value,int size);
         [DllImport("dwmapi.dll")]static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd,ref Margins margins);
+        [DllImport("user32.dll")]static extern int GetWindowLong(IntPtr hwnd,int index);
+        [DllImport("user32.dll")]static extern int SetWindowLong(IntPtr hwnd,int index,int value);
+        [DllImport("user32.dll")]static extern bool SetWindowPos(IntPtr hwnd,IntPtr after,int x,int y,int w,int h,uint flags);
         public static void Apply(Window window) {
             var hwnd=new WindowInteropHelper(window).Handle;
+            SetWindowLong(hwnd,-16,GetWindowLong(hwnd,-16)&~0x80000); // WS_SYSMENU: custom caption buttons only
+            SetWindowPos(hwnd,IntPtr.Zero,0,0,0,0,0x37); // refresh non-client frame without moving/activating
             HwndSource.FromHwnd(hwnd).CompositionTarget.BackgroundColor=System.Windows.Media.Colors.Transparent;
             var m=new Margins{L=-1,R=-1,T=-1,B=-1};DwmExtendFrameIntoClientArea(hwnd,ref m);
             int value=2;DwmSetWindowAttribute(hwnd,33,ref value,4);value=3;DwmSetWindowAttribute(hwnd,38,ref value,4);

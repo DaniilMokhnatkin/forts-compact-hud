@@ -30,14 +30,14 @@ static class NativeUiTests {
             Check(c.Installed.Layout=="zors","fixture really has Zors installed");
             Check(c.Layout=="compact"&&c.Theme.Current=="default","startup stays Compact/neutral even with Zors installed");
             Check(c.Window.OwnedWindows.Count==0,"startup does not open gallery");
-            Wait(()=>c.UI<TextBlock>("PhotoCount").Text=="1 / 3");
+            Wait(()=>c.UI<TextBlock>("PhotoCount").Text=="1 / 4");
             var firstPhoto=c.UI<System.Windows.Controls.Border>("HudShot").Background;
             c.UI<Button>("PhotoNext").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
-            Wait(()=>c.UI<TextBlock>("PhotoCount").Text=="2 / 3"&&!Object.ReferenceEquals(firstPhoto,c.UI<System.Windows.Controls.Border>("HudShot").Background));
+            Wait(()=>c.UI<TextBlock>("PhotoCount").Text=="2 / 4"&&!Object.ReferenceEquals(firstPhoto,c.UI<System.Windows.Controls.Border>("HudShot").Background));
             Check(((SolidColorBrush)c.UI<Border>("PhotosBox").Background).Color.A==255,"gallery navigation has an opaque readable background");
             c.Window.UpdateLayout();
             Check(c.UI<Border>("PhotosBox").TranslatePoint(new Point(0,0),c.UI<Border>("HudFrame")).Y>=c.UI<Border>("HudShot").ActualHeight,"photo navigation sits outside the screenshot");
-            Check(c.UI<TextBlock>("PhotoCount").Text=="2 / 3","photo arrows update image and visible counter");
+            Check(c.UI<TextBlock>("PhotoCount").Text=="2 / 4","photo arrows update image and visible counter");
             Check(((ImageBrush)c.UI<Border>("HudShot").Background).Stretch==Stretch.Uniform,"gallery preview does not crop screenshots into similar-looking strips");
             var full=new GalleryViewer(c.Window,new[]{Path.Combine(root,@"setup\app\assets\hud_after.png"),Path.Combine(root,@"setup\app\assets\hud_photo_2.png")},0,"Compact",false,true);
             full.Show();Wait(()=>full.Picture.Source!=null);full.Step(1);
@@ -45,13 +45,15 @@ static class NativeUiTests {
             Wait(()=>full.Index==1&&Object.ReferenceEquals(full.Picture.Source,secondPhoto));
             Check(full.Counter.Text=="2 / 2"&&full.Picture.Stretch==Stretch.Uniform,"large viewer browses full uncropped screenshots");full.Close();
             Check(c.Selection().Customization.Resources=="corner","corner placement default remains an explicit setting");
-            var dialog=new CustomizationDialog(c.Window,c.Selection().Customization,"compact",false);
+            var dialog=new CustomizationDialog(c.Window,c.Selection().Customization,"tactical",false);
             Check(dialog.CardsChoice.Style==c.Window.FindResource("TahoeCombo"),"settings use the shared Tahoe control system");
             Check(Enumerable.Range(-12,25).All(n=>!CustomizationDialog.HueLabel("compact",n*15,false).Any(Char.IsDigit)),"hue is shown as a colour name instead of degrees");
             dialog.Show();Pump(60);Render(dialog,Path.Combine(root,@"build\native-customization.png"));
             dialog.ResourcesChoice.SelectedIndex=1;dialog.CardsChoice.SelectedIndex=0;dialog.BackgroundChoice.SelectedIndex=2;dialog.HueSlider.Value=90;
             Check(dialog.Value.Resources=="center"&&dialog.Value.Cards==65&&dialog.Value.Background==100&&dialog.Value.Hue==90,"settings controls update live customization independently");
             dialog.ResourcesChoice.SelectedIndex=0;Check(dialog.Value.Resources=="corner","resources can be switched back to the corner");dialog.Close();
+            {var sd=new CustomizationDialog(c.Window,new HudCustomization{Background=100},"compact",false);sd.Show();Pump(60);Render(sd,Path.Combine(root,@"build\native-starkoff.png"));sd.Close();}
+            {var c1=new HudCustomization{Resources="corner",Cards=65,Background=100,Hue=90,Indicators=false}.For("compact");var c2=new HudCustomization{Resources="center",Background=100}.For("compact");Check(c1.Cards==80&&c1.Hue==0&&c1.Indicators&&c1.Background==0&&c2.Background==0,"Starkoff only varies resource position");}
             Render(c.Window,Path.Combine(root,@"build\native-compact.png"));
             c.UI<RadioButton>("NavCross").IsChecked=true;c.UI<Slider>("SizeSlider").Value=75;
             Check(c.UI<TextBlock>("SizeValue").Text=="75%","native slider updates preview");
@@ -70,7 +72,26 @@ static class NativeUiTests {
             Check(c.UI<TextBlock>("LayoutTitle").Text.Contains("Zors"),"Zors content updates");
             c.SelectLayout("tactical");Pump(100);
             Check(c.UI<TextBlock>("LayoutTitle").Text.Contains("RobberFox")&&c.UI<Button>("LayoutLink").Content.ToString().Contains("RobberFox"),"Tactical credits RobberFox in the UI");
+            Wait(()=>c.UI<TextBlock>("PhotoCount").Text=="1 / 2");Check(c.UI<TextBlock>("ShotCaption").Text.Contains("центру"),"Tactical gallery uses both real gameplay screenshots");
+            c.SelectLayout("minimalist");Check(c.UI<Button>("CustomizationBtn").Visibility==Visibility.Collapsed&&c.Selection().Customization==null,"Minimalist cannot inherit customization");
             c.SelectLayout("zors");
+            Check(c.UI<Button>("CustomizationBtn").Visibility==Visibility.Collapsed&&c.Selection().Customization==null,"Zors cannot inherit customization");
+            Check(c.UI<Button>("FeedbackBtn")!=null&&c.UI<Button>("CheckUpdateBtn")!=null,"feedback and manual update actions are present");
+            Wait(()=>c.UI<Button>("CheckUpdateBtn").IsEnabled);
+            c.UI<Button>("CheckUpdateBtn").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+            Check(c.UI<ProgressBar>("UpdateProgress").Visibility==Visibility.Visible&&!c.UI<Button>("CheckUpdateBtn").IsEnabled,"manual update check animates and prevents duplicate requests");
+            Wait(()=>c.UI<Button>("CheckUpdateBtn").IsEnabled);Check(!String.IsNullOrWhiteSpace(c.UI<TextBlock>("UpdateStatus").Text)&&c.UI<ProgressBar>("UpdateProgress").Visibility==Visibility.Collapsed,"manual update check ends with an explicit result");
+            var feedback=new FeedbackDialog(c.Window,Path.Combine(game,"unconfigured-feedback"),"version=test; layout=zors",false);feedback.Show();Pump(80);
+            feedback.Description.Text="Ошибка при установке";Check(!feedback.SendButton.IsEnabled,"unconfigured feedback cannot claim to send");Render(feedback,Path.Combine(root,@"build\native-feedback.png"));feedback.Close();
+            if(FeedbackClient.Endpoint(Path.Combine(root,"setup"))!=null){
+                var connected=new FeedbackDialog(c.Window,Path.Combine(root,"setup"),"version=test; layout=zors",false);connected.Show();connected.Description.Text="Проверка формы без отправки";Pump(40);
+                Check(connected.SendButton.IsEnabled,"embedded public endpoint enables feedback after a description is entered");Render(connected,Path.Combine(root,@"build\native-feedback-connected.png"));connected.Close();
+            }
+            bool rejected=false;try{FeedbackClient.Mime(new byte[]{77,90,0,0,0,0,0,0});}catch(InvalidDataException){rejected=true;}Check(rejected,"feedback rejects disguised non-image attachments");
+            using(var form=FeedbackClient.BuildBody("Русский текст","","version=test",new byte[]{137,80,78,71,13,10,26,10,0,0})){
+                string raw=form.ReadAsStringAsync().GetAwaiter().GetResult();
+                Check(raw.Contains("name=\"description\"")&&raw.Contains("name=\"contact\"")&&raw.Contains("name=\"details\"")&&raw.Contains("name=\"screenshot\"")&&raw.Contains("filename=\"screenshot.png\""),"feedback serializes quoted multipart names and filename for Cloudflare");
+            }
             c.UI<RadioButton>("NavIcons").IsChecked=true;
             c.UI<Button>("InstallBtn").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
             Wait(()=>c.UI<Button>("DoneBtn").Visibility==Visibility.Visible);

@@ -1,5 +1,45 @@
 # Changelog
 
+## 1.5.1 — 2026-11-09
+
+- Quote multipart field names and filenames from the .NET Framework client so
+  Cloudflare accepts report forms and attachments instead of invalid_form.
+- Simplified the feedback explanation and removed the service hostname from the form.
+
+## 1.5.0 — 2026-11-09
+
+- Minimalist and Zors.o use their ready-made layouts and textures, ignoring
+  inherited HUD customization. Compact and Tactical remain customizable.
+- Tactical gallery now includes two real gameplay screenshots supplied by the user.
+- Added a manual update button with a progress indicator and explicit result.
+- Removed duplicate native caption buttons behind the custom window controls.
+- Added a feedback form with an optional screenshot and reply contact, plus a
+  Cloudflare-to-Telegram relay and interactive Windows configuration wizard.
+  Delivery requires running the wizard; no Telegram credentials ship in the app.
+
+## 1.4.3 — 2026-11-09
+
+- Moved Tactical's carousel input container together with its cards, so the
+  visible list remains inside its parent's mouse region at all three scales.
+  Commander, reactor, spy panel and tooltip positions are preserved.
+
+## 1.4.2 — 2026-11-09
+
+- Tactical's centred resources now keep their selected background opacity and
+  sit directly above the build cards at the bottom of the screen.
+
+## 1.4.1 — 2026-11-09
+
+- Reworked Tactical around the RobberFox reference: direction controls on the
+  left, hidden category tabs with keyboard switching retained, and build cards
+  at the bottom edge. Added new ImageGen panel and chevron reactor-health art.
+- Kept the live spy readout inside the screen and aligned its resource columns.
+- Restored the normal localized font for the spy's last-building name; the
+  numeric readout font is used only for resource values.
+- Custom backgrounds no longer reveal the vanilla HUD's baked screens and frames.
+- Hue and icon opacity now support Minimalist's uncompressed DX10 BGRA DDS files,
+  preserving their headers and alpha channels.
+
 ## 1.4.0 — 2026-11-09
 
 - Added Customize HUD: choose corner/centre resource placement, build-card size,

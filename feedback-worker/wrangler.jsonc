@@ -1,0 +1,7 @@
+{
+  "name": "forts-hud-feedback",
+  "main": "worker.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "ratelimits": [{"name":"REPORT_LIMIT","namespace_id":"460931","simple":{"limit":3,"period":60}}]
+}

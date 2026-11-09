@@ -8,6 +8,7 @@ import shutil
 from PIL import Image
 import forts_ui as ui
 from build_layouts import open_image, vanilla_texture
+from hud_chrome import apply_chrome
 
 ROOT = Path(__file__).resolve().parents[1]
 PANEL = 'root/HUD/HUDPanel'
@@ -15,7 +16,7 @@ RES = PANEL + '/ResourcePanel'
 ITEMS = PANEL + '/HUDItems'
 
 
-def customize(globals_, placement, scale, background, indicators, tactical=False):
+def customize(globals_, placement, scale, background, indicators, tactical=False, plain=False):
     paths = ui.unique_paths(ui.find_root(globals_))
     def node(path): return paths[path][1]
     def ctl(path): return paths[path][2]
@@ -33,7 +34,7 @@ def customize(globals_, placement, scale, background, indicators, tactical=False
         else:
             p=ctl(path).get('Position').array()
             ctl(path).set('Position',[p[0],ctl(ITEMS).get('Position').array()[1]-extra-40-485])
-        colour(path, round(255*background/100))
+        if not plain: colour(path, round(255*background/100))
         if tactical: node(path).set('Texture', 'ui/textures/HUD/custom/tactical_readout.dds')
     # Scale complete build cards, including costs, locks and alert anchors.
     for path, (_, n, c) in paths.items():
@@ -68,7 +69,7 @@ def customize(globals_, placement, scale, background, indicators, tactical=False
                 p=ctl(path).get('Position').array();ctl(path).set('Position',[p[0],p[1]+extra])
     backgrounds=[PANEL+'/'+k for k in ('PanelLeft','PanelCenter','PanelCenterL','PanelCenterR')]+[RES,ITEMS+'/ResourcePanelEnemy']
     for path in backgrounds:
-        if path not in paths: continue
+        if plain or path not in paths: continue
         alpha=round(255*background/100)
         # The broad centre backing is deliberately absent in the tactical theme.
         if tactical and '/PanelCenter' in path: alpha=0
@@ -88,28 +89,35 @@ def customize(globals_, placement, scale, background, indicators, tactical=False
         path=RES+'/'+name
         if path in paths and not indicators:
             p=ctl(path).get('Position').array();ctl(path).set('Position',[p[0],p[1]+400])
+    # Starkoff (compact) keeps its original panels; only Tactical gets the new chrome.
+    if tactical: apply_chrome(globals_,placement,background,tactical)
     return globals_
 
 
 def main(game):
     payload=ROOT/'setup'/'payload'
     target=payload/'customization'; target.mkdir(exist_ok=True)
-    sources={'compact':ROOT/'build/hud.lua','zors':ROOT/'build/hud_zors.lua',
-             'tactical':ROOT/'build/hud.lua','minimalist':ROOT/'third_party/minimalist/screens/hud.lua'}
+    sources={'compact':ROOT/'build/hud.lua','tactical':ROOT/'build/hud.lua'}
     staging=ROOT/'build'/'customization';staging.mkdir(exist_ok=True)
     total=0
     for layout,source in sources.items():
         out=target/'variants'/layout;out.mkdir(parents=True,exist_ok=True)
         original,_=ui.load(str(source),game)
         original_names=set(ui.unique_paths(ui.find_root(original)))
-        for placement,scale,bg,indicators in product(('corner','center'),(65,80,100),(0,50,100),(False,True)):
+        # Starkoff: only the resource position is configurable (original size/panels/colours).
+        combos=[('corner',80,0,True),('center',80,0,True)] if layout=='compact' else product(('corner','center'),(65,80,100),(0,50,100),(False,True))
+        for placement,scale,bg,indicators in combos:
             g,f32=ui.load(str(source),game)
-            customize(g,placement,scale,bg,indicators,layout=='tactical')
+            customize(g,placement,scale,bg,indicators,layout=='tactical',layout=='compact')
             paths=ui.unique_paths(ui.find_root(g))
-            assert set(paths)==original_names, 'Customization changed engine control paths'
+            expected=original_names|({RES+'/CustomizationBackdrop'} if layout=='tactical' else set())
+            if layout=='tactical':
+                old=RES+'/AssistantSettingsPanel/WeaponLeft'
+                expected={p.replace(old,PANEL+'/ItemDetail/WeaponLeft') if p==old or p.startswith(old+'/') else p for p in expected}
+            assert set(paths)==expected, 'Customization changed unexpected engine control paths'
             for i,res in enumerate(('Metal','Energy')):
                 pos=paths[RES+'/Readout'+res][2].get('Position').array()
-                if placement=='corner': assert pos==[42,i*40]
+                if placement=='corner': assert pos==([60,12+i*36] if layout=='tactical' else [42,i*40])
             for n in ('Grid','Autodoor','AutoCrossBrace'):
                 p=RES+'/'+n
                 if p in paths and indicators: assert paths[p][2].get('Position').array()[1]<120
@@ -118,7 +126,8 @@ def main(game):
                 assert paths[ITEMS][2].get('Position').array()[1]+enemy.get('Position').array()[1]+enemy.get('Size').array()[1]<=485-8
             else:
                 readout=paths[RES+'/ReadoutMetal'][2]
-                assert 485+readout.get('Position').array()[1]+readout.get('Size').array()[1] <= paths[ITEMS][2].get('Position').array()[1]
+                cards_top=paths[ITEMS][2].get('Position').array()[1]+paths[ITEMS+'/TabbedItemPanel'][2].get('Position').array()[1]
+                assert 485+readout.get('Position').array()[1]+readout.get('Size').array()[1] <= cards_top
             name=f'{placement}-{scale}-{bg}-{int(indicators)}'
             lua=staging/(layout+'-'+name+'.lua');lua.write_text(ui.to_source(g,f32),encoding='latin-1')
             ui.compile_lua(str(lua),str(out/(name+'.lua')),game);total+=1
