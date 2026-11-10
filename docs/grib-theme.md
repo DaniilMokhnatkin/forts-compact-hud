@@ -67,7 +67,8 @@ in Russian/English, switching layouts restores foreign theme files, and the
 existing installer/rollback tests pass. Deliver a local versioned EXE and hashes.
 
 ## Verification performed
-- 15 layout tests, including transparent borders and the solid mushroom silhouette.
+- 17 layout tests, including transparent borders, the solid mushroom silhouette,
+  spy-well alignment and resource-rate gutters.
 - 49 native engine checks, including both Grib variants, cursor independence,
   fixed cursor colours, real demolition DDS alpha at 25%, reset and restoration.
 - 56 WPF checks, including the exact requested name, RU/EN copy, theme switching,
@@ -76,3 +77,15 @@ existing installer/rollback tests pass. Deliver a local versioned EXE and hashes
   cursor, demolition source and both Lua variants match their source bytes.
 - Real-game and multiplayer rendering remain unverified; no real installation
   or new GitHub release was performed.
+
+## 1.10.1 game-feedback correction
+The user's in-game screenshots exposed the spy text retaining vanilla y=40/64
+while the generated texture places its numeric wells around y=59/79. The header
+also sat on the red cap, and own-resource rates reached the ivory right bezel.
+`tools/grib_geometry.py` aligns these live fields to the existing artwork without
+changing the textures or engine control names. Tests sample the actual DDS
+wells and gutters, rather than checking only the outer panel bounds.
+
+The user briefly requested removing the two commander mushrooms, then explicitly
+retracted that request. Both mushroom emblems and all their texture states remain
+unchanged. The running game has not been modified or closed during this fix.

@@ -37,7 +37,7 @@ def customize_themed(globals_, placement, theme='zors'):
     for i, resource in enumerate(('Metal', 'Energy')):
         path = RES + '/Readout' + resource
         if placement == 'corner':
-            paths[path][2].set('Position', [46, 3 + i * 37 if theme == 'grib' else i * 40])
+            paths[path][2].set('Position', [46, 3 + i * 35 if theme == 'grib' else i * 40])
         else:
             x, y = paths[path][2].get('Position').array()
             frames.append(backing('Grib' + resource + 'Plate', 'ui/textures/HUD/custom/grib_plate.dds', [x, y - 14], [142, 50]))
@@ -53,6 +53,9 @@ def customize_themed(globals_, placement, theme='zors'):
         enemy = paths[ITEMS + '/ResourcePanelEnemy'][2]
         pos = enemy.get('Position').array(); enemy_height = enemy.get('Size').array()[1]
         enemy.set('Position', [pos[0], 485 + (top if theme == 'grib' else 0) - enemy_height - 8 - paths[ITEMS][2].get('Position').array()[1]])
+    if theme == 'grib':
+        from grib_geometry import align_fields
+        align_fields(paths, placement, RES, ITEMS)
     return globals_
 
 
@@ -161,7 +164,7 @@ def main(game):
             assert set(paths)==expected, 'Customization changed unexpected engine control paths'
             for i,res in enumerate(('Metal','Energy')):
                 pos=paths[RES+'/Readout'+res][2].get('Position').array()
-                if placement=='corner': assert pos==([60,12+i*36] if layout=='tactical' else [46,3+i*37] if layout=='grib' else [46 if layout=='zors' else 42,i*40])
+                if placement=='corner': assert pos==([60,12+i*36] if layout=='tactical' else [46,3+i*35] if layout=='grib' else [46 if layout=='zors' else 42,i*40])
             for n in ('Grid','Autodoor','AutoCrossBrace'):
                 p=RES+'/'+n
                 if p in paths and indicators: assert paths[p][2].get('Position').array()[1]<120

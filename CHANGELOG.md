@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.10.1 — 2026-11-11
+
+- Aligned Grib's spy-panel header, metal and energy values with their actual
+  dark wells. Numeric columns have space between them and the spy button sits
+  beside the device name inside the header.
+- Moved resource income away from the ivory frame, widened its text field and
+  adjusted line spacing in both resource layouts. Commander mushroom emblems
+  and charge gauges remain unchanged.
+
 ## 1.10.0 — 2026-11-11
 
 - Added **♂ True Grib Version ♂**: hand-painted mushroom caps, ivory frames,

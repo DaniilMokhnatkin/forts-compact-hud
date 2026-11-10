@@ -5,6 +5,7 @@ from PIL import Image
 
 import forts_ui as ui
 from build_customization import ROOT, RES, ITEMS, customize_themed
+from build_layouts import open_image
 
 
 class GribLayoutTests(unittest.TestCase):
@@ -59,6 +60,60 @@ class GribLayoutTests(unittest.TestCase):
                     self.assertTrue((textures / folder / f'{name}-{state}.dds').is_file())
         self.assertTrue((ROOT / 'setup/payload/icons/grib/scrap.dds').is_file())
         self.assertFalse((textures / 'mouse_target.dds').exists(), 'HUD selection alone must not force a cursor')
+
+    def test_spy_values_use_the_numeric_wells_not_header_or_dividers(self):
+        image = open_image(str(ROOT / 'setup/payload/layouts/grib/textures/HUD/skin_base/PanelSpy.dds'))
+        bands = []
+        start = None
+        for y in range(image.height):
+            r, g, b, a = image.getpixel((round(image.width * .55), y))
+            inside = a > 200 and g > r * 1.1 and r < 65 and b < 65
+            if inside and start is None: start = y
+            if not inside and start is not None:
+                if y - start > 12: bands.append((start, y))
+                start = None
+        self.assertEqual(len(bands), 3)
+        for placement in ('corner', 'center'):
+            g = copy.deepcopy(self.original); customize_themed(g, placement, 'grib')
+            p = ui.unique_paths(ui.find_root(g)); spy = ITEMS + '/ResourcePanelEnemy'
+            scale = p[spy][2].get('Size').array()[1] / image.height
+            for resource, band in zip(('Metal', 'Energy'), bands[1:]):
+                top, bottom = (v * scale for v in band)
+                for suffix in ('', 'Cap', 'Rate'):
+                    c = p[spy + '/' + resource + suffix][2]
+                    x, y = c.get('Position').array(); w, h = c.get('Size').array()
+                    self.assertGreaterEqual(y - h / 2, top + 2)
+                    self.assertLessEqual(y + h / 2, bottom - 2)
+                    ix = round((x + 3) / p[spy][2].get('Size').array()[0] * image.width)
+                    iy = round(y / scale)
+                    r, green, b, a = image.getpixel((ix, iy))
+                    self.assertTrue(a > 200 and green > r * 1.1 and r < 65 and b < 65, 'Spy values need a dark gutter')
+            label = p[spy + '/LastDeviceBox'][2]
+            child = p[spy + '/LastDeviceBox/LastDevice'][2]
+            label_y = label.get('Position').array()[1] + child.get('Position').array()[1]
+            self.assertGreaterEqual(label_y, bands[0][0] * scale + 2)
+            self.assertLessEqual(label_y + child.get('Size').array()[1], bands[0][1] * scale - 2)
+            columns = [p[spy + '/Metal' + suffix][2] for suffix in ('', 'Cap', 'Rate')]
+            for left, right in zip(columns, columns[1:]):
+                self.assertGreaterEqual(right.get('Position').array()[0] - right.get('Size').array()[0] - left.get('Position').array()[0], 3)
+
+    def test_own_rates_leave_a_dark_gutter_before_the_frame(self):
+        for placement in ('corner', 'center'):
+            g = copy.deepcopy(self.original); customize_themed(g, placement, 'grib')
+            p = ui.unique_paths(ui.find_root(g))
+            for resource in ('Metal', 'Energy'):
+                box = p[RES + '/Readout' + resource][2]
+                c = p[RES + '/Readout' + resource + '/' + resource + 'Rate'][2]
+                bx, by = box.get('Position').array(); x, y = c.get('Position').array(); w, h = c.get('Size').array()
+                backing = p[RES + ('/GribResourceBackdrop' if placement == 'corner' else '/Grib' + resource + 'Plate')]
+                fx, fy = backing[2].get('Position').array(); fw, fh = backing[2].get('Size').array()
+                image = open_image(str(ROOT / 'setup/payload/layouts/grib/textures' / backing[1].get('Texture').removeprefix('ui/textures/')))
+                for px, py in ((bx + x + 3, by + y - h / 2), (bx + x + 3, by + y + h / 2)):
+                    ix, iy = round((px - fx) / fw * image.width), round((py - fy) / fh * image.height)
+                    self.assertTrue(0 <= ix < image.width and 0 <= iy < image.height)
+                    r, green, b, a = image.getpixel((ix, iy))
+                    self.assertTrue(a > 200 and green > r * 1.1 and r < 65 and b < 65, f'{placement} {resource} rate reaches the frame')
+                self.assertGreaterEqual(w, 48, 'Long positive rates need a full-width field')
 
 
 if __name__ == '__main__':
