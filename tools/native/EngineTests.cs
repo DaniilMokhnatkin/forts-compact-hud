@@ -26,6 +26,7 @@ static class EngineTests {
             Reject(() => Engine.SafePath(game,game),"reject absolute path");
             Reject(() => engine.Install(game,new Options{Hud=true,Layout="unknown"},null),"reject unknown layout before writes");
             Check(Same(initial,Snapshot(game)),"invalid choice leaves game untouched");
+            Check(Engine.CanCustomize("zors"),"Zors supports resource placement customization");
             var options=new Options { Hud=true,Layout="zors",Crosshair="zors",Size=150,SkipIntro=true };
             options.Icons["repair"]=50;
             engine.Install(game,options,null);
@@ -75,7 +76,15 @@ static class EngineTests {
             Check(Engine.Hash(Path.Combine(game,@"data\ui\textures\HUD\skin_base\PanelSpy.dds"))==Engine.Hash(engine.Payload(@"layouts\minimalist\textures\HUD\skin_base\PanelSpy.dds")),"Minimalist texture is byte-identical and not tinted");
             Check(!File.Exists(Path.Combine(game,@"data\ui\textures\HUD\custom\customization_panel.dds")),"switching away removes custom backdrops");
             engine.Install(game,new Options{Hud=true,Layout="zors",Customization=custom},null);
-            Check(engine.Status(game).Customization==null&&Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"))==Engine.Hash(engine.Payload(@"layouts\zors\hud.lua")),"Zors ignores inherited HUD customization and uses ready-made layout");
+            var zors=engine.Status(game).Customization;
+            Check(zors!=null&&zors.Resources=="center"&&zors.Cards==80&&zors.Background==0&&zors.Hue==0&&!zors.White&&zors.Indicators,"Zors keeps the resource position and discards Tactical-only settings");
+            Check(Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"))==Engine.Hash(engine.Payload(@"customization\variants\zors\center-80-0-1.lua")),"Zors installs the selected centre resource layout");
+            custom.Resources="corner";custom.White=true;
+            engine.Install(game,new Options{Hud=true,Layout="zors",Customization=custom},null);
+            Check(engine.Status(game).Customization.Resources=="corner"&&Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"))==Engine.Hash(engine.Payload(@"customization\variants\zors\corner-80-0-1.lua")),"Zors installs and persists the bottom-right resource layout");
+            Check(Engine.Hash(Path.Combine(game,@"data\ui\textures\HUD\custom\zors_corner.dds"))==Engine.Hash(engine.Payload(@"layouts\zors\textures\HUD\custom\zors_corner.dds"))&&Engine.Hash(Path.Combine(game,@"data\ui\textures\HUD\skin_base\PanelSpy.dds"))==Engine.Hash(engine.Payload(@"layouts\zors\textures\HUD\skin_base\PanelSpy.dds")),"Zors corner art and existing purple textures stay byte-identical");
+            engine.Install(game,new Options{Hud=true,Layout="compact"},null);
+            Check(!File.Exists(Path.Combine(game,@"data\ui\textures\HUD\custom\zors_corner.dds")),"switching away from Zors removes its resource art");
             byte[] dx10=File.ReadAllBytes(engine.Payload(@"layouts\minimalist\textures\HUD\skin_base\PanelSpy.dds"));
             byte[] rotated=HudCustomization.ShiftHue(dx10,30);
             Check(dx10.Take(148).SequenceEqual(rotated.Take(148))&&Enumerable.Range(0,(dx10.Length-148)/4).All(i=>dx10[151+i*4]==rotated[151+i*4]),"DX10 hue preserves its full header and alpha");

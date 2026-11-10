@@ -10,7 +10,7 @@ namespace FortsSetup {
         public bool White=false;
         public string Key {get{return Resources+"-"+Cards+"-"+Background+"-"+(Indicators?1:0);}}
         public HudCustomization Clone(){return (HudCustomization)MemberwiseClone();}
-        // Starkoff (compact) only lets the player move the resources; everything else is fixed.
+        // Starkoff and Zors only let the player move resources; their other styling is fixed.
         public HudCustomization For(string layout){var c=Clone();if(layout!="tactical"){c.Cards=80;c.Background=0;c.Hue=0;c.White=false;c.Indicators=true;}return c;}
         public void Validate(){
             if((Resources!="corner"&&Resources!="center")||(Cards!=65&&Cards!=80&&Cards!=100)||(Background!=0&&Background!=50&&Background!=100)||Hue< -180||Hue>180||Hue%15!=0)

@@ -16,6 +16,34 @@ RES = PANEL + '/ResourcePanel'
 ITEMS = PANEL + '/HUDItems'
 
 
+def customize_zors(globals_, placement):
+    # The centre option is the original Zors layout, including its existing plates.
+    if placement == 'center':
+        return globals_
+    paths = ui.unique_paths(ui.find_root(globals_))
+    frame = ui.Table()
+    for key, value in {'Type': 'Static', 'Name': 'ZorsResourceBackdrop', 'Style': 'Normal',
+                       'Texture': 'ui/textures/HUD/custom/zors_corner.dds',
+                       'Colour': [255, 255, 255, 255], 'ColourLower': [255, 255, 255, 255]}.items():
+        frame.set(key, value)
+    control = ui.Table()
+    control.set('Position', [16, -4]); control.set('Size', [176, 84])
+    frame.set('Control', control)
+    parent = paths[RES][2]
+    parent.set('Children', ui.Table.of([frame] + parent.get('Children').array()))
+    for i, resource in enumerate(('Metal', 'Energy')):
+        path = RES + '/Readout' + resource
+        paths[path][2].set('Position', [46, i * 40])
+        # Only the backing sprite is hidden; the existing live number controls stay opaque.
+        for key in ('Colour', 'ColourLower'):
+            paths[path][1].set(key, [255, 255, 255, 0])
+        paths[path + '/' + resource + 'Rate'][2].set('Position', [138, 9])
+    enemy = paths[ITEMS + '/ResourcePanelEnemy'][2]
+    pos = enemy.get('Position').array(); height = enemy.get('Size').array()[1]
+    enemy.set('Position', [pos[0], 485 - height - 8 - paths[ITEMS][2].get('Position').array()[1]])
+    return globals_
+
+
 def customize(globals_, placement, scale, background, indicators, tactical=False, plain=False):
     paths = ui.unique_paths(ui.find_root(globals_))
     def node(path): return paths[path][1]
@@ -97,20 +125,22 @@ def customize(globals_, placement, scale, background, indicators, tactical=False
 def main(game):
     payload=ROOT/'setup'/'payload'
     target=payload/'customization'; target.mkdir(exist_ok=True)
-    sources={'compact':ROOT/'build/hud.lua','tactical':ROOT/'build/hud.lua'}
+    sources={'compact':ROOT/'build/hud.lua','tactical':ROOT/'build/hud.lua','zors':ROOT/'build/hud_zors.lua'}
     staging=ROOT/'build'/'customization';staging.mkdir(exist_ok=True)
     total=0
     for layout,source in sources.items():
         out=target/'variants'/layout;out.mkdir(parents=True,exist_ok=True)
         original,_=ui.load(str(source),game)
         original_names=set(ui.unique_paths(ui.find_root(original)))
-        # Starkoff: only the resource position is configurable (original size/panels/colours).
-        combos=[('corner',80,0,True),('center',80,0,True)] if layout=='compact' else product(('corner','center'),(65,80,100),(0,50,100),(False,True))
+        # Starkoff and Zors: only the resource position is configurable.
+        combos=product(('corner','center'),(65,80,100),(0,50,100),(False,True)) if layout=='tactical' else [('corner',80,0,True),('center',80,0,True)]
         for placement,scale,bg,indicators in combos:
             g,f32=ui.load(str(source),game)
-            customize(g,placement,scale,bg,indicators,layout=='tactical',layout=='compact')
+            if layout=='zors': customize_zors(g,placement)
+            else: customize(g,placement,scale,bg,indicators,layout=='tactical',layout=='compact')
             paths=ui.unique_paths(ui.find_root(g))
             added=({RES+'/CustomizationStrip'}|({RES+'/CustomizationBackdrop'} if placement=='corner' else set())) if layout=='tactical' else set()
+            if layout=='zors' and placement=='corner': added={RES+'/ZorsResourceBackdrop'}
             expected=original_names|added
             if layout=='tactical':
                 old=RES+'/AssistantSettingsPanel/WeaponLeft'
@@ -118,7 +148,7 @@ def main(game):
             assert set(paths)==expected, 'Customization changed unexpected engine control paths'
             for i,res in enumerate(('Metal','Energy')):
                 pos=paths[RES+'/Readout'+res][2].get('Position').array()
-                if placement=='corner': assert pos==([60,12+i*36] if layout=='tactical' else [42,i*40])
+                if placement=='corner': assert pos==([60,12+i*36] if layout=='tactical' else [46 if layout=='zors' else 42,i*40])
             for n in ('Grid','Autodoor','AutoCrossBrace'):
                 p=RES+'/'+n
                 if p in paths and indicators: assert paths[p][2].get('Position').array()[1]<120

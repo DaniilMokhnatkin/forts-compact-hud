@@ -39,7 +39,7 @@ namespace FortsSetup {
         public const string BackupName="Forts-Setup-Backup", TextureDir=@"data\ui\textures\HUD\custom";
         public static readonly string[] LayoutIds={"compact","zors","minimalist","tactical"}, SkinIds={"dlc3","base","dlc1","dlc2","pro","elite"};
         public static readonly string[] IconIds={"extinguisher","under_construction","repair"};
-        public static bool CanCustomize(string layout){return layout=="compact"||layout=="tactical";}
+        public static bool CanCustomize(string layout){return layout=="compact"||layout=="tactical"||layout=="zors";}
         public static readonly Dictionary<string,string> Colors=new Dictionary<string,string>{{"white","FFFFFF"},{"green","5CFF6E"},{"yellow","FFE04A"},{"red","FF5A4E"},{"cyan","46E6FF"}};
         public static readonly string[] CrossFiles={@"data\ui\textures\mouse_target.dds",@"data\ui\textures\mouse_target_painted.dds"};
         static readonly Dictionary<string,string> HudFiles=new Dictionary<string,string>{

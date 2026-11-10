@@ -186,6 +186,9 @@ def crosshair(out):
 def plate(out):
     im = clean(Image.open(os.path.join(GEN, "cosmic-purple-number-plate-1600x400.png")).convert("RGBA"))
     save(im.resize((256, 64), Image.LANCZOS), os.path.join(out, "HUD", "custom", "zors_plate.dds"))
+    corner = clean(Image.open(os.path.join(GEN, "cosmic-purple-resource-corner.png")).convert("RGBA"))
+    save(corner.resize((512, 256), Image.LANCZOS), os.path.join(out, "HUD", "custom", "zors_corner.dds"))
+    corner.save(os.path.join(ROOT, "setup", "app", "assets", "zors_resource_corner.png"))
 
 
 def main(game, out):

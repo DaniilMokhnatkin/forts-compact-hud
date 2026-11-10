@@ -86,7 +86,17 @@ static class NativeUiTests {
             Wait(()=>c.UI<TextBlock>("PhotoCount").Text=="1 / 2");Check(c.UI<TextBlock>("ShotCaption").Text.Contains("центру"),"Tactical gallery uses both real gameplay screenshots");
             c.SelectLayout("minimalist");Check(c.UI<Button>("CustomizationBtn").Visibility==Visibility.Collapsed&&c.Selection().Customization==null,"Minimalist cannot inherit customization");
             c.SelectLayout("zors");
-            Check(c.UI<Button>("CustomizationBtn").Visibility==Visibility.Collapsed&&c.Selection().Customization==null,"Zors cannot inherit customization");
+            Check(c.UI<Button>("CustomizationBtn").Visibility==Visibility.Visible&&c.Selection().Customization!=null,"Zors offers resource placement settings");
+            app.Dispatcher.BeginInvoke(new Action(()=>{
+                var zd=c.Window.OwnedWindows.OfType<CustomizationDialog>().Single();
+                Check(zd.Title.Contains("Zors.o")&&zd.CardsChoice.Visibility==Visibility.Collapsed&&zd.BackgroundChoice.Visibility==Visibility.Collapsed,"Zors settings identify the theme and only expose resource placement");
+                zd.ResourcesChoice.SelectedIndex=0;Render(zd,Path.Combine(root,@"build\native-zors-corner.png"));
+                Check(zd.Value.Resources=="corner"&&zd.Value.Cards==80&&zd.Value.Hue==0&&!zd.Value.White,"Zors corner choice preserves the original styling");
+                zd.ResourcesChoice.SelectedIndex=1;Render(zd,Path.Combine(root,@"build\native-zors-center.png"));zd.DialogResult=true;
+            }));
+            c.UI<Button>("CustomizationBtn").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+            Check(c.Selection().Customization.Resources=="center","Zors settings button applies the selected resource position");
+            Check(!c.UI<Button>("CustomizationBtn").ToolTip.ToString().Contains("80%"),"Zors settings tooltip describes only the available resource option");
             Check(c.UI<Button>("FeedbackBtn")!=null&&c.UI<Button>("CheckUpdateBtn")!=null,"feedback and manual update actions are present");
             Wait(()=>c.UI<Button>("CheckUpdateBtn").IsEnabled);
             c.UI<Button>("CheckUpdateBtn").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));

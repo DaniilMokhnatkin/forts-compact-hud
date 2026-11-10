@@ -130,7 +130,7 @@ namespace FortsSetup {
             UI<Button>("FullScreenBtn").Click+=(s,e)=>OpenViewer();UI<Border>("HudShot").MouseLeftButtonUp+=(s,e)=>OpenViewer();
             UI<Button>("PhotoPrevious").Click+=(s,e)=>StepShot(-1);UI<Button>("PhotoNext").Click+=(s,e)=>StepShot(1);
             UI<Button>("LayoutLink").Click+=(s,e)=>OpenUrl(Layout=="tactical"?"https://www.youtube.com/@robber_fox/videos":Layout=="zors"?"https://steamcommunity.com/profiles/76561199099877561":"https://steamcommunity.com/sharedfiles/filedetails/?id=3750502564");
-            UI<Button>("CustomizationBtn").Click+=(s,e)=>{var dialog=new CustomizationDialog(Window,customization,Layout,lang=="en");if(dialog.ShowDialog()==true){customization=dialog.Value.Clone();customizationChosen=true;UpdateSummary();}};
+            UI<Button>("CustomizationBtn").Click+=(s,e)=>{var dialog=new CustomizationDialog(Window,customization,Layout,lang=="en",assets);if(dialog.ShowDialog()==true){customization=dialog.Value.Clone();customizationChosen=true;UpdateSummary();}};
             UI<Button>("AuthorLink").Click+=(s,e)=>OpenUrl(Matchroom.Author);UI<Button>("MatchroomPage").Click+=(s,e)=>OpenUrl(Matchroom.Page);
             UI<Button>("KadrPage").Click+=(s,e)=>OpenUrl(Matchroom.KadrPage);
             foreach(var app in new[]{Tuple.Create("MatchroomDownload","MatchroomProgress","MatchroomStatus",Matchroom.Repo),Tuple.Create("KadrDownload","KadrProgress","KadrStatus",Matchroom.KadrRepo)}){
@@ -252,7 +252,7 @@ namespace FortsSetup {
             var o=Selection();var parts=new List<string>();if(o.Hud)parts.Add("HUD «"+L(layoutNames[Layout])+"»");if(o.Crosshair!=null)parts.Add(L("Прицел")+" «"+L(crossNames[cross])+"» "+o.Size+"%");
             foreach(var p in o.Icons)if(p.Value<100)parts.Add(L(iconNames[p.Key])+" "+p.Value+"%");if(Installed!=null&&o.SkipIntro!=Installed.SkipIntro)parts.Add(L(o.SkipIntro==true?"без заставки":"с заставкой"));
             Text("Summary",parts.Count>0?L("Будет установлено: ")+String.Join("; ",parts):L("Ничего не выбрано"));Text("NavHudValue",o.Hud?L(layoutNames[Layout]):L("Выкл."));Text("NavCrossValue",o.Crosshair==null?L("Выкл."):L(crossNames[cross]));Text("NavIconsValue",o.Icons.Count(p=>p.Value<100)>0?o.Icons.Count(p=>p.Value<100)+" изм.":"");
-            UI<Button>("CustomizationBtn").ToolTip=(customization.Resources=="corner"?L("Ресурсы справа внизу"):L("Ресурсы по центру"))+" · "+customization.Cards+"% · "+CustomizationDialog.ColourLabel(Layout,customization,lang=="en");
+            UI<Button>("CustomizationBtn").ToolTip=(customization.Resources=="corner"?L("Ресурсы справа внизу"):L("Ресурсы по центру"))+(Layout=="tactical"?" · "+customization.Cards+"% · "+CustomizationDialog.ColourLabel(Layout,customization,lang=="en"):"");
             UI<WrapPanel>("Tiles").IsEnabled=o.Crosshair!=null;UI<Grid>("SizeControls").IsEnabled=o.Crosshair!=null;UI<Grid>("ColourControls").IsEnabled=o.Crosshair!=null&&cross!="zors";UI<StackPanel>("Skins").IsEnabled=o.Hud;
             bool changes=Installed!=null&&(o.Icons.Any(p=>p.Value!=Installed.Icons[p.Key])||o.SkipIntro!=Installed.SkipIntro);
             UI<Button>("InstallBtn").IsEnabled=!busy&&statusReady&&Engine.IsGame(game)&&(o.Hud||o.Crosshair!=null||changes||Page!="IconsPage");

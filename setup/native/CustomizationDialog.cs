@@ -1,4 +1,5 @@
 using System;
+using Path = System.IO.Path;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,10 +21,12 @@ namespace FortsSetup {
         readonly Ellipse hueSwatch=new Ellipse{Width=16,Height=16,Stroke=Brushes.White,StrokeThickness=1,Margin=new Thickness(8,0,0,0)};
         readonly string layout;
         readonly bool english;
+        readonly ImageSource zorsCorner;
         string L(string ru,string en){return english?en:ru;}
-        public CustomizationDialog(Window owner,HudCustomization current,string layoutId,bool en) {
-            layout=layoutId;english=en;Value=current.Clone();
-            Grid root;Button close;Sheet.Frame(this,owner,L("Настройка HUD","Customize HUD")+" · "+(layoutId=="tactical"?L("Тактический","Tactical"):"Starkoff"),L("Изменения применятся к игре после нажатия «Установить».","Changes apply to the game when you click Install."),L("Закрыть","Close"),out root,out close);
+        public CustomizationDialog(Window owner,HudCustomization current,string layoutId,bool en,string assets=null) {
+            layout=layoutId;english=en;Value=current.For(layoutId);
+            if(layout=="zors"&&assets!=null)zorsCorner=WindowController.Bitmap(Path.Combine(assets,"zors_resource_corner.png"));
+            Grid root;Button close;Sheet.Frame(this,owner,L("Настройка HUD","Customize HUD")+" · "+(layoutId=="tactical"?L("Тактический","Tactical"):layoutId=="zors"?"Zors.o":"Starkoff"),L("Изменения применятся к игре после нажатия «Установить».","Changes apply to the game when you click Install."),L("Закрыть","Close"),out root,out close);
             bool full=layoutId=="tactical";Width=720;Height=full?668:446;close.Click+=(s,e)=>Close();
             foreach(var height in new[]{GridLength.Auto,new GridLength(1,GridUnitType.Star),GridLength.Auto})root.RowDefinitions.Add(new RowDefinition{Height=height});
             var controls=new Grid();controls.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(210)});controls.ColumnDefinitions.Add(new ColumnDefinition());
@@ -49,13 +52,14 @@ namespace FortsSetup {
             var actions=new StackPanel{Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right};DockPanel.SetDock(actions,Dock.Right);footer.Children.Add(actions);
             var cancel=new Button{Style=(Style)owner.FindResource("Secondary"),Content=L("Отмена","Cancel"),IsCancel=true,Margin=new Thickness(0,0,10,0)};actions.Children.Add(cancel);
             var apply=new Button{Style=(Style)owner.FindResource("Primary"),Content=L("Готово","Done"),IsDefault=true};AutomationProperties.SetAutomationId(apply,"ApplyCustomization");actions.Children.Add(apply);apply.Click+=(s,e)=>{Read();Value.Validate();DialogResult=true;};
-            Set(current);
+            Set(Value);
             ResourcesChoice.SelectionChanged+=(s,e)=>Draw();CardsChoice.SelectionChanged+=(s,e)=>Draw();BackgroundChoice.SelectionChanged+=(s,e)=>Draw();HueSlider.ValueChanged+=(s,e)=>{WhiteChoice.IsChecked=false;Draw();};WhiteChoice.Checked+=(s,e)=>Draw();WhiteChoice.Unchecked+=(s,e)=>Draw();IndicatorsChoice.Checked+=(s,e)=>Draw();IndicatorsChoice.Unchecked+=(s,e)=>Draw();Draw();
         }
         ComboBox Combo(string[] labels,string id){var combo=new ComboBox{Style=(Style)FindResource("TahoeCombo"),ItemsSource=labels,Height=34,VerticalAlignment=VerticalAlignment.Center};AutomationProperties.SetName(combo,id);AutomationProperties.SetAutomationId(combo,id);return combo;}
         void Set(HudCustomization value){ResourcesChoice.SelectedIndex=value.Resources=="corner"?0:1;CardsChoice.SelectedIndex=Array.IndexOf(new[]{65,80,100},value.Cards);BackgroundChoice.SelectedIndex=value.Background/50;HueSlider.Value=value.Hue;WhiteChoice.IsChecked=value.White;IndicatorsChoice.IsChecked=value.Indicators;Draw();}
         void Read(){Value.Resources=ResourcesChoice.SelectedIndex==0?"corner":"center";Value.Cards=new[]{65,80,100}[Math.Max(0,CardsChoice.SelectedIndex)];Value.Background=layout=="tactical"?Math.Max(0,BackgroundChoice.SelectedIndex)*50:0;Value.Hue=(int)HueSlider.Value;Value.White=layout=="tactical"&&WhiteChoice.IsChecked==true;Value.Indicators=IndicatorsChoice.IsChecked==true;}
         void Box(double x,double y,double w,double h,Brush fill,string caption,Brush ink=null){var border=new Border{Width=w,Height=h,Background=fill,CornerRadius=new CornerRadius(3),BorderBrush=new SolidColorBrush(Color.FromArgb(100,170,180,210)),BorderThickness=new Thickness(1)};if(caption!=null)border.Child=new TextBlock{Text=caption,Foreground=ink??Brushes.White,FontSize=10,HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Center};Canvas.SetLeft(border,x);Canvas.SetTop(border,y);preview.Children.Add(border);}
+        void Number(double x,double y,double width,string text){var label=new TextBlock{Text=text,Foreground=Brushes.White,FontSize=10,Width=width,TextAlignment=TextAlignment.Center};Canvas.SetLeft(label,x);Canvas.SetTop(label,y);preview.Children.Add(label);}
         void Draw(){
             if(ResourcesChoice==null||CardsChoice==null||BackgroundChoice==null||HueSlider==null||IndicatorsChoice==null||WhiteChoice==null)return;Read();preview.Children.Clear();preview.Background=new LinearGradientBrush(Color.FromRgb(58,64,78),Color.FromRgb(26,28,36),90);
             double hue=((layout=="zors"?275:230)+Value.Hue+360)%360;Color c=Hue(hue);var solid=new SolidColorBrush(c);var backing=new SolidColorBrush(Color.FromArgb((byte)(Value.Background*255/100),c.R,c.G,c.B));
@@ -66,7 +70,10 @@ namespace FortsSetup {
             double card=36*Value.Cards/100.0;for(int i=0;i<7;i++)Box(236+i*(card+4),154-card,card,card,solid,null);
             Box(230,160,286,23,readout,L("Категории строительства","Build categories"));
             double rx=Value.Resources=="corner"?605:275,ry=Value.Resources=="corner"?103:91;
-            Box(rx,ry,102,23,readout,"600 / 600");Box(rx+(Value.Resources=="center"?108:0),ry+(Value.Resources=="corner"?28:0),102,23,readout,"3000 / 3000");
+            if(layout=="zors"&&Value.Resources=="corner"&&zorsCorner!=null){
+                var art=new Image{Source=zorsCorner,Width=132,Height=63,Stretch=Stretch.Fill};Canvas.SetLeft(art,582);Canvas.SetTop(art,97);preview.Children.Add(art);
+                Number(605,108,106,"600 / 600");Number(605,138,106,"3000 / 3000");
+            }else{Box(rx,ry,102,23,readout,"600 / 600");Box(rx+(Value.Resources=="center"?108:0),ry+(Value.Resources=="corner"?28:0),102,23,readout,"3000 / 3000");}
             if(Value.Indicators)for(int i=0;i<3;i++)Box(603+i*26,163,22,20,solid,new[]{"#","|","×"}[i],ink);
             hueValue.Text=ColourLabel(layout,Value,english);hueSwatch.Fill=solid;AutomationProperties.SetHelpText(HueSlider,hueValue.Text);
         }

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.0 — 2026-11-10
+
+- Zors.o now offers resource placement in Customize HUD: bottom right, like the
+  original game, or above the centre build strip. The corner option has a new
+  two-row purple nebula panel with metal and energy symbols, matching the theme.
+- Zors.o keeps its original colours, card size and action buttons. Resource
+  placement is saved with the installed profile; Tactical-only settings do not
+  carry over. The settings diagram shows the new corner artwork.
+
 ## 1.8.4 — 2026-11-09
 
 - Downloads include the GitHub release version in their filename. Existing
