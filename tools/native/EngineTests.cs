@@ -27,6 +27,8 @@ static class EngineTests {
             Reject(() => engine.Install(game,new Options{Hud=true,Layout="unknown"},null),"reject unknown layout before writes");
             Check(Same(initial,Snapshot(game)),"invalid choice leaves game untouched");
             Check(Engine.CanCustomize("zors"),"Zors supports resource placement customization");
+            Check(Engine.IconIds.Contains("scrap"),"demolition has its own opacity setting");
+            Check(Engine.LayoutIds.Contains("grib")&&Engine.CanCustomize("grib"),"Grib is an installable HUD with resource placement settings");
             var options=new Options { Hud=true,Layout="zors",Crosshair="zors",Size=150,SkipIntro=true };
             options.Icons["repair"]=50;
             engine.Install(game,options,null);
@@ -85,6 +87,24 @@ static class EngineTests {
             Check(Engine.Hash(Path.Combine(game,@"data\ui\textures\HUD\custom\zors_corner.dds"))==Engine.Hash(engine.Payload(@"layouts\zors\textures\HUD\custom\zors_corner.dds"))&&Engine.Hash(Path.Combine(game,@"data\ui\textures\HUD\skin_base\PanelSpy.dds"))==Engine.Hash(engine.Payload(@"layouts\zors\textures\HUD\skin_base\PanelSpy.dds")),"Zors corner art and existing purple textures stay byte-identical");
             engine.Install(game,new Options{Hud=true,Layout="compact"},null);
             Check(!File.Exists(Path.Combine(game,@"data\ui\textures\HUD\custom\zors_corner.dds")),"switching away from Zors removes its resource art");
+            foreach(string placement in new[]{"corner","center"}){
+                engine.Install(game,new Options{Hud=true,Layout="grib",Crosshair="grib",Color="cyan",Size=150,Customization=new HudCustomization{Resources=placement,Hue=90,White=true}},null);
+                var mushroom=engine.Status(game);
+                Check(mushroom.Layout=="grib"&&mushroom.Customization.Resources==placement&&mushroom.Customization.Hue==0&&!mushroom.Customization.White,"Grib "+placement+" installs and persists without Tactical styling");
+                Check(Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"))==Engine.Hash(engine.Payload(@"customization\variants\grib\"+placement+"-80-0-1.lua")),"Grib "+placement+" installs the selected Lua bytes");
+                Check(mushroom.Crosshair=="grib"&&mushroom.Size==150&&mushroom.Color=="white"&&Engine.Hash(Path.Combine(game,@"data\ui\textures\mouse_target.dds"))==Engine.Hash(engine.Payload(@"crosshairs\grib\mouse_target.dds")),"Grib keeps the mushroom colours and cursor size");
+            }
+            engine.Install(game,new Options{Hud=true,Layout="compact",Crosshair="cross"},null);
+            Check(!File.Exists(Path.Combine(game,@"data\ui\textures\HUD\custom\grib_corner.dds")),"leaving Grib removes the mushroom backing");
+            string cursorBefore=Engine.Hash(Path.Combine(game,@"data\ui\textures\mouse_target.dds"));
+            var demolition=new Options{Hud=true,Layout="grib"};demolition.Icons["scrap"]=25;
+            engine.Install(game,demolition,null);
+            byte[] scrap=File.ReadAllBytes(Path.Combine(game,@"data\ui\textures\scrap.dds")),opaqueScrap=File.ReadAllBytes(engine.Payload(@"icons\grib\scrap.dds"));
+            int scrapOffset=HudCustomization.BgraPixelOffset(scrap);
+            Check(engine.Status(game).Icons["scrap"]==25&&Enumerable.Range(0,(scrap.Length-scrapOffset)/4).All(i=>Math.Abs(scrap[scrapOffset+i*4+3]-opaqueScrap[scrapOffset+i*4+3]*0.25)<=1),"demolition opacity changes actual DDS alpha and persists");
+            Check(Engine.Hash(Path.Combine(game,@"data\ui\textures\mouse_target.dds"))==cursorBefore,"Grib HUD alone keeps the independently selected cursor");
+            demolition.Icons["scrap"]=100;engine.Install(game,demolition,null);
+            Check(engine.Status(game).Icons["scrap"]==100&&Engine.Hash(Path.Combine(game,@"data\ui\textures\scrap.dds"))==Engine.Hash(engine.Payload(@"layouts\grib\textures\scrap.dds")),"demolition opacity can restore the original mushroom artwork");
             byte[] dx10=File.ReadAllBytes(engine.Payload(@"layouts\minimalist\textures\HUD\skin_base\PanelSpy.dds"));
             byte[] rotated=HudCustomization.ShiftHue(dx10,30);
             Check(dx10.Take(148).SequenceEqual(rotated.Take(148))&&Enumerable.Range(0,(dx10.Length-148)/4).All(i=>dx10[151+i*4]==rotated[151+i*4]),"DX10 hue preserves its full header and alpha");

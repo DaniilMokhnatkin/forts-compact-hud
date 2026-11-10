@@ -86,7 +86,7 @@ $script:English = @{
     "Оригиналы сохраняются, вернуть можно одной кнопкой" = "The originals are kept; restore with one button"
     "Иконки" = "Icons"; "Вернуть всем 100%" = "Set all back to 100%"; "Непрозрачность: " = "Opacity: "; "{0} изм." = "{0} changed"
     "иконки: " = "icons: "; "полупрозрачные иконки" = "see-through icons"
-    "Значки тушения, строительства и ремонта над фортом. Сделай их полупрозрачными, чтобы не закрывали постройки." = "The extinguish, construction and repair icons over your fort. Make them see-through so they do not cover your build."
+    "Значки тушения, строительства, ремонта и демонтажа над фортом. Сделай их полупрозрачными, чтобы не закрывали постройки." = "Extinguish, construction, repair and demolition icons over your fort. Make them translucent so they do not hide your build."
     "Фон главного меню" = "Main menu background"; "Скины в игре" = "Skins in the game"
     "Наш компактный HUD в космическом фиолетовом: кнопки, вкладки, командир, реактор, иконки и прицел; фон меню и заставка от Zors.o." = "Our compact HUD in cosmic purple: buttons, tabs, commander, reactor, icons and crosshair; menu background and splash by Zors.o."
     "• Сейчас в игре скин меню «{0}», с ним фон Zors.o не виден: DLC-скины берут фон из своих файлов. Выбери в игре: Настройки → Игра → Скин меню → «По умолчанию», «Классика» или «Склад оружия»." = '• The game now uses the "{0}" menu skin, which does not show the Zors.o background: DLC skins use their own files. In the game choose Options → Game → Menu Skin → "Default", "Classic" or "Armoury".'
@@ -133,6 +133,12 @@ $script:English['Ресурсы справа внизу'] = 'Resources at bottom
 $script:English['Ресурсы по центру'] = 'Resources in the centre'
 $script:English['• Фон меню Zors.o виден только со скинами «По умолчанию», «Классика» и «Склад оружия». Выбери один из них в настройках игры.'] = '• The Zors.o menu background requires Default, Classic or Tons of Guns. Choose one in the game settings.'
 $script:English['Не тронул изменившиеся после установки: '] = 'Left files changed since installation untouched: '
+$script:English['Демонтаж'] = 'Demolition'
+$script:English['Гриб'] = 'Mushroom'
+$script:English['Концепт оформления'] = 'Design concept'
+$script:English['Мухоморные вкладки, лесные панели и грибной прицел. 100% гриб. Скилл в комплект не входит.'] = 'Toadstool tabs, forest panels and a mushroom cursor. 100% mushroom. Skill not included.'
+$script:English['• Для грибных вкладок и командира выбери скин HUD «По умолчанию» в настройках Forts.'] = '• Choose the Default HUD skin in Forts settings for the mushroom tabs and commander.'
+$script:English['Прицел можно выбрать отдельно. В галерее — концепт оформления.'] = 'Select the cursor independently. The gallery shows the design concept.'
 
 function Lower-First([string]$s) { $s.Substring(0, 1).ToLower() + $s.Substring(1) }
 

@@ -37,9 +37,10 @@ namespace FortsSetup {
     sealed class PlannedFile { public string Rel, Source, Owner; public byte[] Bytes; }
     public sealed class Engine {
         public const string BackupName="Forts-Setup-Backup", TextureDir=@"data\ui\textures\HUD\custom";
-        public static readonly string[] LayoutIds={"compact","zors","minimalist","tactical"}, SkinIds={"dlc3","base","dlc1","dlc2","pro","elite"};
-        public static readonly string[] IconIds={"extinguisher","under_construction","repair"};
-        public static bool CanCustomize(string layout){return layout=="compact"||layout=="tactical"||layout=="zors";}
+        public static readonly string[] LayoutIds={"compact","zors","minimalist","tactical","grib"}, SkinIds={"dlc3","base","dlc1","dlc2","pro","elite"};
+        public static readonly string[] IconIds={"extinguisher","under_construction","repair","scrap"};
+        public static bool CanCustomize(string layout){return layout=="compact"||layout=="tactical"||layout=="zors"||layout=="grib";}
+        public static bool PreservesCrosshairColours(string id){return id=="zors"||id=="grib";}
         public static readonly Dictionary<string,string> Colors=new Dictionary<string,string>{{"white","FFFFFF"},{"green","5CFF6E"},{"yellow","FFE04A"},{"red","FF5A4E"},{"cyan","46E6FF"}};
         public static readonly string[] CrossFiles={@"data\ui\textures\mouse_target.dds",@"data\ui\textures\mouse_target_painted.dds"};
         static readonly Dictionary<string,string> HudFiles=new Dictionary<string,string>{
@@ -170,6 +171,7 @@ namespace FortsSetup {
             if(!SkinIds.Contains(o.Skin)||!Colors.ContainsKey(o.Color)||o.Size<50||o.Size>200||o.Size%5!=0)throw new ArgumentException("Недопустимые настройки прицела или скина.");
             if(o.Icons.Any(p=>!IconIds.Contains(p.Key)||p.Value<10||p.Value>100))throw new ArgumentException("Прозрачность иконок: от 10 до 100%.");
             if(o.Crosshair!=null&&!Crosshairs.Contains(o.Crosshair))throw new ArgumentException("Неизвестный прицел.");
+            string crossColor=PreservesCrosshairColours(o.Crosshair)?"white":o.Color;
             var plan=new Dictionary<string,PlannedFile>(StringComparer.OrdinalIgnoreCase);
             Action<string,string,string> add=(rel,source,owner)=>plan[rel]=new PlannedFile{Rel=rel,Source=source,Owner=owner};
             var status=Status(game);int? cursor=null;
@@ -214,7 +216,7 @@ namespace FortsSetup {
                 if(icon.Value>=100){string own=Payload(@"layouts\"+iconLayout+@"\textures\"+file+".dds");if(File.Exists(own))add(rel,own,"hud");}
                 else {string source=Payload(@"icons\"+iconLayout+"\\"+file+".dds");if(File.Exists(source))plan[rel]=new PlannedFile{Rel=rel,Bytes=Tint(File.ReadAllBytes(source),"FFFFFF",icon.Value),Owner="icons"};}
             }
-            if(o.Crosshair!=null){string dir=CrossDir(o.Crosshair,o.Size);foreach(string rel in CrossFiles){string src=Path.Combine(dir,Path.GetFileName(rel));if(o.Color=="white")add(rel,src,"crosshair");else{string tint=Path.Combine(dir,"tint.dds");plan[rel]=new PlannedFile{Rel=rel,Bytes=Tint(File.ReadAllBytes(File.Exists(tint)?tint:Path.Combine(dir,"mouse_target.dds")),Colors[o.Color],100),Owner="crosshair"};}}cursor=o.Size;}
+            if(o.Crosshair!=null){string dir=CrossDir(o.Crosshair,o.Size);foreach(string rel in CrossFiles){string src=Path.Combine(dir,Path.GetFileName(rel));if(crossColor=="white")add(rel,src,"crosshair");else{string tint=Path.Combine(dir,"tint.dds");plan[rel]=new PlannedFile{Rel=rel,Bytes=Tint(File.ReadAllBytes(File.Exists(tint)?tint:Path.Combine(dir,"mouse_target.dds")),Colors[crossColor],100),Owner="crosshair"};}}cursor=o.Size;}
             const string configRel=@"data\db\constants_user.lua";string config=SafePath(game,configRel),before=File.Exists(config)?File.ReadAllText(config):"",after=ConfigText(before,cursor,o.SkipIntro);
             if(after!=before)plan[configRel]=new PlannedFile{Rel=configRel,Bytes=new UTF8Encoding(false).GetBytes(after),Owner="config"};
             foreach(var p in plan.Values){SafePath(game,p.Rel);if(p.Bytes==null&&!File.Exists(p.Source))throw new FileNotFoundException("Не хватает файла установщика.",p.Source);}
@@ -238,7 +240,7 @@ namespace FortsSetup {
                 if(progress!=null)progress(++step,total,"Сохраняю резервную копию");
                 write(Path.Combine(backup,"state.json"),Encoding.UTF8.GetBytes(json.Serialize(state.Values.OrderBy(e=>e.path).ToArray())));
                 if(o.Hud)write(Path.Combine(backup,"hud-profile.json"),Encoding.UTF8.GetBytes(json.Serialize(new HudProfile{layout=o.Layout,hash=Hash(SafePath(game,@"data\ui\screens\hud.lua")),customization=customization})));
-                if(o.Crosshair!=null)write(Path.Combine(backup,"crosshair.json"),Encoding.UTF8.GetBytes(json.Serialize(new{id=o.Crosshair,size=o.Size,color=o.Color,hash=Hash(SafePath(game,CrossFiles[0]))})));
+                if(o.Crosshair!=null)write(Path.Combine(backup,"crosshair.json"),Encoding.UTF8.GetBytes(json.Serialize(new{id=o.Crosshair,size=o.Size,color=crossColor,hash=Hash(SafePath(game,CrossFiles[0]))})));
                 if(o.Icons.Count>0)write(Path.Combine(backup,"icons.json"),Encoding.UTF8.GetBytes(json.Serialize(o.Icons)));
             } catch(Exception failure) {
                 var errors=new List<Exception>{failure};

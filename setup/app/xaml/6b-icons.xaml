@@ -1,9 +1,9 @@
 
-          <!-- icons: opacity of the extinguish / construction / repair icons -->
+          <!-- Opacity of the world action icons. Rows follow Engine.IconIds. -->
           <StackPanel x:Name="IconsPage" Visibility="Collapsed">
             <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
             <TextBlock Text="Иконки и запуск" Style="{StaticResource PageTitle}"/>
-            <TextBlock Style="{StaticResource PageNote}" Text="Значки тушения, строительства и ремонта над фортом. Сделай их полупрозрачными, чтобы не закрывали постройки."/>
+            <TextBlock Style="{StaticResource PageNote}" Text="Значки тушения, строительства, ремонта и демонтажа над фортом. Сделай их полупрозрачными, чтобы не закрывали постройки."/>
             <Border CornerRadius="14" ClipToBounds="True" Height="100" Margin="0,14,0,0">
               <Grid>
                 <Image x:Name="IconScene" Stretch="UniformToFill"/>

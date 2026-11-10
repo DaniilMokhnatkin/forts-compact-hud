@@ -15,7 +15,9 @@ $setup = Join-Path $root "setup"
 $payload = Join-Path $setup "payload"
 $assets = Join-Path $setup "app\assets"
 
-Remove-Item -Recurse -Force $payload -ErrorAction SilentlyContinue
+$payloadPath=[IO.Path]::GetFullPath($payload)
+if ($payloadPath -ne (Join-Path $root 'setup\payload')) { throw 'Unexpected payload output path' }
+Remove-Item -LiteralPath $payloadPath -Recurse -Force -ErrorAction SilentlyContinue
 $hud = Join-Path $payload "hud\data\ui"
 New-Item -ItemType Directory -Force "$hud\screens", "$hud\textures\HUD\custom", $assets | Out-Null
 Copy-Item (Join-Path $root "build\hud.lua"), (Join-Path $root "build\transaction.lua") "$hud\screens\"
@@ -29,6 +31,8 @@ Copy-Item (Join-Path $root "textures\HUD\custom\*.dds") "$hud\textures\HUD\custo
 if ($LASTEXITCODE -ne 0) { throw "zors hud failed" }
 & $Python (Join-Path $PSScriptRoot "build_layouts.py") $Game $payload $assets
 if ($LASTEXITCODE -ne 0) { throw "layouts failed" }
+& $Python (Join-Path $PSScriptRoot 'build_grib_hud.py') $Game
+if ($LASTEXITCODE -ne 0) { throw 'Grib HUD failed' }
 
 # Button sets for the other HUD skins (dlc3 is the default set above).
 foreach ($dir in Get-ChildItem -LiteralPath (Join-Path $root "textures\HUD\skins") -Directory) {

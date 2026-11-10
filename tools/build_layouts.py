@@ -16,7 +16,7 @@ from PIL import Image, DdsImagePlugin  # noqa: F401 (registers DDS)
 
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ICONS = ["extinguisher", "under_construction", "under_construction_grey", "repair", "repair_grey"]
+ICONS = ["extinguisher", "under_construction", "under_construction_grey", "repair", "repair_grey", "scrap"]
 
 
 def copy_tree(src, dst):
@@ -62,7 +62,8 @@ def main(game, payload, assets):
     tp = os.path.join(ROOT, "third_party")
     zors = os.path.join(payload, "layouts", "zors")
     mini = os.path.join(payload, "layouts", "minimalist")
-    for d in (zors, mini, os.path.join(payload, "icons")):
+    # This builder owns these three icon sets; retain independently built themes.
+    for d in (zors, mini, *(os.path.join(payload, "icons", k) for k in ("compact", "zors", "minimalist"))):
         shutil.rmtree(d, ignore_errors=True)
     os.makedirs(zors)
     shutil.copy2(os.path.join(ROOT, "build", "hud_zors.lua"), os.path.join(zors, "hud.lua"))

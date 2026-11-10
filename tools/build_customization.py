@@ -16,31 +16,43 @@ RES = PANEL + '/ResourcePanel'
 ITEMS = PANEL + '/HUDItems'
 
 
-def customize_zors(globals_, placement):
-    # The centre option is the original Zors layout, including its existing plates.
-    if placement == 'center':
+def customize_themed(globals_, placement, theme='zors'):
+    # Zors centre remains byte-identical. Grib's cap needs space above its live digits.
+    if placement == 'center' and theme == 'zors':
         return globals_
     paths = ui.unique_paths(ui.find_root(globals_))
-    frame = ui.Table()
-    for key, value in {'Type': 'Static', 'Name': 'ZorsResourceBackdrop', 'Style': 'Normal',
-                       'Texture': 'ui/textures/HUD/custom/zors_corner.dds',
-                       'Colour': [255, 255, 255, 255], 'ColourLower': [255, 255, 255, 255]}.items():
-        frame.set(key, value)
-    control = ui.Table()
-    control.set('Position', [16, -4]); control.set('Size', [176, 84])
-    frame.set('Control', control)
+    def backing(name, texture, pos, size):
+        frame = ui.Table()
+        for key, value in {'Type': 'Static', 'Name': name, 'Style': 'Normal', 'Texture': texture,
+                           'Colour': [255, 255, 255, 255], 'ColourLower': [255, 255, 255, 255]}.items(): frame.set(key, value)
+        control = ui.Table(); control.set('Position', pos); control.set('Size', size)
+        frame.set('Control', control)
+        return frame
+    top, height = (-24, 104) if theme == 'grib' else (-4, 84)
+    frames = []
+    if placement == 'corner':
+        frames.append(backing(theme.capitalize() + 'ResourceBackdrop',
+                      f'ui/textures/HUD/custom/{theme}_corner.dds', [16, top], [176, height]))
     parent = paths[RES][2]
-    parent.set('Children', ui.Table.of([frame] + parent.get('Children').array()))
     for i, resource in enumerate(('Metal', 'Energy')):
         path = RES + '/Readout' + resource
-        paths[path][2].set('Position', [46, i * 40])
+        if placement == 'corner':
+            paths[path][2].set('Position', [46, 3 + i * 37 if theme == 'grib' else i * 40])
+        else:
+            x, y = paths[path][2].get('Position').array()
+            frames.append(backing('Grib' + resource + 'Plate', 'ui/textures/HUD/custom/grib_plate.dds', [x, y - 14], [142, 50]))
         # Only the backing sprite is hidden; the existing live number controls stay opaque.
         for key in ('Colour', 'ColourLower'):
             paths[path][1].set(key, [255, 255, 255, 0])
-        paths[path + '/' + resource + 'Rate'][2].set('Position', [138, 9])
-    enemy = paths[ITEMS + '/ResourcePanelEnemy'][2]
-    pos = enemy.get('Position').array(); height = enemy.get('Size').array()[1]
-    enemy.set('Position', [pos[0], 485 - height - 8 - paths[ITEMS][2].get('Position').array()[1]])
+        paths[path + '/' + resource + 'Rate'][2].set('Position', [138, 10 if theme == 'grib' else 9])
+        if theme == 'grib':
+            for field in (resource, resource + 'Cap'):
+                ctl = paths[path + '/' + field][2]; pos = ctl.get('Position').array(); ctl.set('Position', [pos[0], 21])
+    parent.set('Children', ui.Table.of(frames + parent.get('Children').array()))
+    if placement == 'corner':
+        enemy = paths[ITEMS + '/ResourcePanelEnemy'][2]
+        pos = enemy.get('Position').array(); enemy_height = enemy.get('Size').array()[1]
+        enemy.set('Position', [pos[0], 485 + (top if theme == 'grib' else 0) - enemy_height - 8 - paths[ITEMS][2].get('Position').array()[1]])
     return globals_
 
 
@@ -125,7 +137,7 @@ def customize(globals_, placement, scale, background, indicators, tactical=False
 def main(game):
     payload=ROOT/'setup'/'payload'
     target=payload/'customization'; target.mkdir(exist_ok=True)
-    sources={'compact':ROOT/'build/hud.lua','tactical':ROOT/'build/hud.lua','zors':ROOT/'build/hud_zors.lua'}
+    sources={'compact':ROOT/'build/hud.lua','tactical':ROOT/'build/hud.lua','zors':ROOT/'build/hud_zors.lua','grib':ROOT/'build/hud_grib.lua'}
     staging=ROOT/'build'/'customization';staging.mkdir(exist_ok=True)
     total=0
     for layout,source in sources.items():
@@ -136,11 +148,12 @@ def main(game):
         combos=product(('corner','center'),(65,80,100),(0,50,100),(False,True)) if layout=='tactical' else [('corner',80,0,True),('center',80,0,True)]
         for placement,scale,bg,indicators in combos:
             g,f32=ui.load(str(source),game)
-            if layout=='zors': customize_zors(g,placement)
+            if layout in ('zors','grib'): customize_themed(g,placement,layout)
             else: customize(g,placement,scale,bg,indicators,layout=='tactical',layout=='compact')
             paths=ui.unique_paths(ui.find_root(g))
             added=({RES+'/CustomizationStrip'}|({RES+'/CustomizationBackdrop'} if placement=='corner' else set())) if layout=='tactical' else set()
             if layout=='zors' and placement=='corner': added={RES+'/ZorsResourceBackdrop'}
+            if layout=='grib': added={RES+'/GribResourceBackdrop'} if placement=='corner' else {RES+'/GribMetalPlate',RES+'/GribEnergyPlate'}
             expected=original_names|added
             if layout=='tactical':
                 old=RES+'/AssistantSettingsPanel/WeaponLeft'
@@ -148,7 +161,7 @@ def main(game):
             assert set(paths)==expected, 'Customization changed unexpected engine control paths'
             for i,res in enumerate(('Metal','Energy')):
                 pos=paths[RES+'/Readout'+res][2].get('Position').array()
-                if placement=='corner': assert pos==([60,12+i*36] if layout=='tactical' else [46 if layout=='zors' else 42,i*40])
+                if placement=='corner': assert pos==([60,12+i*36] if layout=='tactical' else [46,3+i*37] if layout=='grib' else [46 if layout=='zors' else 42,i*40])
             for n in ('Grid','Autodoor','AutoCrossBrace'):
                 p=RES+'/'+n
                 if p in paths and indicators: assert paths[p][2].get('Position').array()[1]<120
@@ -175,7 +188,8 @@ def main(game):
             ui.compile_lua(str(lua),str(out/(name+'.lua')),game);total+=1
     tactical=payload/'layouts/tactical';tactical.mkdir(exist_ok=True)
     shutil.copy2(target/'variants/tactical/corner-80-100-1.lua',tactical/'hud.lua')
-    for icon in ('extinguisher','under_construction','repair'):
+    shutil.copy2(target/'variants/grib/corner-80-0-1.lua',payload/'layouts/grib/hud.lua')
+    for icon in ('extinguisher','under_construction','repair','scrap'):
         shutil.copy2(ROOT/f'setup/app/assets/icon_compact_{icon}.png',ROOT/f'setup/app/assets/icon_tactical_{icon}.png')
     shutil.copytree(payload/'icons/compact',payload/'icons/tactical',dirs_exist_ok=True)
     # Runtime hue rotation only needs UI chrome. Decode DDS here, at build time;

@@ -11,6 +11,9 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 # Colour themes: plates behind the readouts, the "/" and the three numbers.
 THEMES = {
+    "grib": {"plate": [255, 255, 255, 255], "plate_texture": "ui/textures/HUD/custom/grib_plate.dds", "tab_text_centred": True,
+             "slash": [245, 226, 186, 220], "amount": [255, 246, 222, 255],
+             "cap": [225, 213, 185, 255], "rate": [120, 230, 130, 255]},
     "default": {"plate": [0, 0, 0, 150], "slash": [255, 255, 255, 160],
                 "amount": [255, 255, 255, 255], "cap": [165, 172, 190, 255], "rate": [120, 230, 130, 255]},
     # Zors.o: the generated nebula plate (installed as HUD/custom/zors_plate.dds), lavender

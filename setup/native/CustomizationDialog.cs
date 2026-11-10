@@ -21,12 +21,12 @@ namespace FortsSetup {
         readonly Ellipse hueSwatch=new Ellipse{Width=16,Height=16,Stroke=Brushes.White,StrokeThickness=1,Margin=new Thickness(8,0,0,0)};
         readonly string layout;
         readonly bool english;
-        readonly ImageSource zorsCorner;
+        readonly ImageSource resourceArt;
         string L(string ru,string en){return english?en:ru;}
         public CustomizationDialog(Window owner,HudCustomization current,string layoutId,bool en,string assets=null) {
             layout=layoutId;english=en;Value=current.For(layoutId);
-            if(layout=="zors"&&assets!=null)zorsCorner=WindowController.Bitmap(Path.Combine(assets,"zors_resource_corner.png"));
-            Grid root;Button close;Sheet.Frame(this,owner,L("Настройка HUD","Customize HUD")+" · "+(layoutId=="tactical"?L("Тактический","Tactical"):layoutId=="zors"?"Zors.o":"Starkoff"),L("Изменения применятся к игре после нажатия «Установить».","Changes apply to the game when you click Install."),L("Закрыть","Close"),out root,out close);
+            if((layout=="zors"||layout=="grib")&&assets!=null)resourceArt=WindowController.Bitmap(Path.Combine(assets,layout+"_resource_corner.png"));
+            Grid root;Button close;Sheet.Frame(this,owner,L("Настройка HUD","Customize HUD")+" · "+(layoutId=="tactical"?L("Тактический","Tactical"):layoutId=="zors"?"Zors.o":layoutId=="grib"?"♂ True Grib Version ♂":"Starkoff"),L("Изменения применятся к игре после нажатия «Установить».","Changes apply to the game when you click Install."),L("Закрыть","Close"),out root,out close);
             bool full=layoutId=="tactical";Width=720;Height=full?668:446;close.Click+=(s,e)=>Close();
             foreach(var height in new[]{GridLength.Auto,new GridLength(1,GridUnitType.Star),GridLength.Auto})root.RowDefinitions.Add(new RowDefinition{Height=height});
             var controls=new Grid();controls.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(210)});controls.ColumnDefinitions.Add(new ColumnDefinition());
@@ -63,6 +63,7 @@ namespace FortsSetup {
         void Draw(){
             if(ResourcesChoice==null||CardsChoice==null||BackgroundChoice==null||HueSlider==null||IndicatorsChoice==null||WhiteChoice==null)return;Read();preview.Children.Clear();preview.Background=new LinearGradientBrush(Color.FromRgb(58,64,78),Color.FromRgb(26,28,36),90);
             double hue=((layout=="zors"?275:230)+Value.Hue+360)%360;Color c=Hue(hue);var solid=new SolidColorBrush(c);var backing=new SolidColorBrush(Color.FromArgb((byte)(Value.Background*255/100),c.R,c.G,c.B));
+            if(layout=="grib"){solid=new SolidColorBrush(Color.FromRgb(181,46,57));}
             // White HUD: icon buttons turn white with dark icons; panels, tabs and number readouts stay graphite.
             Brush ink=Brushes.White,readout=solid;
             if(Value.White){c=Color.FromRgb(238,238,242);solid=new SolidColorBrush(c);readout=new SolidColorBrush(Color.FromRgb(52,52,58));backing=new SolidColorBrush(Color.FromArgb((byte)(Value.Background*255/100),40,40,46));ink=Brushes.Black;}
@@ -70,8 +71,8 @@ namespace FortsSetup {
             double card=36*Value.Cards/100.0;for(int i=0;i<7;i++)Box(236+i*(card+4),154-card,card,card,solid,null);
             Box(230,160,286,23,readout,L("Категории строительства","Build categories"));
             double rx=Value.Resources=="corner"?605:275,ry=Value.Resources=="corner"?103:91;
-            if(layout=="zors"&&Value.Resources=="corner"&&zorsCorner!=null){
-                var art=new Image{Source=zorsCorner,Width=132,Height=63,Stretch=Stretch.Fill};Canvas.SetLeft(art,582);Canvas.SetTop(art,97);preview.Children.Add(art);
+            if((layout=="zors"||layout=="grib")&&Value.Resources=="corner"&&resourceArt!=null){
+                var art=new Image{Source=resourceArt,Width=132,Height=layout=="grib"?78:63,Stretch=Stretch.Fill};Canvas.SetLeft(art,582);Canvas.SetTop(art,layout=="grib"?82:97);preview.Children.Add(art);
                 Number(605,108,106,"600 / 600");Number(605,138,106,"3000 / 3000");
             }else{Box(rx,ry,102,23,readout,"600 / 600");Box(rx+(Value.Resources=="center"?108:0),ry+(Value.Resources=="corner"?28:0),102,23,readout,"3000 / 3000");}
             if(Value.Indicators)for(int i=0;i<3;i++)Box(603+i*26,163,22,20,solid,new[]{"#","|","×"}[i],ink);

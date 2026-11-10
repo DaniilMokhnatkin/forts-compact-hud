@@ -1,0 +1,78 @@
+# ♂ True Grib Version ♂
+
+## Accepted direction
+The user approved the mushroom concept on 2026-11-11 and requested implementation.
+The final requested display name is **♂ True Grib Version ♂**; `grib` remains
+the internal layout/cursor id. Demolition opacity was added to the same task
+at the user's explicit request; it applies to all HUDs, not just Grib.
+Their correction takes precedence over the earlier crosshair proposal: the cursor
+is one complete mushroom, with no target ring, cross, ticks or central hole.
+
+## Objective and scope
+Add a separate `grib` HUD and independently selectable `grib` cursor to Forts
+Setup. Red spotted caps, ivory stem frames, dark forest wells and small moss
+accents follow the approved concept. Keep live amounts, capacities, rates,
+functional glyphs, commander characters and warning/charge colours readable.
+The meme copy in the installer is “100% гриб. Скилл в комплект не входит.”
+
+Resources support centre and bottom-right placement. Other theme styling is
+fixed, like Zors. Four button states and disabled construction/repair states
+must be included. Cursor size follows the existing 50–200% selector; its red
+cap and cream stem retain their original colours. Selecting the theme suggests
+its cursor; players can pick a different cursor independently.
+
+The theme targets the game's Default HUD skin, using the existing skin notice.
+No menu backgrounds, splash, world structures, node/weapon textures, gameplay
+rules, multiplayer data or existing user settings are changed. The concept
+board is labelled as a concept, never presented as a tested gameplay screenshot.
+
+## Implementation structure
+- `textures/grib/generated/`: original ImageGen atlases, cursor and prompts.
+- `tools/build_grib_hud.py`: deterministic crop/fit, DDS conversion, four states,
+  complete payload and installer previews. Reuse existing glyph/fit helpers.
+- `layouts/compact.py`: Grib readout colour/texture theme on the proven layout.
+- `tools/build_customization.py`: two precompiled resource placements, retaining
+  all existing game control paths; one optional backing control in corner mode.
+- `setup/native/`: layout/cursor selection, red/cream installer accent, settings
+  preview, installation/profile/restore through the existing engine.
+- `tools/native/` and `tools/test_grib_layout.py`: regression coverage.
+
+## Commands and conventions
+Use the bundled Python when `python` is unavailable:
+`C:/Users/r4pto/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe`.
+
+```powershell
+python tools/build_grib_hud.py 'C:\Program Files (x86)\Steam\steamapps\common\Forts'
+python tools/build_customization.py
+python -m unittest discover -s tools -p 'test_*layout.py'
+.\tools\build_native_setup.ps1 -Test
+```
+
+Follow the existing `Path`/Pillow builders and C# WPF conventions. For example:
+`save(texture, out / 'HUD/custom/grib_plate.dds')`. Generated textures are
+fitted to the original alpha bounds, not guessed canvas dimensions. Read
+vanilla sources from the installer backup before the live game directory.
+
+## Validation and boundaries
+Always preserve native control names and number callbacks, verify alpha and
+payload texture references, run layout and native tests before commits, and
+inspect the actual WPF rendering. Installer tests use a temporary game fixture.
+Never claim a concept image or fixture test demonstrates real-match rendering.
+No dependency additions are needed. Do not install into the real game or publish
+a new release as part of this implementation without the user's instruction.
+
+Success: both positions install and persist, the cursor is a solid mushroom at
+every supported size, button and alert states are complete, the theme is selectable
+in Russian/English, switching layouts restores foreign theme files, and the
+existing installer/rollback tests pass. Deliver a local versioned EXE and hashes.
+
+## Verification performed
+- 15 layout tests, including transparent borders and the solid mushroom silhouette.
+- 49 native engine checks, including both Grib variants, cursor independence,
+  fixed cursor colours, real demolition DDS alpha at 25%, reset and restoration.
+- 56 WPF checks, including the exact requested name, RU/EN copy, theme switching,
+  resource settings and the demolition slider; rendered screens inspected.
+- 7 downloader checks. Full payload-to-EXE build completed; embedded artwork,
+  cursor, demolition source and both Lua variants match their source bytes.
+- Real-game and multiplayer rendering remain unverified; no real installation
+  or new GitHub release was performed.

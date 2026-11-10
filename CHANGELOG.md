@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.10.0 — 2026-11-11
+
+- Added **♂ True Grib Version ♂**: hand-painted mushroom caps, ivory frames,
+  forest-green panels, matching action icons and a solid mushroom cursor.
+  Resources can be placed in the centre or bottom right. The cursor is also
+  selectable independently, supports 50–200% size and keeps its original colours.
+- Added the missing **Demolition** opacity slider for every HUD. Like the other
+  action icons it supports 10–100%, is saved with the installation and can be reset.
+- The Grib installer uses a red/cream palette and clearly labels its concept
+  artwork. Theme textures target the Default HUD skin in Forts.
+
 ## 1.9.0 — 2026-11-10
 
 - Zors.o now offers resource placement in Customize HUD: bottom right, like the

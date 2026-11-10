@@ -97,6 +97,18 @@ static class NativeUiTests {
             c.UI<Button>("CustomizationBtn").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
             Check(c.Selection().Customization.Resources=="center","Zors settings button applies the selected resource position");
             Check(!c.UI<Button>("CustomizationBtn").ToolTip.ToString().Contains("80%"),"Zors settings tooltip describes only the available resource option");
+            c.SelectLayout("grib");Pump(600);
+            Check(c.Theme.Current=="grib"&&c.Selection().Crosshair=="grib"&&c.Selection().Color=="white"&&!c.UI<Grid>("ColourControls").IsEnabled,"Grib selects its full-colour mushroom cursor and installer theme");
+            Check(c.UI<TextBlock>("LayoutTitle").Text=="♂ True Grib Version ♂"&&c.UI<Button>("LayoutLink").Visibility==Visibility.Collapsed,"Grib has its own title and no unrelated author link");
+            Render(c.Window,Path.Combine(root,@"build\native-grib.png"));
+            var gd=new CustomizationDialog(c.Window,c.Selection().Customization,"grib",false,Path.Combine(root,@"setup\app\assets"));gd.Show();gd.ResourcesChoice.SelectedIndex=0;Pump(30);Render(gd,Path.Combine(root,@"build\native-grib-corner.png"));
+            Check(gd.Title.Contains("♂ True Grib Version ♂")&&gd.Value.Resources=="corner"&&gd.CardsChoice.Visibility==Visibility.Collapsed,"Grib settings expose resource placement with the correct theme title");gd.ResourcesChoice.SelectedIndex=1;Check(gd.Value.Resources=="center","Grib resources can move to the centre");gd.Close();
+            c.UI<RadioButton>("NavCross").IsChecked=true;Pump(30);Render(c.Window,Path.Combine(root,@"build\native-grib-cursor.png"));
+            c.UI<CheckBox>("CrossSwitch").IsChecked=false;Check(c.Selection().Crosshair==null,"Grib cursor can be disabled independently");c.UI<CheckBox>("CrossSwitch").IsChecked=true;
+            c.UI<RadioButton>("NavIcons").IsChecked=true;
+            var scrapSlider=c.UI<StackPanel>("IconRows").Children.OfType<Grid>().SelectMany(row=>row.Children.OfType<Slider>()).Single(sl=>System.Windows.Automation.AutomationProperties.GetAutomationId(sl)=="Opacity-scrap");
+            scrapSlider.Value=25;Check(c.Selection().Icons["scrap"]==25,"demolition has a working independent opacity slider");Pump(30);Render(c.Window,Path.Combine(root,@"build\native-grib-icons.png"));scrapSlider.Value=100;
+            c.SelectLayout("zors");
             Check(c.UI<Button>("FeedbackBtn")!=null&&c.UI<Button>("CheckUpdateBtn")!=null,"feedback and manual update actions are present");
             Wait(()=>c.UI<Button>("CheckUpdateBtn").IsEnabled);
             c.UI<Button>("CheckUpdateBtn").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
@@ -121,7 +133,8 @@ static class NativeUiTests {
             c.Window.Close();
             var reduced=new WindowController(Path.Combine(root,"setup"),game,"en",true);reduced.Window.Show();Wait(()=>reduced.Ready!=null&&reduced.Ready.IsCompleted);reduced.SelectLayout("zors");
             Check(!((SolidColorBrush)reduced.Window.Resources["Accent"]).HasAnimatedProperties,"reduced motion applies theme immediately");
-            Check(reduced.UI<Button>("InstallBtn").Content.ToString()=="Next","English UI translated");reduced.Window.Close();
+            Check(reduced.UI<Button>("InstallBtn").Content.ToString()=="Next","English UI translated");
+            reduced.SelectLayout("grib");Check(reduced.UI<TextBlock>("HudTitle").Text.Contains("♂ True Grib Version ♂")&&reduced.UI<TextBlock>("LayoutText").Text.Contains("Skill not included")&&reduced.UI<TextBlock>("AfterLabel").Text.Contains("Mushroom"),"English Grib UI keeps the requested title and translates theme/cursor copy");reduced.Window.Close();
             var updater=new WindowController(Path.Combine(root,"setup"),game,"ru",true);updater.Window.Show();Wait(()=>updater.Ready!=null&&updater.Ready.IsCompleted);bool revealed=false;
             updater.CompleteSelfUpdate("Forts.Setup-1.8.4.exe",file=>{Check(updater.Window.IsVisible&&file=="Forts.Setup-1.8.4.exe","new update is revealed before closing the old installer");revealed=true;});
             Check(revealed&&!updater.Window.IsVisible,"old installer closes after a successful update download");

@@ -3,7 +3,7 @@ import copy
 import unittest
 
 import forts_ui as ui
-from build_customization import ROOT, RES, ITEMS, customize_zors
+from build_customization import ROOT, RES, ITEMS, customize_themed
 
 
 class ZorsLayoutTests(unittest.TestCase):
@@ -15,12 +15,12 @@ class ZorsLayoutTests(unittest.TestCase):
     def test_center_keeps_the_existing_zors_layout(self):
         g = copy.deepcopy(self.original)
         before = ui.to_source(g, True)
-        customize_zors(g, 'center')
+        customize_themed(g, 'center')
         self.assertEqual(ui.to_source(g, True), before)
 
     def test_corner_preserves_live_controls_and_fits_the_resource_frame(self):
         g = copy.deepcopy(self.original)
-        customize_zors(g, 'corner')
+        customize_themed(g, 'corner')
         paths = ui.unique_paths(ui.find_root(g))
         self.assertEqual(set(paths), set(self.paths) | {RES + '/ZorsResourceBackdrop'})
         frame = paths[RES + '/ZorsResourceBackdrop'][2]
