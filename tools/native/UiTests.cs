@@ -126,15 +126,30 @@ static class NativeUiTests {
                 Check(raw.Contains("name=\"description\"")&&raw.Contains("name=\"contact\"")&&raw.Contains("name=\"details\"")&&raw.Contains("name=\"screenshot\"")&&raw.Contains("filename=\"screenshot.png\""),"feedback serializes quoted multipart names and filename for Cloudflare");
             }
             c.UI<RadioButton>("NavIcons").IsChecked=true;
+            bool skinWarningShown=false;
+            var skinWarningTimer=new DispatcherTimer{Interval=TimeSpan.FromMilliseconds(20)};
+            skinWarningTimer.Tick+=(s,e)=>{
+                var warning=c.Window.OwnedWindows.OfType<HudSkinWarningDialog>().FirstOrDefault();if(warning==null)return;
+                skinWarningShown=true;skinWarningTimer.Stop();Render(warning,Path.Combine(root,@"build\native-default-skin-warning.png"));
+                Check(warning.IsVisible&&warning.Title.Contains("По умолчанию"),"required default-skin warning opens after HUD installation");
+                warning.Acknowledge.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+            };
+            skinWarningTimer.Start();
             c.UI<Button>("InstallBtn").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
             Wait(()=>c.UI<Button>("DoneBtn").Visibility==Visibility.Visible);
+            skinWarningTimer.Stop();Check(skinWarningShown&&c.UI<TextBlock>("WorkText").Text.Contains("Скин HUD"),"default-skin instructions remain on the completed installation page");
+            Check(c.UI<TextBlock>("WorkText").Text.Contains("Скин меню")&&HudSkinWarningDialog.Message(true,true,null,true).Contains("Menu Skin"),"Zors warning requires both Default HUD skin and Default menu background");
             Check(c.UI<TextBlock>("WorkTitle").Text=="Готово","native UI completes installation");
             Check(engine.Status(game).Layout=="zors","UI installs selected layout");
             c.Window.Close();
             var reduced=new WindowController(Path.Combine(root,"setup"),game,"en",true);reduced.Window.Show();Wait(()=>reduced.Ready!=null&&reduced.Ready.IsCompleted);reduced.SelectLayout("zors");
             Check(!((SolidColorBrush)reduced.Window.Resources["Accent"]).HasAnimatedProperties,"reduced motion applies theme immediately");
             Check(reduced.UI<Button>("InstallBtn").Content.ToString()=="Next","English UI translated");
-            reduced.SelectLayout("grib");Check(reduced.UI<TextBlock>("HudTitle").Text.Contains("♂ True Grib Version ♂")&&reduced.UI<TextBlock>("LayoutText").Text.Contains("Skill not included")&&reduced.UI<TextBlock>("AfterLabel").Text.Contains("Mushroom"),"English Grib UI keeps the requested title and translates theme/cursor copy");reduced.Window.Close();
+            reduced.SelectLayout("grib");Check(reduced.UI<TextBlock>("HudTitle").Text.Contains("♂ True Grib Version ♂")&&reduced.UI<TextBlock>("LayoutText").Text.Contains("Skill not included")&&reduced.UI<TextBlock>("AfterLabel").Text.Contains("Mushroom"),"English Grib UI keeps the requested title and translates theme/cursor copy");
+            Check(Engine.RequiresDefaultHudSkin("grib")&&Engine.RequiresDefaultHudSkin("zors")&&Engine.RequiresDefaultHudSkin("minimalist")&&Engine.RequiresDefaultHudSkin("tactical")&&!Engine.RequiresDefaultHudSkin("compact"),"default-skin requirement follows the installed HUD's supported skins");
+            Check(HudSkinWarningDialog.Message(true).Contains("HUD Skin")&&HudSkinWarningDialog.Message(true).Contains("Default"),"default-skin warning has English instructions");
+            Check(HudSkinWarningDialog.Message(false,false,"Firebird").Contains("Firebird")&&HudSkinWarningDialog.Message(false,false,"Firebird").Contains("совпадать"),"Starkoff warning names the selected skin and requires matching the game");
+            {var warning=new HudSkinWarningDialog(reduced.Window,false,false,"Firebird");warning.Show();Pump(30);Render(warning,Path.Combine(root,@"build\native-starkoff-skin-warning.png"));warning.Close();}reduced.Window.Close();
             var updater=new WindowController(Path.Combine(root,"setup"),game,"ru",true);updater.Window.Show();Wait(()=>updater.Ready!=null&&updater.Ready.IsCompleted);bool revealed=false;
             updater.CompleteSelfUpdate("Forts.Setup-1.8.4.exe",file=>{Check(updater.Window.IsVisible&&file=="Forts.Setup-1.8.4.exe","new update is revealed before closing the old installer");revealed=true;});
             Check(revealed&&!updater.Window.IsVisible,"old installer closes after a successful update download");

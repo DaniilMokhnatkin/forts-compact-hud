@@ -54,8 +54,9 @@ def customize_themed(globals_, placement, theme='zors'):
         pos = enemy.get('Position').array(); enemy_height = enemy.get('Size').array()[1]
         enemy.set('Position', [pos[0], 485 + (top if theme == 'grib' else 0) - enemy_height - 8 - paths[ITEMS][2].get('Position').array()[1]])
     if theme == 'grib':
-        from grib_geometry import align_fields
+        from grib_geometry import align_fields, centre_commander_fields
         align_fields(paths, placement, RES, ITEMS)
+        centre_commander_fields(paths, ROOT/'setup/payload/layouts/grib/textures/HUD/skin_base/commander', ITEMS)
     return globals_
 
 

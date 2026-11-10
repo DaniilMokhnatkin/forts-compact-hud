@@ -1,4 +1,37 @@
 """Live readouts aligned to the generated Grib wells, verified against game feedback."""
+from PIL import Image, ImageDraw
+
+# CO-panel-background / CO-panel-gauge UVs in Forts 1.39 uisprites.lua.
+COMMANDER_UV = (.128, .14, .859, .855)
+
+
+def centre_commander_fields(paths, texture_dir, items_path):
+    for parent, frame_name, children in (
+        (items_path + '/COBackground', 'COGauge_BG.dds', [('COActivate', 'COGauge_Button-A.dds'), ('COGauge', 'COGauge_Radial.dds'), ('COStar', 'COGauge_Star.dds')]),
+        (items_path + '/ResourcePanelEnemy/COBackground_Enemy', 'COGauge_BG_enemy.dds', [('COActivate_Enemy', 'COGauge_Button_enemy-A.dds'), ('COGauge_Enemy', 'COGauge_Radial_enemy.dds')])):
+        frame = Image.open(texture_dir / frame_name).convert('RGBA')
+        hole = frame.getchannel('A').point(lambda a: 255 if a >= 24 else 0)
+        seed = (frame.width // 2, frame.height // 2)
+        if hole.getpixel(seed) != 0:
+            raise ValueError('Commander frame has no transparent centre')
+        ImageDraw.floodfill(hole, seed, 128)
+        box = hole.point(lambda a: 255 if a == 128 else 0).getbbox()
+        if not box or box[0] == 0 or box[1] == 0 or box[2] == frame.width or box[3] == frame.height:
+            raise ValueError('Commander frame centre is not enclosed')
+        fw, fh = paths[parent][2].get('Size').array()
+        # Background anchor is bottom-left; the enemy frame is mirrored horizontally.
+        left, top, right, bottom = COMMANDER_UV
+        cx = fw * ((box[0] + box[2]) / 2 / frame.width - left) / (right - left)
+        cy = -fh + fh * ((box[1] + box[3]) / 2 / frame.height - top) / (bottom - top)
+        for child, name in children:
+            image = Image.open(texture_dir / name).convert('RGBA')
+            box = image.getchannel('A').point(lambda a: 255 if a >= 128 else 0).getbbox()
+            control = paths[parent + '/' + child][2]; w, h = control.get('Size').array()
+            left, top, right, bottom = COMMANDER_UV if child.startswith('COGauge') else (0, 0, 1, 1)
+            control.set('Position', [round(cx - w * ((box[0] + box[2]) / 2 / image.width - left) / (right - left), 3),
+                                     round(cy - h * ((box[1] + box[3]) / 2 / image.height - top) / (bottom - top), 3)])
+
+
 def align_fields(paths, placement, resource_path, items_path):
     for resource in ('Metal', 'Energy'):
         box = resource_path + '/Readout' + resource

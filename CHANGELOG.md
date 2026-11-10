@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.10.2 — 2026-11-11
+
+- Centred Grib's commander mushrooms, charge gauges and ready effect on the
+  actual openings in the generated player/enemy frames, including mirrored art.
+- Reduced the mushroom cursor's base size by 30%. Size presets and previews use
+  the smaller source; rebuilding and reinstalling never shrink it repeatedly.
+- Active Grib buttons and the selected build tab now use muted gold caps;
+  inactive buttons keep red caps. Extinguish is red, repair is blue and
+  construction is yellow; disabled appearances and opacity settings still work.
+- After every HUD installation, a prominent warning opens automatically. Zors,
+  Minimalist, Tactical and Grib require Default; Starkoff instructs players to
+  match the game's skin with the installer selection and shows that selection.
+  Zors also explicitly requires the Default menu skin/background.
+  Instructions remain on the completion screen. Cursor-only changes and
+  restoration do not show this warning.
+
 ## 1.10.1 — 2026-11-11
 
 - Aligned Grib's spy-panel header, metal and energy values with their actual

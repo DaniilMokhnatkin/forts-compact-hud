@@ -31,6 +31,14 @@ def brighter(im, factor):
     return out
 
 
+def cursor_texture(mushroom):
+    cursor = Image.new('RGBA', (64, 64))
+    small = mushroom.copy()
+    small.thumbnail((round(58 * .7), round(58 * .7)), Image.Resampling.LANCZOS)
+    cursor.alpha_composite(small, ((64 - small.width) // 2, (64 - small.height) // 2))
+    return cursor
+
+
 def main(game=ui.DEFAULT_GAME):
     payload = ROOT / 'setup/payload'
     layout = payload / 'layouts/grib'
@@ -45,15 +53,17 @@ def main(game=ui.DEFAULT_GAME):
     button = main_art(0, 0)
     normal = Image.new('RGBA', (64, 64))
     normal.alpha_composite(button.resize((58, 58), Image.Resampling.LANCZOS), (3, 3))
+    selected = Image.new('RGBA', (64, 64))
+    selected.alpha_composite(piece('atlas-selected.png', 0, 0).resize((58, 58), Image.Resampling.LANCZOS), (3, 3))
     glyph_sets = [(custom, db.glyphs()), (skin, extra_glyphs())]
     for folder, glyphs in glyph_sets:
         for name, shapes in glyphs.items():
             glyph = db.skin_glyph_layer(shapes, (32, 34), CREAM, 0.95)
             face = Image.alpha_composite(normal, glyph)
-            for state, im in db.states(face, brighter(face, 1.22)).items():
+            for state, im in db.states(face, Image.alpha_composite(selected, glyph)).items():
                 save(im, str(folder / f'{name}-{state}.dds'))
     tab = fit(main_art(1, 0), 'tabs/Button-Long-A.dds')
-    for state, im in db.states(tab, brighter(tab, 1.22)).items():
+    for state, im in db.states(tab, fit(piece('atlas-selected.png', 1, 0), 'tabs/Button-Long-A.dds')).items():
         save(im, str(skin / 'tabs' / f'Button-Long-{state}.dds'))
     frame = main_art(1, 1)
     mushroom = clean(Image.open(GEN / 'mushroom-cursor.png').convert('RGBA'))
@@ -89,14 +99,12 @@ def main(game=ui.DEFAULT_GAME):
                          'upgrade': (2, 0), 'repair': (3, 0), 'reload': (0, 1),
                          'reload_banked_ammo': (1, 1), 'scrap': (2, 1)}.items():
         icon = Image.new('RGBA', (128, 128))
-        icon.alpha_composite(piece('action-icons.png', x, y, 4, 2).resize((126, 126), Image.Resampling.LANCZOS), (1, 1))
+        icon.alpha_composite(piece('action-icons-colours.png', x, y, 4, 2).resize((126, 126), Image.Resampling.LANCZOS), (1, 1))
         save(icon, str(out / f'{name}.dds'))
         if name in ('under_construction', 'repair'):
             grey = ImageOps.grayscale(icon).convert('RGBA'); grey.putalpha(icon.getchannel('A'))
             save(brighter(grey, 0.75), str(out / f'{name}_grey.dds'))
-    cursor = Image.new('RGBA', (64, 64))
-    small = mushroom.copy(); small.thumbnail((58, 58), Image.Resampling.LANCZOS)
-    cursor.alpha_composite(small, ((64 - small.width) // 2, (64 - small.height) // 2))
+    cursor = cursor_texture(mushroom)
     cursor_dir = payload / 'crosshairs/grib'
     for name in ('mouse_target', 'mouse_target_painted'):
         save(cursor, str(cursor_dir / f'{name}.dds'))

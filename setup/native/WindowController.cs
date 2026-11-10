@@ -207,9 +207,9 @@ namespace FortsSetup {
         }
         void UpdateSkinNote() {
             Text("SkinNote",L(skinNames[skin]));
-            string current=Engine.GameSkin(game,false),menu=Engine.GameSkin(game,true);
+            string current=Engine.GameSkin(game,false);
             Text("ZorsHudText",current!=null&&current!="base"?L("• Нужен скин HUD «По умолчанию» (Настройки → Игра → Скин HUD)."):L("• Скин HUD «По умолчанию» — как нужно: вкладки, командир и реактор будут фиолетовыми."));
-            Text("ZorsMenuText",new[]{"dlc1","dlc2","dlc3"}.Contains(menu)?L("• Фон меню Zors.o виден только со скинами «По умолчанию», «Классика» и «Склад оружия». Выбери один из них в настройках игры."):L("• Фон меню виден со скинами меню «По умолчанию», «Классика» и «Склад оружия»."));
+            Text("ZorsMenuText",L("• Для фона меню Zors.o выбери скин меню «По умолчанию» в настройках Forts."));
             Text("MiniSkin",L("• Нужен скин HUD «По умолчанию» (Настройки → Игра → Скин HUD)."));
             if(Layout=="tactical")Text("ZorsMenuText",L("Тема по HUD RobberFox. Скриншоты из игры."));
             if(Layout=="grib"){
@@ -301,6 +301,11 @@ namespace FortsSetup {
                 Visible("Bar",false);Text("WorkTitle",L("Готово"));
                 string message=L(restore?"Файлы игры снова такие, какими были до установки.":"Готово. Запускай Forts.");if(skipped.Count>0)message+="\n"+L("Не тронул изменившиеся после установки: ")+String.Join(", ",skipped);
                 Text("WorkText",message);Animate(UI<UIElement>("DoneCircle"),UIElement.OpacityProperty,1,180);Animate(UI<System.Windows.Shapes.Path>("DoneCheck"),System.Windows.Shapes.Shape.StrokeDashOffsetProperty,0,260);
+                if(!restore&&options.Hud){
+                    bool defaultSkin=Engine.RequiresDefaultHudSkin(options.Layout);string selectedSkin=L(skinNames[options.Skin]);
+                    Text("WorkText",HudSkinWarningDialog.Message(lang=="en",defaultSkin,selectedSkin,options.Layout=="zors"));
+                    new HudSkinWarningDialog(Window,lang=="en",defaultSkin,selectedSkin,options.Layout=="zors").ShowDialog();
+                }
             } catch(Exception e){Visible("Bar",false);Visible("ErrorCircle",true);Visible("ErrorMark",true);Text("WorkTitle",L("Не получилось"));Text("WorkText",L(e.Message));Visible("BackBtn",true);}
             finally {busy=false;UI<RadioButton>("LangRu").IsEnabled=true;UI<RadioButton>("LangEn").IsEnabled=true;Visible("DoneBtn",true);UI<Button>("DoneBtn").Focus();}
         }

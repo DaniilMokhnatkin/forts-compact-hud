@@ -1,0 +1,4 @@
+Use case: precise-object-edit. This transparent 4x2 mushroom action-icon atlas is the edit target. Change ONLY cap colours in TWO cells:
+- TOP ROW, SECOND CELL, HAMMER/CONSTRUCTION: its red mushroom cap becomes restrained warm ochre/honey yellow (#B99342), with ivory spots.
+- TOP ROW, FOURTH CELL, WRENCH/REPAIR: its red mushroom cap becomes muted cornflower/slate blue (#547FA4), with ivory spots.
+The extinguisher in top row first cell MUST retain its red cap. Keep every functional cream glyph, forest green well, ivory circular rim, dark contour, cell placement, canvas size and all transparency unchanged. All other icons remain unchanged. No glow, no neon, no new text, no extra shapes. Muted accents that fit the hand-painted game style, rather than vivid multicolour decoration. Preserve genuine alpha transparency.

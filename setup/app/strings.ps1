@@ -136,6 +136,7 @@ $script:English['Не тронул изменившиеся после уста�
 $script:English['Демонтаж'] = 'Demolition'
 $script:English['Гриб'] = 'Mushroom'
 $script:English['Концепт оформления'] = 'Design concept'
+$script:English['• Для фона меню Zors.o выбери скин меню «По умолчанию» в настройках Forts.'] = '• For the Zors.o menu background, select the Default menu skin in Forts settings.'
 $script:English['Мухоморные вкладки, лесные панели и грибной прицел. 100% гриб. Скилл в комплект не входит.'] = 'Toadstool tabs, forest panels and a mushroom cursor. 100% mushroom. Skill not included.'
 $script:English['• Для грибных вкладок и командира выбери скин HUD «По умолчанию» в настройках Forts.'] = '• Choose the Default HUD skin in Forts settings for the mushroom tabs and commander.'
 $script:English['Прицел можно выбрать отдельно. В галерее — концепт оформления.'] = 'Select the cursor independently. The gallery shows the design concept.'

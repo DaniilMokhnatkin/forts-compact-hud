@@ -1,7 +1,8 @@
 """Grib keeps live controls and exposes only a solid mushroom cursor."""
 import copy
 import unittest
-from PIL import Image
+import colorsys
+from PIL import Image, ImageDraw
 
 import forts_ui as ui
 from build_customization import ROOT, RES, ITEMS, customize_themed
@@ -42,13 +43,47 @@ class GribLayoutTests(unittest.TestCase):
         self.assertGreater(im.getpixel((32, 32))[3], 200)
         self.assertEqual(im.getpixel((0, 0))[3], 0)
         box = im.getchannel('A').point(lambda a: 255 if a >= 128 else 0).getbbox()
-        self.assertGreaterEqual(box[0], 2); self.assertGreaterEqual(box[1], 2)
-        self.assertLessEqual(box[2], 62); self.assertLessEqual(box[3], 62)
+        self.assertLessEqual(abs((box[2] - box[0]) - round(58 * .7)), 1)
+        self.assertLessEqual(abs((box[3] - box[1]) - round(58 * .7)), 1)
         self.assertLess(abs((box[0] + box[2]) / 2 - 32), 1)
         pixels = [im.getpixel((x, y)) for y in range(64) for x in range(64)]
         red = sum(1 for r, g, b, a in pixels if a > 200 and r > g * 1.5 and r > b * 1.5)
         cream = sum(1 for r, g, b, a in pixels if a > 200 and r > 180 and g > 150 and b > 90)
-        self.assertGreater(red, 300); self.assertGreater(cream, 300)
+        opaque = sum(1 for r, g, b, a in pixels if a > 200)
+        self.assertGreater(red / opaque, .2); self.assertGreater(cream / opaque, .2)
+
+    def test_commander_emblems_and_gauges_are_centred_in_the_frame_holes(self):
+        g = copy.deepcopy(self.original); customize_themed(g, 'corner', 'grib')
+        p = ui.unique_paths(ui.find_root(g))
+        folder = ROOT / 'setup/payload/layouts/grib/textures/HUD/skin_base/commander'
+        sprite_globals, _ = ui.load(str(ROOT / 'reference/uisprites.lua'), ui.DEFAULT_GAME)
+        sprites = next(value for name, value in sprite_globals if name == 'Sprites')
+        sprite_uv = {}
+        for value in sprites.array():
+            if isinstance(value, ui.Table) and value.get('Name') in ('CO-panel-background', 'CO-panel-background-enemy', 'CO-panel-gauge', 'CO-panel-gauge-enemy'):
+                frame = value.get('States').get('Normal').get('Frames').array()[0]
+                sprite_uv[value.get('Name')] = tuple(frame.get(k) for k in ('left', 'top', 'right', 'bottom'))
+        for parent, frame_name, children in (
+            (ITEMS + '/COBackground', 'COGauge_BG.dds', [('COActivate', 'COGauge_Button-A.dds'), ('COGauge', 'COGauge_Radial.dds'), ('COStar', 'COGauge_Star.dds')]),
+            (ITEMS + '/ResourcePanelEnemy/COBackground_Enemy', 'COGauge_BG_enemy.dds', [('COActivate_Enemy', 'COGauge_Button_enemy-A.dds'), ('COGauge_Enemy', 'COGauge_Radial_enemy.dds')])):
+            frame = Image.open(folder / frame_name).convert('RGBA')
+            holes = frame.getchannel('A').point(lambda a: 255 if a >= 24 else 0)
+            ImageDraw.floodfill(holes, (frame.width // 2, frame.height // 2), 128)
+            bounds = holes.point(lambda a: 255 if a == 128 else 0).getbbox()
+            fw, fh = p[parent][2].get('Size').array()
+            left, top, right, bottom = sprite_uv[p[parent][1].get('Texture')]
+            target = (fw * ((bounds[0] + bounds[2]) / 2 / frame.width - left) / (right - left),
+                      -fh + fh * ((bounds[1] + bounds[3]) / 2 / frame.height - top) / (bottom - top))
+            for child, texture in children:
+                image = Image.open(folder / texture).convert('RGBA')
+                bounds = image.getchannel('A').point(lambda a: 255 if a >= 128 else 0).getbbox()
+                c = p[parent + '/' + child][2]; x, y = c.get('Position').array(); w, h = c.get('Size').array()
+                uv = sprite_uv.get(p[parent + '/' + child][1].get('Texture'), (0, 0, 1, 1))
+                left, top, right, bottom = uv
+                actual = (x + w * ((bounds[0] + bounds[2]) / 2 / image.width - left) / (right - left),
+                          y + h * ((bounds[1] + bounds[3]) / 2 / image.height - top) / (bottom - top))
+                self.assertAlmostEqual(actual[0], target[0], delta=.05, msg=child + ' horizontal centre')
+                self.assertAlmostEqual(actual[1], target[1], delta=.05, msg=child + ' vertical centre')
 
     def test_texture_states_and_demolition_source_are_complete(self):
         textures = ROOT / 'setup/payload/layouts/grib/textures'
@@ -60,6 +95,33 @@ class GribLayoutTests(unittest.TestCase):
                     self.assertTrue((textures / folder / f'{name}-{state}.dds').is_file())
         self.assertTrue((ROOT / 'setup/payload/icons/grib/scrap.dds').is_file())
         self.assertFalse((textures / 'mouse_target.dds').exists(), 'HUD selection alone must not force a cursor')
+
+    def test_cursor_build_is_repeatable_from_the_original_art(self):
+        from build_grib_hud import cursor_texture, clean, GEN
+        source = clean(Image.open(GEN / 'mushroom-cursor.png').convert('RGBA'))
+        before = source.tobytes()
+        first = cursor_texture(source); second = cursor_texture(source)
+        self.assertEqual(first.tobytes(), second.tobytes())
+        self.assertEqual(before, source.tobytes())
+
+    def test_grib_colours_distinguish_active_buttons_and_world_actions(self):
+        folder = ROOT / 'setup/payload/layouts/grib/textures'
+        def cap_hue(name):
+            im = Image.open(folder / name).convert('RGBA')
+            values = []
+            for y in range(round(im.height * .4)):
+                for x in range(im.width):
+                    r, g, b, a = im.getpixel((x, y)); h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+                    if a > 200 and s > .4 and v > .25: values.append(h)
+            self.assertGreater(len(values), 5)
+            return sorted(values)[len(values) // 2]
+        red = cap_hue('HUD/skin_base/Grid-A.dds')
+        self.assertTrue(red < .08 or red > .94)
+        self.assertTrue(.08 < cap_hue('HUD/skin_base/Grid-S.dds') < .18)
+        red = cap_hue('extinguisher.dds')
+        self.assertTrue(red < .08 or red > .94)
+        self.assertTrue(.08 < cap_hue('under_construction.dds') < .18)
+        self.assertTrue(.5 < cap_hue('repair.dds') < .67)
 
     def test_spy_values_use_the_numeric_wells_not_header_or_dividers(self):
         image = open_image(str(ROOT / 'setup/payload/layouts/grib/textures/HUD/skin_base/PanelSpy.dds'))

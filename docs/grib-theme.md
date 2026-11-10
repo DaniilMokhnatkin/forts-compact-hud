@@ -67,12 +67,12 @@ in Russian/English, switching layouts restores foreign theme files, and the
 existing installer/rollback tests pass. Deliver a local versioned EXE and hashes.
 
 ## Verification performed
-- 17 layout tests, including transparent borders, the solid mushroom silhouette,
+- 20 layout tests, including transparent borders, the solid mushroom silhouette,
   spy-well alignment and resource-rate gutters.
 - 49 native engine checks, including both Grib variants, cursor independence,
   fixed cursor colours, real demolition DDS alpha at 25%, reset and restoration.
-- 56 WPF checks, including the exact requested name, RU/EN copy, theme switching,
-  resource settings and the demolition slider; rendered screens inspected.
+- 62 WPF checks, including the exact requested name, RU/EN copy, theme switching,
+  resource settings, demolition slider and mandatory skin warnings; rendered screens inspected.
 - 7 downloader checks. Full payload-to-EXE build completed; embedded artwork,
   cursor, demolition source and both Lua variants match their source bytes.
 - Real-game and multiplayer rendering remain unverified; no real installation
@@ -89,3 +89,29 @@ wells and gutters, rather than checking only the outer panel bounds.
 The user briefly requested removing the two commander mushrooms, then explicitly
 retracted that request. Both mushroom emblems and all their texture states remain
 unchanged. The running game has not been modified or closed during this fix.
+
+## 1.10.2 refinement
+The user's next game screenshot confirmed the resource layout correction and
+showed the commander emblems above the circles' centres. Frame silhouettes have
+asymmetric caps; their texture-canvas centre is not the centre of the transparent
+round opening. Read the opening from alpha and project its centre through the
+player/enemy control sizes, retaining the enemy's mirrored horizontal geometry.
+Align the emblem, radial charge and ready effect to the same point.
+The background and radial sprites crop their DDS with UVs `.128/.14/.859/.855`;
+button sprites and the ready effect use the full texture. Projection must include
+these UVs, and the regression test reads them independently from `uisprites.lua`.
+
+The cursor now uses a 70% base sprite on the same centred 64×64 canvas. Every
+build starts from the original large mushroom PNG. Red ordinary buttons become
+muted gold in their selected state; world action caps are red for extinguish,
+blue for repair and ochre for construction. Original and edited ImageGen sheets
+and their exact prompts remain in `textures/grib/generated/`.
+
+After successful HUD installation, a modal amber warning instructs players to
+select Settings → Game → HUD Skin → Default and restart Forts for Grib, Zors,
+Minimalist and Tactical. The user's clarification also requires a separate
+Starkoff warning: the game's skin and the selected installer skin must match;
+the chosen name is displayed. No warning is shown for restoring files or
+changing only cursor/icons, and instructions remain on the completion page.
+For Zors.o the user additionally requires the menu skin/background to be Default;
+both setting paths appear in its post-install warning and its page hint.
