@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.10.3 — 2026-11-11
+
+- Replaced Grib's installer concept preview with the user's gameplay screenshot;
+  the old preview is removed from the shipped gallery.
+- Fixed Grib charge gauges using their complete circular mask: their angular
+  alpha ramp had been mistaken for ordinary opacity. The discs now fit inside
+  the commander frames and use uniform blue RGB to remove the vertical seam,
+  while preserving every alpha value used by the live charge indicator.
+- Extended all five reactor gauges to the end of their mushroom buttons,
+  removing the empty vanilla spacer while retaining the native live controls.
+
 ## 1.10.2 — 2026-11-11
 
 - Centred Grib's commander mushrooms, charge gauges and ready effect on the

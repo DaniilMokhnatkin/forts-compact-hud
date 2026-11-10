@@ -23,8 +23,9 @@ its cursor; players can pick a different cursor independently.
 
 The theme targets the game's Default HUD skin, using the existing skin notice.
 No menu backgrounds, splash, world structures, node/weapon textures, gameplay
-rules, multiplayer data or existing user settings are changed. The concept
-board is labelled as a concept, never presented as a tested gameplay screenshot.
+rules, multiplayer data or existing user settings are changed. The original
+concept remains in the design documents; the installer gallery now contains
+only the user's real gameplay screenshot, labelled “В игре” / “Gameplay”.
 
 ## Implementation structure
 - `textures/grib/generated/`: original ImageGen atlases, cursor and prompts.
@@ -67,12 +68,13 @@ in Russian/English, switching layouts restores foreign theme files, and the
 existing installer/rollback tests pass. Deliver a local versioned EXE and hashes.
 
 ## Verification performed
-- 20 layout tests, including transparent borders, the solid mushroom silhouette,
-  spy-well alignment and resource-rate gutters.
+- 22 layout tests, including transparent borders, the solid mushroom silhouette,
+  spy-well alignment, resource-rate gutters, full charge-disc bounds and reactor spacing.
 - 49 native engine checks, including both Grib variants, cursor independence,
   fixed cursor colours, real demolition DDS alpha at 25%, reset and restoration.
-- 62 WPF checks, including the exact requested name, RU/EN copy, theme switching,
-  resource settings, demolition slider and mandatory skin warnings; rendered screens inspected.
+- 63 WPF checks, including the exact requested name, RU/EN copy, theme switching,
+  resource settings, demolition slider, gameplay gallery and mandatory skin warnings;
+  rendered screens inspected.
 - 7 downloader checks. Full payload-to-EXE build completed; embedded artwork,
   cursor, demolition source and both Lua variants match their source bytes.
 - Real-game and multiplayer rendering remain unverified; no real installation
@@ -115,3 +117,25 @@ the chosen name is displayed. No warning is shown for restoring files or
 changing only cursor/icons, and instructions remain on the completion page.
 For Zors.o the user additionally requires the menu skin/background to be Default;
 both setting paths appear in its post-install warning and its page hint.
+
+## 1.10.3 final game-feedback corrections
+The user's final screenshots replace the gallery concept and expose a thin
+vertical mark in the charged commander circle plus a gap in the reactor bar.
+The old commander test made the same incorrect assumption as the implementation:
+thresholding radial alpha at 128 discarded half the circle. Alpha is the game's
+angular charge ramp, so geometry must use every nonzero pixel. The native disc
+also exceeded the new frame opening. Centre the complete disc, fit it inside
+the opening with one virtual unit of padding, and retain its mirrored geometry.
+Use a uniform version of its native blue RGB to remove the twelve-o'clock colour
+wrap, preserving all original alpha values byte for byte.
+
+All five native reactor gauges now start four virtual units after the button;
+their original right edge, live callbacks, glow and hit controls remain intact.
+The new tests failed against the previous geometry (9.54-unit disc offset,
+out-of-frame fill and 21-unit reactor gap), then passed after these corrections.
+The compiled-layout rendering and the real WPF gallery were inspected. The
+gameplay screenshot is copied unchanged; its SHA-256 is
+`af35ac7422f31b762324d7af1594bb379eff423cd8a303ad059e2c138982e7c3`.
+Final game rendering after this last fix remains unverified; the running Forts
+installation was not changed. The user explicitly authorized publishing the
+corrected version to GitHub and resolving routine choices autonomously.

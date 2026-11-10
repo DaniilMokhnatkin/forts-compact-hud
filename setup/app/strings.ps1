@@ -139,7 +139,8 @@ $script:English['Концепт оформления'] = 'Design concept'
 $script:English['• Для фона меню Zors.o выбери скин меню «По умолчанию» в настройках Forts.'] = '• For the Zors.o menu background, select the Default menu skin in Forts settings.'
 $script:English['Мухоморные вкладки, лесные панели и грибной прицел. 100% гриб. Скилл в комплект не входит.'] = 'Toadstool tabs, forest panels and a mushroom cursor. 100% mushroom. Skill not included.'
 $script:English['• Для грибных вкладок и командира выбери скин HUD «По умолчанию» в настройках Forts.'] = '• Choose the Default HUD skin in Forts settings for the mushroom tabs and commander.'
-$script:English['Прицел можно выбрать отдельно. В галерее — концепт оформления.'] = 'Select the cursor independently. The gallery shows the design concept.'
+$script:English['Прицел можно выбрать отдельно. В галерее — скриншот из игры.'] = 'Select the cursor independently. The gallery shows a gameplay screenshot.'
+$script:English['В игре'] = 'Gameplay'
 
 function Lower-First([string]$s) { $s.Substring(0, 1).ToLower() + $s.Substring(1) }
 

@@ -214,7 +214,7 @@ namespace FortsSetup {
             if(Layout=="tactical")Text("ZorsMenuText",L("Тема по HUD RobberFox. Скриншоты из игры."));
             if(Layout=="grib"){
                 Text("ZorsHudText",L("• Для грибных вкладок и командира выбери скин HUD «По умолчанию» в настройках Forts."));
-                Text("ZorsMenuText",L("Прицел можно выбрать отдельно. В галерее — концепт оформления."));
+                Text("ZorsMenuText",L("Прицел можно выбрать отдельно. В галерее — скриншот из игры."));
             }
         }
         async void LoadGallery(string key) {
@@ -230,7 +230,7 @@ namespace FortsSetup {
             if(index<0||index>=gallery.Length)return;shotIndex=index;int version=galleryVersion;string path=gallery[index];Text("PhotoCount",(index+1)+" / "+gallery.Length);
             try {var bmp=await Task.Run(()=>Bitmap(path));if(version!=galleryVersion||shotIndex!=index)return;
                 var brush=new ImageBrush(bmp){Stretch=Stretch.Uniform};var target=UI<Border>("HudShot");target.Background=brush;target.BeginAnimation(UIElement.OpacityProperty,null);target.Opacity=noMotion?1:0.35;Animate(target,UIElement.OpacityProperty,1,180);
-                string caption=System.Text.RegularExpressions.Regex.Replace(Path.GetFileNameWithoutExtension(path),@"^\d+\s*","");Text("ShotCaption",Layout=="grib"?L("Концепт оформления"):caption);Visible("ShotCaptionBox",Layout=="tactical"||Path.GetDirectoryName(path)!=assets);
+                string caption=System.Text.RegularExpressions.Regex.Replace(Path.GetFileNameWithoutExtension(path),@"^\d+\s*","");Text("ShotCaption",L(caption));Visible("ShotCaptionBox",Layout=="tactical"||Path.GetDirectoryName(path)!=assets);
             }catch(Exception e){Text("ShotCaption",e.Message);}
         }
         void OpenViewer() {

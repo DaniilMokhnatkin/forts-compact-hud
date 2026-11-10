@@ -100,6 +100,8 @@ static class NativeUiTests {
             c.SelectLayout("grib");Pump(600);
             Check(c.Theme.Current=="grib"&&c.Selection().Crosshair=="grib"&&c.Selection().Color=="white"&&!c.UI<Grid>("ColourControls").IsEnabled,"Grib selects its full-colour mushroom cursor and installer theme");
             Check(c.UI<TextBlock>("LayoutTitle").Text=="♂ True Grib Version ♂"&&c.UI<Button>("LayoutLink").Visibility==Visibility.Collapsed,"Grib has its own title and no unrelated author link");
+            Wait(()=>c.UI<TextBlock>("ShotCaption").Text=="В игре");
+            Check(c.UI<TextBlock>("PhotoCount").Text=="1 / 1"&&Directory.GetFiles(Path.Combine(root,@"setup\app\assets\gallery\grib")).Length==1,"Grib gallery contains only the user's gameplay screenshot");
             Render(c.Window,Path.Combine(root,@"build\native-grib.png"));
             var gd=new CustomizationDialog(c.Window,c.Selection().Customization,"grib",false,Path.Combine(root,@"setup\app\assets"));gd.Show();gd.ResourcesChoice.SelectedIndex=0;Pump(30);Render(gd,Path.Combine(root,@"build\native-grib-corner.png"));
             Check(gd.Title.Contains("♂ True Grib Version ♂")&&gd.Value.Resources=="corner"&&gd.CardsChoice.Visibility==Visibility.Collapsed,"Grib settings expose resource placement with the correct theme title");gd.ResourcesChoice.SelectedIndex=1;Check(gd.Value.Resources=="center","Grib resources can move to the centre");gd.Close();

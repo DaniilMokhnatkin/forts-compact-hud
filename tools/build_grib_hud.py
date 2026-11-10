@@ -80,9 +80,14 @@ def main(game=ui.DEFAULT_GAME):
     face = fit(support(1, 1), 'Reactor-A.dds')
     for state, im in db.states(face).items():
         save(im, str(skin / f'Reactor-{state}.dds'))
-    # Keep native charge and signal colours, including their original alpha masks.
-    for rel in ('ReactorGauge.dds', 'commander/COGauge_Radial.dds', 'commander/COGauge_Radial_enemy.dds'):
-        save(open_image(vanilla_texture(game, 'HUD/skin_base/' + rel)), str(skin / rel))
+    save(open_image(vanilla_texture(game, 'HUD/skin_base/ReactorGauge.dds')), str(skin / 'ReactorGauge.dds'))
+    for rel in ('commander/COGauge_Radial.dds', 'commander/COGauge_Radial_enemy.dds'):
+        charge = open_image(vanilla_texture(game, 'HUD/skin_base/' + rel)).convert('RGBA')
+        # RGB can be uniform blue; alpha is the engine's numerical charge ramp
+        # and must remain byte-identical. The old RGB wrap drew a vertical seam.
+        blue = Image.new('RGBA', charge.size, (118, 121, 225, 0))
+        blue.putalpha(charge.getchannel('A'))
+        save(blue, str(skin / rel))
     save(fit(support(1, 0), 'PanelSpy.dds'), str(skin / 'PanelSpy.dds'))
     # The magnifier is a vector functional glyph on the same generated button face.
     glyph = Image.new('RGBA', (256, 256)); draw = ImageDraw.Draw(glyph)
@@ -113,8 +118,7 @@ def main(game=ui.DEFAULT_GAME):
     for name in ('mouse_target.dds', 'mouse_target_painted.dds'):
         shutil.copy2(cursor_dir / name, source_dir / name)
     mushroom.save(assets / 'theme_grib.png')
-    gallery = assets / 'gallery/grib'; gallery.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(ROOT / 'docs/concepts/true-version-grib/concept.png', gallery / '01 Концепт оформления.png')
+    # The checked-in gallery contains the user's real gameplay screenshot.
     icons = payload / 'icons/grib'; icons.mkdir(parents=True, exist_ok=True)
     for name in OPACITY_ICONS:
         shutil.copy2(out / f'{name}.dds', icons / f'{name}.dds')

@@ -6,7 +6,7 @@
 
 ## Скачать
 
-[Releases](https://github.com/DaniilMokhnatkin/forts-compact-hud/releases/latest) → **Forts-Setup.exe**
+[Releases](https://github.com/DaniilMokhnatkin/forts-compact-hud/releases/latest) → **Forts.Setup-<версия>.exe**
 (один файл) или **Forts-Setup.zip** (внутри тот же `Forts Setup.exe`). Закрой Forts перед установкой.
 Windows может предупредить о неизвестном издателе: файл не подписан, «Подробнее → Выполнить в любом случае».
 
@@ -30,7 +30,16 @@ Windows может предупредить о неизвестном издат
   Moonshot, Firebird, PRO, Elite; скин берётся из настроек игры, можно выбрать вручную;
 - проверка экрана (HUD рассчитан на 16:9), русский и английский, проверка обновлений через GitHub.
 
-*English:* a compact HUD and crosshair pack for Forts without mods. Download **Forts-Setup.exe** from
+После установки сетап обязательно показывает нужные настройки игры:
+
+- **Zors.o, Minimalist, Тактический и ♂ True Grib Version ♂:** в Forts выбери
+  «Настройки → Игра → Скин HUD → По умолчанию».
+- **Zors.o:** также выбери «Скин меню → По умолчанию», чтобы правильно отображался фон меню.
+- **Starkoff:** скин HUD в игре должен совпадать со скином, выбранным в сетапе.
+
+После смены настроек перезапусти Forts.
+
+*English:* a compact HUD and crosshair pack for Forts without mods. Download **Forts.Setup-<version>.exe** from
 Releases, close the game, run it. The installer keeps the original files and can restore them.
 
 ## Сборка из исходников

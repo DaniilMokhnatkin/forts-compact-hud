@@ -23,11 +23,21 @@ def centre_commander_fields(paths, texture_dir, items_path):
         left, top, right, bottom = COMMANDER_UV
         cx = fw * ((box[0] + box[2]) / 2 / frame.width - left) / (right - left)
         cy = -fh + fh * ((box[1] + box[3]) / 2 / frame.height - top) / (bottom - top)
+        opening_w = abs(fw) * (box[2] - box[0]) / frame.width / (right - left)
+        opening_h = fh * (box[3] - box[1]) / frame.height / (bottom - top)
         for child, name in children:
             image = Image.open(texture_dir / name).convert('RGBA')
-            box = image.getchannel('A').point(lambda a: 255 if a >= 128 else 0).getbbox()
+            radial = child.startswith('COGauge')
+            # The radial alpha is an angular charge ramp, not ordinary opacity.
+            box = image.getchannel('A').point(lambda a: 255 if a >= (1 if radial else 128) else 0).getbbox()
             control = paths[parent + '/' + child][2]; w, h = control.get('Size').array()
-            left, top, right, bottom = COMMANDER_UV if child.startswith('COGauge') else (0, 0, 1, 1)
+            left, top, right, bottom = COMMANDER_UV if radial else (0, 0, 1, 1)
+            if radial:
+                fill_w = abs(w) * (box[2] - box[0]) / image.width / (right - left)
+                fill_h = h * (box[3] - box[1]) / image.height / (bottom - top)
+                scale = min((opening_w - 1) / fill_w, (opening_h - 1) / fill_h)
+                w, h = round(w * scale, 3), round(h * scale, 3)
+                control.set('Size', [w, h])
             control.set('Position', [round(cx - w * ((box[0] + box[2]) / 2 / image.width - left) / (right - left), 3),
                                      round(cy - h * ((box[1] + box[3]) / 2 / image.height - top) / (bottom - top), 3)])
 
@@ -59,3 +69,11 @@ def align_fields(paths, placement, resource_path, items_path):
     control.set('ScriptX', 'ParentMiddleX')
     button = paths[spy + '/SpyNext'][2]
     button.set('Position', [135, 28]); button.set('Size', [16, 16])
+    for index in range(5):
+        bar = items_path + '/ReactorBars/ReactorBG' + str(index)
+        button = paths[bar + '/ReactorButton' + str(index)][2]
+        gauge = paths[bar + '/ReactorGauge' + str(index)][2]
+        x, y = gauge.get('Position').array(); w, h = gauge.get('Size').array()
+        start = button.get('Position').array()[0] + button.get('Size').array()[0] + 4
+        # Extend the live gauge into the old vanilla spacer, retaining its end.
+        gauge.set('Position', [start, y]); gauge.set('Size', [x + w - start, h])

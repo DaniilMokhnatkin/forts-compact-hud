@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw
 
 import forts_ui as ui
 from build_customization import ROOT, RES, ITEMS, customize_themed
-from build_layouts import open_image
+from build_layouts import open_image, vanilla_texture
 
 
 class GribLayoutTests(unittest.TestCase):
@@ -76,7 +76,9 @@ class GribLayoutTests(unittest.TestCase):
                       -fh + fh * ((bounds[1] + bounds[3]) / 2 / frame.height - top) / (bottom - top))
             for child, texture in children:
                 image = Image.open(folder / texture).convert('RGBA')
-                bounds = image.getchannel('A').point(lambda a: 255 if a >= 128 else 0).getbbox()
+                # Radial alpha stores the charge ramp; even the low-alpha half
+                # belongs to the circle and must contribute to its centre.
+                bounds = image.getchannel('A').point(lambda a: 255 if a >= (1 if child.startswith('COGauge') else 128) else 0).getbbox()
                 c = p[parent + '/' + child][2]; x, y = c.get('Position').array(); w, h = c.get('Size').array()
                 uv = sprite_uv.get(p[parent + '/' + child][1].get('Texture'), (0, 0, 1, 1))
                 left, top, right, bottom = uv
@@ -84,6 +86,56 @@ class GribLayoutTests(unittest.TestCase):
                           y + h * ((bounds[1] + bounds[3]) / 2 / image.height - top) / (bottom - top))
                 self.assertAlmostEqual(actual[0], target[0], delta=.05, msg=child + ' horizontal centre')
                 self.assertAlmostEqual(actual[1], target[1], delta=.05, msg=child + ' vertical centre')
+
+    def test_commander_charge_disc_fits_the_opening_without_a_colour_seam(self):
+        folder = ROOT / 'setup/payload/layouts/grib/textures/HUD/skin_base/commander'
+        for placement in ('center', 'corner'):
+            g = copy.deepcopy(self.original); customize_themed(g, placement, 'grib')
+            p = ui.unique_paths(ui.find_root(g))
+            for parent, suffix in ((ITEMS + '/COBackground', ''), (ITEMS + '/ResourcePanelEnemy/COBackground_Enemy', '_enemy')):
+                frame = Image.open(folder / ('COGauge_BG' + suffix + '.dds')).convert('RGBA')
+                hole = frame.getchannel('A').point(lambda a: 255 if a >= 24 else 0)
+                ImageDraw.floodfill(hole, (frame.width // 2, frame.height // 2), 128)
+                bounds = hole.point(lambda a: 255 if a == 128 else 0).getbbox()
+                gauge = Image.open(folder / ('COGauge_Radial' + suffix + '.dds')).convert('RGBA')
+                circle = gauge.getchannel('A').point(lambda a: 255 if a else 0).getbbox()
+                control = p[parent + '/COGauge' + ('_Enemy' if suffix else '')][2]
+                x, y = control.get('Position').array(); w, h = control.get('Size').array()
+                fw, fh = p[parent][2].get('Size').array()
+                left, top, right, bottom = (.128, .14, .859, .855)
+                opening_x = sorted(fw * (v / frame.width - left) / (right - left) for v in (bounds[0], bounds[2]))
+                opening_y = [-fh + fh * (v / frame.height - top) / (bottom - top) for v in (bounds[1], bounds[3])]
+                fill_x = sorted(x + w * (v / gauge.width - left) / (right - left) for v in (circle[0], circle[2]))
+                fill_y = [y + h * (v / gauge.height - top) / (bottom - top) for v in (circle[1], circle[3])]
+                self.assertGreaterEqual(fill_x[0], opening_x[0] + .3)
+                self.assertLessEqual(fill_x[1], opening_x[1] - .3)
+                self.assertGreaterEqual(fill_y[0], opening_y[0] + .3)
+                self.assertLessEqual(fill_y[1], opening_y[1] - .3)
+                # Both sides of twelve o'clock need the same blue: the old
+                # angular RGB discontinuity drew the thin vertical stripe.
+                cx = round((circle[0] + circle[2]) / 2); cy = round((circle[1] + circle[3]) / 2)
+                a = gauge.getpixel((cx - 3, cy - round((circle[3] - circle[1]) * .3)))[:3]
+                b = gauge.getpixel((cx + 3, cy - round((circle[3] - circle[1]) * .3)))[:3]
+                self.assertLessEqual(max(abs(u - v) for u, v in zip(a, b)), 5)
+                original = open_image(vanilla_texture(ui.DEFAULT_GAME, 'HUD/skin_base/commander/COGauge_Radial' + suffix + '.dds'))
+                self.assertEqual(gauge.getchannel('A').tobytes(), original.getchannel('A').tobytes(), 'The charge ramp must stay intact')
+
+    def test_reactor_gauges_fill_the_track_beside_the_button(self):
+        for placement in ('center', 'corner'):
+            g = copy.deepcopy(self.original); customize_themed(g, placement, 'grib')
+            p = ui.unique_paths(ui.find_root(g))
+            for index in range(5):
+                bar = ITEMS + '/ReactorBars/ReactorBG' + str(index)
+                button = p[bar + '/ReactorButton' + str(index)][2]
+                gauge = p[bar + '/ReactorGauge' + str(index)][2]
+                bx, by = button.get('Position').array(); bw, bh = button.get('Size').array()
+                x, y = gauge.get('Position').array(); w, h = gauge.get('Size').array()
+                self.assertGreaterEqual(x, bx + bw + 2)
+                self.assertLessEqual(x - bx - bw, 4, 'No empty vanilla spacer before the live gauge')
+                self.assertGreaterEqual(x + w, 157)
+                self.assertLessEqual(x + w, 159)
+                self.assertGreaterEqual(y, by)
+                self.assertLessEqual(y + h, by + bh)
 
     def test_texture_states_and_demolition_source_are_complete(self):
         textures = ROOT / 'setup/payload/layouts/grib/textures'
