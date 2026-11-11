@@ -28,6 +28,15 @@ static class EngineTests {
             Check(Same(initial,Snapshot(game)),"invalid choice leaves game untouched");
             Check(Engine.CanCustomize("zors"),"Zors supports resource placement customization");
             Check(Engine.IconIds.Contains("scrap"),"demolition has its own opacity setting");
+            Check(Engine.PreservesCrosshairColours("duo_cross")&&Engine.PreservesCrosshairColours("neo_prism"),"Duo and Neo preserve their contrasting accent colours");
+            Check(!Engine.PreservesCrosshairColours(null)&&!Engine.PreservesCrosshairColours("cross"),"ordinary crosshairs still support tinting");
+            foreach(string id in new[]{"duo_cross","neo_prism"})foreach(int size in new[]{50,100,150,200}){
+                engine.Install(game,new Options{Crosshair=id,Color="green",Size=size},null);
+                var accent=engine.Status(game);
+                string source=engine.Payload(@"crosshairs\"+id+(size<100?@"\sizes\"+size:""));
+                Check(accent.Crosshair==id&&accent.Size==size&&accent.Color=="white"&&Engine.CrossFiles.All(file=>Engine.Hash(Path.Combine(game,file))==Engine.Hash(Path.Combine(source,Path.GetFileName(file)))),id+" preserves both DDS colours and size at "+size+"%");
+            }
+            Check(engine.Restore(game,null).Count==0&&Same(initial,Snapshot(game)),"Duo / Neo restore the original cursor and remove size configuration");
             Check(Engine.LayoutIds.Contains("grib")&&Engine.CanCustomize("grib"),"Grib is an installable HUD with resource placement settings");
             var options=new Options { Hud=true,Layout="zors",Crosshair="zors",Size=150,SkipIntro=true };
             options.Icons["repair"]=50;

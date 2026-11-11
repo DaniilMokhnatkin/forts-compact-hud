@@ -69,6 +69,12 @@ dlc3, снятая с экрана) в `textures\HUD\custom\*.dds`, 4 состо
 - `setup/app/strings.ps1` — словарь переводов для сборки; в EXE попадает только `en.json`.
   Прежние PowerShell-скрипты сохранены для сравнения и старых тестов, но не входят в дистрибутив.
 - Прицелы рисует `py -3 tools\draw_crosshairs.py`; фоны превью — `setup\app\assets\bg_*.png`.
+- Ещё 32 прицела Duo / Neo рисует `py -3 tools\draw_crosshair_packs.py`;
+  `build_setup.ps1` запускает его автоматически. [Листы ImageGen и промпты](crosshair-packs/prompts.md)
+  служат референсом: игровые DDS строятся из геометрии на холсте 64×64 с точкой
+  наведения (32, 32). Префиксы `duo_` и `neo_` сохраняют авторские цвета в движке
+  и превью; общая перекраска отключена. Названия — в `WindowController.cs`,
+  переводы — в `strings.ps1`. Старые PowerShell UI/движок в поставку не входят.
 - `.\tools\build_setup.ps1` собирает `dist\Forts-Setup.zip` и `dist\Forts Setup.exe`
   с нативным EXE. Перед этим нужен `build\` с HUD: `.\install.ps1 -DryRun`.
 - Если ресурсы уже собраны: `.\tools\build_native_setup.ps1 -Test` — проверки C# движка,

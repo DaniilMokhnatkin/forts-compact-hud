@@ -40,7 +40,7 @@ namespace FortsSetup {
         public static readonly string[] LayoutIds={"compact","zors","minimalist","tactical","grib"}, SkinIds={"dlc3","base","dlc1","dlc2","pro","elite"};
         public static readonly string[] IconIds={"extinguisher","under_construction","repair","scrap"};
         public static bool CanCustomize(string layout){return layout=="compact"||layout=="tactical"||layout=="zors"||layout=="grib";}
-        public static bool PreservesCrosshairColours(string id){return id=="zors"||id=="grib";}
+        public static bool PreservesCrosshairColours(string id){return id=="zors"||id=="grib"||(id!=null&&(id.StartsWith("duo_",StringComparison.Ordinal)||id.StartsWith("neo_",StringComparison.Ordinal)));}
         public static bool RequiresDefaultHudSkin(string layout){return layout=="zors"||layout=="grib"||layout=="minimalist"||layout=="tactical";}
         public static readonly Dictionary<string,string> Colors=new Dictionary<string,string>{{"white","FFFFFF"},{"green","5CFF6E"},{"yellow","FFE04A"},{"red","FF5A4E"},{"cyan","46E6FF"}};
         public static readonly string[] CrossFiles={@"data\ui\textures\mouse_target.dds",@"data\ui\textures\mouse_target_painted.dds"};

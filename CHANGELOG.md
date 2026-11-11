@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.11.0 — 2026-11-12
+
+- Added 32 crosshairs in two packs: Duo uses white shapes with a red aiming
+  point; Neo uses cyan, amber, mint and violet accents, hollow centres and
+  chevrons. All have dark outlines, both cursor states and 50–200% sizing.
+- The new crosshairs keep their designed colours when switching from a tinted
+  classic cursor. Their previews show the same colours and size as installation.
+- Crosshair cards now fill the picker in six equal columns with balanced
+  spacing, removing the empty strip at the right edge.
+
 ## 1.10.3 — 2026-11-11
 
 - Replaced Grib's installer concept preview with the user's gameplay screenshot;

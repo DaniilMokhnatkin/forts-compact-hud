@@ -76,7 +76,16 @@ namespace FortsSetup {
         readonly Dictionary<string,TextBlock> iconValues=new Dictionary<string,TextBlock>();
         static readonly ConcurrentDictionary<string,BitmapSource> Bitmaps=new ConcurrentDictionary<string,BitmapSource>(StringComparer.OrdinalIgnoreCase);
         readonly Dictionary<string,string> layoutNames=new Dictionary<string,string>{{"compact","Starkoff"},{"zors","Zors.o"},{"minimalist","Minimalist"},{"tactical","Тактический"},{"grib","♂ True Grib Version ♂"}};
-        readonly Dictionary<string,string> crossNames=new Dictionary<string,string>{{"cross","Крест"},{"gap_cross","Разрыв"},{"fine_cross","Тонкий"},{"bold_cross","Жирный"},{"dot","Точка"},{"dot_ring","Кольцо"},{"double_ring","Два кольца"},{"brackets","Рамка"},{"square","Квадрат"},{"diamond","Ромб"},{"chevron","Шеврон"},{"chevron_double","Два шеврона"},{"x_cross","Икс"},{"t_cross","Т-образный"},{"scope","Оптика"},{"sniper","Снайпер"},{"mildot","Мил-дот"},{"arcade","Аркада"},{"zors","Zors.o"},{"grib","Гриб"}};
+        readonly Dictionary<string,string> crossNames=new Dictionary<string,string>{
+            {"cross","Крест"},{"gap_cross","Разрыв"},{"fine_cross","Тонкий"},{"bold_cross","Жирный"},{"dot","Точка"},{"dot_ring","Кольцо"},{"double_ring","Два кольца"},{"brackets","Рамка"},{"square","Квадрат"},{"diamond","Ромб"},{"chevron","Шеврон"},{"chevron_double","Два шеврона"},{"x_cross","Икс"},{"t_cross","Т-образный"},{"scope","Оптика"},{"sniper","Снайпер"},{"mildot","Мил-дот"},{"arcade","Аркада"},{"zors","Zors.o"},{"grib","Гриб"},
+            {"duo_cross","Duo Крест"},{"duo_horseshoe","Подкова"},{"duo_wings","Крылья"},{"duo_focus","Фокус"},
+            {"duo_tripod","Тренога"},{"duo_diamond","Грани"},{"duo_bowl","Чаша"},{"duo_diagonal","Диагональ"},
+            {"duo_parentheses","Скобки"},{"duo_aperture","Апертура"},{"duo_chevron","Остриё"},{"duo_notch","Выемка"},
+            {"duo_hex","Соты"},{"duo_pointers","Указатели"},{"duo_range","Дальномер"},{"duo_optic","Три луча"},
+            {"neo_prism","Призма"},{"neo_fang","Клык"},{"neo_halo","Ореол"},{"neo_fork","Камертон"},
+            {"neo_triad","Триада"},{"neo_needle","Игла"},{"neo_eclipse","Затмение"},{"neo_kite","Кайт"},
+            {"neo_anchor","Якорь"},{"neo_beacon","Маяк"},{"neo_orbit","Орбита"},{"neo_horizon","Горизонт"},
+            {"neo_petal","Лепесток"},{"neo_pulse","Импульс"},{"neo_gate","Врата"},{"neo_star","Звезда"}};
         readonly Dictionary<string,string> skinNames=new Dictionary<string,string>{{"dlc3","Firebird"},{"base","По умолчанию"},{"dlc1","High Seas"},{"dlc2","Луноход"},{"pro","PRO"},{"elite","Elite"}};
         readonly Dictionary<string,string> iconNames=new Dictionary<string,string>{{"extinguisher","Тушение"},{"under_construction","Строительство"},{"repair","Ремонт"},{"scrap","Демонтаж"}};
         readonly Dictionary<string,string> colorNames=new Dictionary<string,string>{{"white","Белый"},{"green","Зелёный"},{"yellow","Жёлтый"},{"red","Красный"},{"cyan","Бирюзовый"}};
@@ -116,7 +125,7 @@ namespace FortsSetup {
             foreach(string id in Engine.LayoutIds){string key=id;layouts[id]=Choice(UI<StackPanel>("LayoutPicker"),"LayoutSeg",L(layoutNames[id]),"HUD",id,()=>SelectLayout(key));}
             foreach(string id in Engine.SkinIds){string key=id;var b=Choice(UI<StackPanel>("Skins"),"SkinChip",L(skinNames[id]),"Skin",id,()=>{skin=key;UpdateSkinNote();});b.Tag=Image("skin_"+id+".png");b.ToolTip=L(skinNames[id]);skins[id]=b;}
             foreach(var pair in new Dictionary<string,string>{{"scene","Бой"},{"bg_sky","Небо"},{"bg_rocks","Скалы"},{"bg_fire","Огонь"}}){string key=pair.Key;var b=Choice(UI<StackPanel>("Scenes"),"SceneSeg",L(pair.Value),"Scene",key,()=>{UI<Image>("SceneBefore").Source=Image(key+".png");UI<Image>("SceneAfter").Source=Image(key+".png");});if(key=="scene")b.IsChecked=true;}
-            foreach(var pair in crossNames){if(!engine.Crosshairs.Contains(pair.Key))continue;string key=pair.Key;var b=Choice(UI<WrapPanel>("Tiles"),"Tile",L(pair.Value),"Crosshair",key,()=>{cross=key;UpdateCross();UpdateSummary();});b.Tag=Image("crosshair_"+key+".png");tiles[key]=b;}
+            foreach(var pair in crossNames){if(!engine.Crosshairs.Contains(pair.Key))continue;string key=pair.Key;var b=Choice(UI<Panel>("Tiles"),"Tile",L(pair.Value),"Crosshair",key,()=>{cross=key;UpdateCross();UpdateSummary();});b.Tag=Image("crosshair_"+key+".png");b.ToolTip=L(pair.Value);tiles[key]=b;}
             foreach(var pair in Engine.Colors){string key=pair.Key;var b=Choice(UI<StackPanel>("Swatches"),"Swatch",null,"Colour",key,()=>{color=key;UpdateCross();});b.Background=(Brush)new BrushConverter().ConvertFrom("#"+pair.Value);b.ToolTip=L(colorNames[key]);AutomationProperties.SetName(b,L("Цвет: ")+L(colorNames[key]));swatches[key]=b;}
             MakeIcons();
             foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackup","NavAbout"}) {var b=UI<RadioButton>(nav);b.Checked+=(s,e)=>ShowPage((string)b.Tag);}
@@ -243,6 +252,7 @@ namespace FortsSetup {
         }
         void UpdateCross() {
             if(cross==null||Layout==null)return;int size=(int)UI<Slider>("SizeSlider").Value;Text("SizeValue",size+"%");
+            Text("CrossNote",L(cross.StartsWith("duo_")?"Duo · белый прицел, красный центр":cross.StartsWith("neo_")?"Neo · фигурный центр, авторские цвета":"Вместо большого круглого"));
             var image=UI<Image>("AfterImage");bool enabled=On("CrossSwitch");image.Width=image.Height=enabled?128:64;
             image.Source=enabled?Tinted(Image("crosshair_"+cross+"_"+size+".png"),Engine.Colors[Engine.PreservesCrosshairColours(cross)?"white":color]):Image("crosshair_vanilla.png");
             Text("AfterLabel",enabled?L(crossNames[cross])+" · "+size+"%":L("Не меняется"));UpdateSummary();
@@ -262,7 +272,7 @@ namespace FortsSetup {
             foreach(var p in o.Icons)if(p.Value<100)parts.Add(L(iconNames[p.Key])+" "+p.Value+"%");if(Installed!=null&&o.SkipIntro!=Installed.SkipIntro)parts.Add(L(o.SkipIntro==true?"без заставки":"с заставкой"));
             Text("Summary",parts.Count>0?L("Будет установлено: ")+String.Join("; ",parts):L("Ничего не выбрано"));Text("NavHudValue",o.Hud?L(layoutNames[Layout]):L("Выкл."));Text("NavCrossValue",o.Crosshair==null?L("Выкл."):L(crossNames[cross]));Text("NavIconsValue",o.Icons.Count(p=>p.Value<100)>0?o.Icons.Count(p=>p.Value<100)+" изм.":"");
             UI<Button>("CustomizationBtn").ToolTip=(customization.Resources=="corner"?L("Ресурсы справа внизу"):L("Ресурсы по центру"))+(Layout=="tactical"?" · "+customization.Cards+"% · "+CustomizationDialog.ColourLabel(Layout,customization,lang=="en"):"");
-            UI<WrapPanel>("Tiles").IsEnabled=o.Crosshair!=null;UI<Grid>("SizeControls").IsEnabled=o.Crosshair!=null;UI<Grid>("ColourControls").IsEnabled=o.Crosshair!=null&&!Engine.PreservesCrosshairColours(cross);UI<StackPanel>("Skins").IsEnabled=o.Hud;
+            UI<Panel>("Tiles").IsEnabled=o.Crosshair!=null;UI<Grid>("SizeControls").IsEnabled=o.Crosshair!=null;UI<Grid>("ColourControls").IsEnabled=o.Crosshair!=null&&!Engine.PreservesCrosshairColours(cross);UI<StackPanel>("Skins").IsEnabled=o.Hud;
             bool changes=Installed!=null&&(o.Icons.Any(p=>p.Value!=Installed.Icons[p.Key])||o.SkipIntro!=Installed.SkipIntro);
             UI<Button>("InstallBtn").IsEnabled=!busy&&statusReady&&Engine.IsGame(game)&&(o.Hud||o.Crosshair!=null||changes||Page!="IconsPage");
         }

@@ -68,6 +68,23 @@ static class NativeUiTests {
             {string rel="https://github.com/DaniilMokhnatkin/forts-compact-hud/releases/download/v1.7.1/";var own=Matchroom.Pick("{\"tag_name\":\"v1.7.1\",\"assets\":[{\"name\":\"Forts-Setup.zip\",\"browser_download_url\":\""+rel+"Forts-Setup.zip\"},{\"name\":\"Forts.Setup.exe\",\"browser_download_url\":\""+rel+"Forts.Setup.exe\"},{\"name\":\"SHA256SUMS.txt\",\"browser_download_url\":\""+rel+"SHA256SUMS.txt\"}]}","DaniilMokhnatkin/forts-compact-hud");Check(own.Name=="Forts.Setup.exe"&&own.HashUrl!=null,"in-app update picks the installer exe and checksum, not the zip");}
             c.UI<RadioButton>("NavCross").IsChecked=true;c.UI<Slider>("SizeSlider").Value=75;
             Check(c.UI<TextBlock>("SizeValue").Text=="75%","native slider updates preview");
+            c.Window.UpdateLayout();var picker=c.UI<Panel>("Tiles");
+            var first=(RadioButton)picker.Children[0];var sixth=(RadioButton)picker.Children[5];
+            var firstWell=(Border)first.Template.FindName("Well",first);var sixthWell=(Border)sixth.Template.FindName("Well",sixth);
+            double leftGap=firstWell.TranslatePoint(new Point(),picker).X;
+            double rightGap=picker.ActualWidth-sixthWell.TranslatePoint(new Point(sixthWell.ActualWidth,0),picker).X;
+            Check(Math.Abs(leftGap-rightGap)<1&&rightGap<12,"six crosshair columns fill the panel with balanced side gaps");
+            var newTiles=c.UI<Panel>("Tiles").Children.OfType<RadioButton>().Where(t=>System.Windows.Automation.AutomationProperties.GetAutomationId(t).StartsWith("Crosshair-duo_")||System.Windows.Automation.AutomationProperties.GetAutomationId(t).StartsWith("Crosshair-neo_")).ToArray();
+            Check(newTiles.Length==32,"all 32 Duo / Neo crosshairs appear in the picker");
+            foreach(var tile in newTiles){
+                tile.IsChecked=true;var selected=c.Selection();
+                Check(selected.Color=="white"&&selected.Size==75&&!c.UI<Grid>("ColourControls").IsEnabled&&Object.ReferenceEquals(c.UI<Image>("AfterImage").Source,WindowController.Bitmap(Path.Combine(root,@"setup\app\assets\crosshair_"+selected.Crosshair+"_75.png"))),selected.Crosshair+" shows the actual multicolour size preview");
+            }
+            foreach(int size in new[]{50,100,150,200}){c.UI<Slider>("SizeSlider").Value=size;Check(c.Selection().Size==size,"accent cursor supports "+size+"% in the UI");}
+            newTiles.First(t=>System.Windows.Automation.AutomationProperties.GetAutomationId(t)=="Crosshair-neo_prism").IsChecked=true;
+            c.UI<Slider>("SizeSlider").Value=150;c.Window.UpdateLayout();newTiles[16].BringIntoView();Pump(400);Render(c.Window,Path.Combine(root,@"build\native-crosshair-packs.png"));
+            c.UI<Panel>("Tiles").Children.OfType<RadioButton>().First(t=>System.Windows.Automation.AutomationProperties.GetAutomationId(t)=="Crosshair-cross").IsChecked=true;
+            Check(c.UI<Grid>("ColourControls").IsEnabled,"classic cursor still enables colour selection after an accent cursor");
             c.UI<CheckBox>("CrossSwitch").IsChecked=false;
             c.UI<CheckBox>("CrossSwitch").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
             Check(!c.UI<Grid>("SizeControls").IsEnabled,"crosshair toggle disables size control");

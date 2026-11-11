@@ -41,7 +41,7 @@
                 </Grid>
                 <Border Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
                 <ScrollViewer MaxHeight="232" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                  <WrapPanel x:Name="Tiles" Margin="20,16,6,12" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                  <UniformGrid x:Name="Tiles" Columns="6" Margin="16,16,16,12" KeyboardNavigation.DirectionalNavigation="Cycle"/>
                 </ScrollViewer>
                 <Border Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
                 <Grid x:Name="ColourControls" Margin="16,6">

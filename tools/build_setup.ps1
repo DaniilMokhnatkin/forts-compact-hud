@@ -41,6 +41,8 @@ foreach ($dir in Get-ChildItem -LiteralPath (Join-Path $root "textures\HUD\skins
     Copy-Item (Join-Path $dir.FullName "*.dds") $dest
 }
 
+& $Python (Join-Path $PSScriptRoot 'draw_crosshair_packs.py')
+if ($LASTEXITCODE -ne 0) { throw 'Duo / Neo crosshairs failed' }
 $cross = Join-Path $root "textures\crosshairs"
 foreach ($dir in Get-ChildItem -LiteralPath $cross -Directory) {
     $dest = Join-Path $payload "crosshairs\$($dir.Name)"

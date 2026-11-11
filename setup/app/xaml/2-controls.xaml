@@ -82,15 +82,15 @@
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="RadioButton">
-            <StackPanel Background="Transparent" Margin="0,0,10,0">
-              <Grid Width="82" Height="62">
+            <StackPanel Background="Transparent" Margin="6,0,6,0">
+              <Grid Height="62">
                 <Border x:Name="Ring" CornerRadius="16" BorderBrush="{DynamicResource Accent}" BorderThickness="2.5" Opacity="0" Margin="-4"/>
                 <Border x:Name="Well" CornerRadius="13" Background="#232326">
                   <Image Source="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" Width="46" Height="46"
                          RenderOptions.BitmapScalingMode="HighQuality"/>
                 </Border>
               </Grid>
-              <TextBlock x:Name="Name" Text="{TemplateBinding Content}" HorizontalAlignment="Center" Margin="0,9,0,0" FontSize="12"
+              <TextBlock x:Name="Name" Text="{TemplateBinding Content}" TextAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,9,0,0" FontSize="12"
                          Foreground="{StaticResource SecondaryText}"/>
             </StackPanel>
             <ControlTemplate.Triggers>
