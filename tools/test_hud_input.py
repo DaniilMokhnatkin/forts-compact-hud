@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 import forts_ui as ui
-from build_customization import customize
+from build_customization import customize, customize_themed
 from hud_input import allow_transparent_backings
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,6 +14,41 @@ PANEL = "root/HUD/HUDPanel"
 class HudInputTests(unittest.TestCase):
     def load(self, relative):
         return ui.load(str(ROOT / relative), ui.DEFAULT_GAME)
+
+    def check_input_policy(self, globals_, label):
+        before = ui.unique_paths(ui.find_root(copy.deepcopy(globals_)))
+        allow_transparent_backings(globals_)
+        after = ui.unique_paths(ui.find_root(globals_))
+        self.assertEqual(set(before), set(after), label)
+        self.assertIs(after[PANEL + "/PanelCenter"][2].get("BlocksMouse"), False, label)
+        for path, (_, node, control) in after.items():
+            original = before[path][2]
+            if node.get("Type") != "Static":
+                self.assertEqual(control.get("BlocksMouse"), original.get("BlocksMouse"), (label, path))
+        self.assertEqual(allow_transparent_backings(globals_), 0, "Policy must be idempotent: " + label)
+
+    def test_every_hud_and_customization_combination(self):
+        for theme, source in (("compact", "build/hud.lua"), ("zors", "build/hud_zors.lua"), ("grib", "build/hud_grib.lua")):
+            for placement in ("corner", "center"):
+                label = theme + "/" + placement
+                with self.subTest(layout=label):
+                    globals_, _ = self.load(source)
+                    if theme == "compact":
+                        customize(globals_, placement, 80, 0, True, plain=True)
+                    else:
+                        customize_themed(globals_, placement, theme)
+                    self.check_input_policy(globals_, label)
+        globals_, _ = self.load("third_party/minimalist/screens/hud.lua")
+        self.check_input_policy(globals_, "minimalist")
+        for placement in ("corner", "center"):
+            for scale in (65, 80, 100):
+                for background in (0, 50, 100):
+                    for indicators in (False, True):
+                        label = "tactical/{}/{}/{}/{}".format(placement, scale, background, indicators)
+                        with self.subTest(layout=label):
+                            globals_, _ = self.load("build/hud.lua")
+                            customize(globals_, placement, scale, background, indicators, tactical=True)
+                            self.check_input_policy(globals_, label)
 
     def test_invisible_original_backings_release_the_mouse(self):
         globals_, _ = self.load("build/hud.lua")

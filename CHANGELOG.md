@@ -6,6 +6,9 @@
   control flag, allowing construction input through the old transparent panel
   rectangles. This applies after all HUD themes and opacity variants are built.
   Interactive controls, opaque backings and all geometry remain unchanged.
+- Covered Starkoff, Zors.o, Minimalist, Tactical and True Grib Version, including
+  all 42 customization variants. Construction through the former Starkoff
+  backing was confirmed in game; the remaining themes were checked structurally.
 
 ## 1.11.0 — 2026-11-12
 
