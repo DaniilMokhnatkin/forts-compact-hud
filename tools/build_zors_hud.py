@@ -163,7 +163,7 @@ def icons(out):
         img = Image.new("RGBA", (128, 128))
         img.alpha_composite(icon, (1, 1))
         save(img, os.path.join(out, name + ".dds"))
-        if name in ("under_construction", "repair"):  # the disabled look
+        if name in ("under_construction", "repair", "scrap"):  # the disabled / progress look
             grey = ImageEnhance.Brightness(ImageOps.grayscale(img.convert("RGB")).convert("RGB")).enhance(0.75).convert("RGBA")
             grey.putalpha(img.getchannel("A"))
             save(grey, os.path.join(out, name + "_grey.dds"))

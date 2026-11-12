@@ -4,7 +4,7 @@
 
 payload\\layouts\\zors\\        hud.lua (compact in purple, from build\\hud_zors.lua) + textures\\
 payload\\layouts\\minimalist\\  hud.lua + textures\\   (nutellafish, third_party\\minimalist)
-payload\\icons\\<layout>\\      extinguisher, under_construction(_grey), repair(_grey) as
+payload\\icons\\<layout>\\      extinguisher, under_construction(_grey), repair(_grey), scrap(_grey) as
                               uncompressed DDS: the installer scales their alpha (opacity slider)
 assets\\layout_*.png, assets\\icon_<layout>_<name>.png   previews for the window
 """
@@ -16,7 +16,9 @@ from PIL import Image, DdsImagePlugin  # noqa: F401 (registers DDS)
 
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ICONS = ["extinguisher", "under_construction", "under_construction_grey", "repair", "repair_grey", "scrap"]
+# Every icon with a progress state needs its _grey twin: the game draws the grey
+# version underneath, so a faded icon over an opaque grey disk would look grey.
+ICONS = ["extinguisher", "under_construction", "under_construction_grey", "repair", "repair_grey", "scrap", "scrap_grey"]
 
 
 def copy_tree(src, dst):

@@ -124,6 +124,10 @@ static class EngineTests {
             byte[] scrap=File.ReadAllBytes(Path.Combine(game,@"data\ui\textures\scrap.dds")),opaqueScrap=File.ReadAllBytes(engine.Payload(@"icons\grib\scrap.dds"));
             int scrapOffset=HudCustomization.BgraPixelOffset(scrap);
             Check(engine.Status(game).Icons["scrap"]==25&&Enumerable.Range(0,(scrap.Length-scrapOffset)/4).All(i=>Math.Abs(scrap[scrapOffset+i*4+3]-opaqueScrap[scrapOffset+i*4+3]*0.25)<=1),"demolition opacity changes actual DDS alpha and persists");
+            // The game draws scrap_grey under scrap: an opaque grey twin would turn a faded icon grey.
+            byte[] scrapGrey=File.ReadAllBytes(Path.Combine(game,@"data\ui\textures\scrap_grey.dds")),opaqueGrey=File.ReadAllBytes(engine.Payload(@"icons\grib\scrap_grey.dds"));
+            int greyOffset=HudCustomization.BgraPixelOffset(scrapGrey);
+            Check(Enumerable.Range(0,(scrapGrey.Length-greyOffset)/4).All(i=>Math.Abs(scrapGrey[greyOffset+i*4+3]-opaqueGrey[greyOffset+i*4+3]*0.25)<=1),"demolition opacity also fades the grey progress twin");
             Check(Engine.Hash(Path.Combine(game,@"data\ui\textures\mouse_target.dds"))==cursorBefore,"Grib HUD alone keeps the independently selected cursor");
             demolition.Icons["scrap"]=100;engine.Install(game,demolition,null);
             Check(engine.Status(game).Icons["scrap"]==100&&Engine.Hash(Path.Combine(game,@"data\ui\textures\scrap.dds"))==Engine.Hash(engine.Payload(@"layouts\grib\textures\scrap.dds")),"demolition opacity can restore the original mushroom artwork");

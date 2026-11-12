@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.11.3 — 2026-11-12
+
+- Fixed the demolition (scrap) icon turning grey when its opacity is lowered.
+  The game draws `scrap_grey.dds` underneath the coloured icon, and that grey
+  twin was never shipped, so a faded icon sat on the game's opaque grey disk.
+  Every HUD now ships and fades `scrap_grey` together with `scrap`, the same way
+  as repair and construction.
+
 ## 1.11.2 — 2026-11-12
 
 - Added a HUD switch to choose whether transparent panels pass construction

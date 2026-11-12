@@ -106,7 +106,7 @@ def main(game=ui.DEFAULT_GAME):
         icon = Image.new('RGBA', (128, 128))
         icon.alpha_composite(piece('action-icons-colours.png', x, y, 4, 2).resize((126, 126), Image.Resampling.LANCZOS), (1, 1))
         save(icon, str(out / f'{name}.dds'))
-        if name in ('under_construction', 'repair'):
+        if name in ('under_construction', 'repair', 'scrap'):
             grey = ImageOps.grayscale(icon).convert('RGBA'); grey.putalpha(icon.getchannel('A'))
             save(brighter(grey, 0.75), str(out / f'{name}_grey.dds'))
     cursor = cursor_texture(mushroom)
