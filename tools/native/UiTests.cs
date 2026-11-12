@@ -45,6 +45,10 @@ static class NativeUiTests {
             Wait(()=>full.Index==1&&Object.ReferenceEquals(full.Picture.Source,secondPhoto));
             Check(full.Counter.Text=="2 / 2"&&full.Picture.Stretch==Stretch.Uniform,"large viewer browses full uncropped screenshots");full.Close();
             Check(c.Selection().Customization.Resources=="corner","corner placement default remains an explicit setting");
+            Check(c.Selection().ClickThrough,"transparent HUD input defaults to the installed behaviour");
+            c.UI<CheckBox>("ClickThroughSwitch").IsChecked=false;
+            Check(!c.Selection().ClickThrough,"HUD input switch can restore blocking");
+            c.UI<CheckBox>("ClickThroughSwitch").IsChecked=true;
             var dialog=new CustomizationDialog(c.Window,c.Selection().Customization,"tactical",false);
             Check(dialog.CardsChoice.Style==c.Window.FindResource("TahoeCombo"),"settings use the shared Tahoe control system");
             Check(Enumerable.Range(-12,25).All(n=>!CustomizationDialog.HueLabel("compact",n*15,false).Any(Char.IsDigit)),"hue is shown as a colour name instead of degrees");

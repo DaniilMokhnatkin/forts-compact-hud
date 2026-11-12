@@ -23,6 +23,8 @@ $script:English = @{
         "Less space at the bottom of the screen, resources always in sight. No mods: only interface files change."
     "Компактный HUD в бою" = "Compact HUD in a match"; "Установить компактный HUD" = "Install the compact HUD"
     "Иконки на 20% меньше, панель ниже" = "Icons 20% smaller, panel lower"; "Экран игры" = "Game screen"
+    "Строительство сквозь прозрачный HUD" = "Build through transparent HUD"
+    "Выключи, чтобы прозрачная область HUD блокировала мышь" = "Turn off to make the transparent HUD block the mouse"
     "Ресурсы" = "Resources"; "«запас / лимит» по центру, над иконками" = '“stock / cap” in the centre, above the icons'
     "Кнопки" = "Buttons"; "сетка, двери, раскосы, пауза и меню в один ряд" = "grid, doors, bracing, pause and menu in one row"
     "Направление оружия" = "Weapon facing"; "открывается над рядом кнопок" = "opens above the button row"

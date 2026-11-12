@@ -84,6 +84,7 @@ namespace FortsSetup {
         }
     }
     public sealed class HudProfile {
+        public bool clickThrough=true;
         public string layout,hash;
         public HudCustomization customization;
     }

@@ -178,7 +178,7 @@ namespace FortsSetup {
             layouts[selection==null?"compact":selection.Layout].IsChecked=true;
             UI<RadioButton>("NavHud").IsChecked=true;
             initializing=false;
-            Window.Loaded+=async(s,e)=>{Animate(UI<UIElement>("Shell"),UIElement.OpacityProperty,1,220);Ready=Refresh();await Ready;if(selection!=null){UI<CheckBox>("HudSwitch").IsChecked=selection.Hud;UI<CheckBox>("CrossSwitch").IsChecked=selection.Crosshair!=null;UI<CheckBox>("IntroSwitch").IsChecked=selection.SkipIntro;foreach(var p in selection.Icons)iconSliders[p.Key].Value=p.Value;UpdateCross();}CheckUpdates();};
+            Window.Loaded+=async(s,e)=>{Animate(UI<UIElement>("Shell"),UIElement.OpacityProperty,1,220);Ready=Refresh();await Ready;if(selection!=null){UI<CheckBox>("HudSwitch").IsChecked=selection.Hud;UI<CheckBox>("ClickThroughSwitch").IsChecked=selection.ClickThrough;UI<CheckBox>("CrossSwitch").IsChecked=selection.Crosshair!=null;UI<CheckBox>("IntroSwitch").IsChecked=selection.SkipIntro;foreach(var p in selection.Icons)iconSliders[p.Key].Value=p.Value;UpdateCross();}CheckUpdates();};
         }
         void MakeIcons() {
             foreach(var pair in iconNames){string id=pair.Key;var row=new Grid{Margin=new Thickness(16,6,16,6)};foreach(double width in new[]{40,120,0,46})row.ColumnDefinitions.Add(new ColumnDefinition{Width=width==0?new GridLength(1,GridUnitType.Star):new GridLength(width)});
@@ -257,7 +257,7 @@ namespace FortsSetup {
             image.Source=enabled?Tinted(Image("crosshair_"+cross+"_"+size+".png"),Engine.Colors[Engine.PreservesCrosshairColours(cross)?"white":color]):Image("crosshair_vanilla.png");
             Text("AfterLabel",enabled?L(crossNames[cross])+" · "+size+"%":L("Не меняется"));UpdateSummary();
         }
-        public Options Selection() {return new Options{Hud=On("HudSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=Engine.PreservesCrosshairColours(cross)?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
+        public Options Selection() {return new Options{Hud=On("HudSwitch"),ClickThrough=On("ClickThroughSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=Engine.PreservesCrosshairColours(cross)?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
         public void ShowPage(string name) {
             Page=name;foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackupPage","AboutPage","WorkPage"})Visible(page,page==name);
             if(name!="WorkPage"){
@@ -282,6 +282,7 @@ namespace FortsSetup {
             if(!Engine.IsGame(game)){Visible("Status",true);Text("Status",L("Нажми «Изменить…» слева и выбери папку, где лежит Forts.exe."));UI<Button>("RestoreBtn").IsEnabled=false;return;}
             try {string selectedGame=game;var status=await Task.Run(()=>engine.Status(selectedGame));if(version!=refreshVersion)return;Installed=status;statusReady=true;
                 UI<CheckBox>("HudSwitch").IsEnabled=status.HudCompatible;if(!status.HudCompatible)UI<CheckBox>("HudSwitch").IsChecked=false;
+                if(status.HudInstalled)UI<CheckBox>("ClickThroughSwitch").IsChecked=status.ClickThrough;
                 Visible("Status",!status.HudCompatible);Text("Status",status.HudCompatible?"":L("Не подходит к этой версии игры"));
                 string detected=Engine.GameSkin(game,false)??status.Skin??"dlc3";if(skins.ContainsKey(detected))skins[detected].IsChecked=true;
                 // Installed state is informational; never change the user's selected layout/theme here.

@@ -63,6 +63,14 @@
                   <StackPanel x:Name="Skins" Orientation="Horizontal" HorizontalAlignment="Right" KeyboardNavigation.DirectionalNavigation="Cycle"/>
                 </Grid>
                 <Border Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
+                <Grid Margin="16,10">
+                  <StackPanel Margin="0,0,60,0">
+                    <TextBlock Text="Строительство сквозь прозрачный HUD" Style="{StaticResource RowTitle}"/>
+                    <TextBlock Text="Выключи, чтобы прозрачная область HUD блокировала мышь" Style="{StaticResource RowNote}"/>
+                  </StackPanel>
+                  <CheckBox x:Name="ClickThroughSwitch" Style="{StaticResource Switch}" IsChecked="True" HorizontalAlignment="Right" VerticalAlignment="Center" AutomationProperties.Name="Строительство сквозь прозрачный HUD"/>
+                </Grid>
+                <Border Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
                 <Grid Margin="16,10"><TextBlock Text="Экран игры" Style="{StaticResource RowTitle}"/>
                   <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Ellipse x:Name="ScreenDot" Width="8" Height="8" Fill="#34C759" Margin="0,1,8,0" VerticalAlignment="Center"/>

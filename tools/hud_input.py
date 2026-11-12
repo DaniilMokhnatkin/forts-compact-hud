@@ -6,6 +6,7 @@ Apply this last, after theme/opacity variants are final, before packaging.
 """
 from pathlib import Path
 import sys
+import shutil
 
 import forts_ui as ui
 
@@ -33,9 +34,13 @@ def allow_transparent_backings(globals_):
 
 def build(payload, game=ui.DEFAULT_GAME):
     staging = ROOT / "build/hud-input"
-    files = sorted(set(payload.glob("**/hud.lua")) | set((payload / "customization/variants").glob("**/*.lua")))
+    files = sorted(p for p in (set(payload.glob("**/hud.lua")) | set((payload / "customization/variants").glob("**/*.lua"))) if 'mouse-blocking' not in p.relative_to(payload).parts)
     total = 0
     for file in files:
+        original = payload / 'mouse-blocking' / file.relative_to(payload)
+        original.parent.mkdir(parents=True, exist_ok=True)
+        if not original.exists():
+            shutil.copyfile(file, original)
         globals_, f32 = ui.load(str(file), game)
         changed = allow_transparent_backings(globals_)
         if not changed:

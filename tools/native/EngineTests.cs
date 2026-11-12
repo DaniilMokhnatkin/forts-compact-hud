@@ -28,6 +28,19 @@ static class EngineTests {
             Check(Same(initial,Snapshot(game)),"invalid choice leaves game untouched");
             Check(Engine.CanCustomize("zors"),"Zors supports resource placement customization");
             Check(Engine.IconIds.Contains("scrap"),"demolition has its own opacity setting");
+            string mouseGame=Path.Combine(root,"build","native-mouse-"+Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(mouseGame);
+            foreach(string file in Directory.GetFiles(game,"*",SearchOption.AllDirectories)){string dst=Path.Combine(mouseGame,file.Substring(game.Length+1));Directory.CreateDirectory(Path.GetDirectoryName(dst));File.Copy(file,dst);}
+            try {foreach(string layout in new[]{"compact","zors","minimalist","tactical","grib"})foreach(bool through in new[]{false,true}){
+                var setting=new Options{Hud=true,Layout=layout,ClickThrough=through,Customization=Engine.CanCustomize(layout)?new HudCustomization():null};
+                engine.Install(mouseGame,setting,null);var current=engine.Status(mouseGame);
+                Check(current.Layout==layout&&current.ClickThrough==through,"transparent HUD mouse choice persists for "+layout+" "+through);
+                string rel=setting.Customization==null?@"layouts\"+layout+@"\hud.lua":@"customization\variants\"+layout+"\\"+setting.Customization.For(layout).Key+".lua";
+                string source=engine.Payload((through?"":@"mouse-blocking\")+rel);
+                Check(Engine.Hash(Path.Combine(mouseGame,@"data\ui\screens\hud.lua"))==Engine.Hash(source),"selected mouse behavior is installed for "+layout+" "+through);
+            }
+            Check(engine.Restore(mouseGame,null).Count==0&&Same(initial,Snapshot(mouseGame)),"restoring after both HUD mouse modes returns originals");
+            } finally {if(mouseGame.StartsWith(Path.Combine(root,"build")+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase))Directory.Delete(mouseGame,true);}
             Check(Engine.PreservesCrosshairColours("duo_cross")&&Engine.PreservesCrosshairColours("neo_prism"),"Duo and Neo preserve their contrasting accent colours");
             Check(!Engine.PreservesCrosshairColours(null)&&!Engine.PreservesCrosshairColours("cross"),"ordinary crosshairs still support tinting");
             foreach(string id in new[]{"duo_cross","neo_prism"})foreach(int size in new[]{50,100,150,200}){

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.11.2 — 2026-11-12
+
+- Added a HUD switch to choose whether transparent panels pass construction
+  input or retain their original mouse-blocking area. The selection is saved
+  for every HUD, including Minimalist.
+
 ## 1.11.1 — 2026-11-12
 
 - Fully invisible static HUD backings now use the game's `BlocksMouse = false`

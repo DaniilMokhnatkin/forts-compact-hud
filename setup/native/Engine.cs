@@ -13,6 +13,7 @@ using Microsoft.Win32;
 namespace FortsSetup {
     public sealed class Options {
         public bool Hud;
+        public bool ClickThrough=true;
         public string Layout="compact", Skin="dlc3", Crosshair, Color="white";
         public int Size=100;
         public HudCustomization Customization;
@@ -21,6 +22,7 @@ namespace FortsSetup {
     }
     public sealed class PackStatus {
         public bool HudCompatible=true, HudInstalled, HasBackup, SkipIntro;
+        public bool ClickThrough=true;
         public string Layout, Skin, Crosshair, Color="white";
         public int Size=100;
         public HudCustomization Customization;
@@ -116,7 +118,7 @@ namespace FortsSetup {
                 var profile=json.Deserialize<HudProfile>(File.ReadAllText(profileFile));
                 if(profile!=null&&profile.hash==hudNow&&LayoutIds.Contains(profile.layout)){
                     if(profile.customization!=null)profile.customization.Validate();
-                    s.Layout=profile.layout;s.Customization=profile.customization;
+                    s.Layout=profile.layout;s.Customization=profile.customization;s.ClickThrough=profile.clickThrough;
                 }
             }
             foreach(var f in HudFiles) {
@@ -179,6 +181,7 @@ namespace FortsSetup {
             if(o.Hud){
                 if(!status.HudCompatible)throw new InvalidOperationException("HUD сделан для Forts 1.39.0 r22745, а файлы интерфейса у тебя другие (другая версия игры или чужой мод).");
                 string selectedHud=customization==null?LayoutHud(o.Layout):Payload(@"customization\variants\"+o.Layout+"\\"+customization.Key+".lua");
+                if(!o.ClickThrough){string payloadRoot=Payload("mouse-blocking");string baseRoot=Payload("hud");string relative=selectedHud.Substring(Path.GetDirectoryName(baseRoot).Length+1);selectedHud=SafePath(payloadRoot,relative);}
                 if(customization!=null&&o.Layout=="tactical"){
                     string chrome=Payload(@"customization\textures");
                     if(!Directory.Exists(chrome))throw new IOException("В установщике отсутствуют текстуры настроенного HUD.");
@@ -240,7 +243,7 @@ namespace FortsSetup {
                 }
                 if(progress!=null)progress(++step,total,"Сохраняю резервную копию");
                 write(Path.Combine(backup,"state.json"),Encoding.UTF8.GetBytes(json.Serialize(state.Values.OrderBy(e=>e.path).ToArray())));
-                if(o.Hud)write(Path.Combine(backup,"hud-profile.json"),Encoding.UTF8.GetBytes(json.Serialize(new HudProfile{layout=o.Layout,hash=Hash(SafePath(game,@"data\ui\screens\hud.lua")),customization=customization})));
+                if(o.Hud)write(Path.Combine(backup,"hud-profile.json"),Encoding.UTF8.GetBytes(json.Serialize(new HudProfile{layout=o.Layout,hash=Hash(SafePath(game,@"data\ui\screens\hud.lua")),customization=customization,clickThrough=o.ClickThrough})));
                 if(o.Crosshair!=null)write(Path.Combine(backup,"crosshair.json"),Encoding.UTF8.GetBytes(json.Serialize(new{id=o.Crosshair,size=o.Size,color=crossColor,hash=Hash(SafePath(game,CrossFiles[0]))})));
                 if(o.Icons.Count>0)write(Path.Combine(backup,"icons.json"),Encoding.UTF8.GetBytes(json.Serialize(o.Icons)));
             } catch(Exception failure) {
