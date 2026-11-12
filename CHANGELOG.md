@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.11.1 — 2026-11-12
+
+- Fully invisible static HUD backings now use the game's `BlocksMouse = false`
+  control flag, allowing construction input through the old transparent panel
+  rectangles. This applies after all HUD themes and opacity variants are built.
+  Interactive controls, opaque backings and all geometry remain unchanged.
+
 ## 1.11.0 — 2026-11-12
 
 - Added 32 crosshairs in two packs: Duo uses white shapes with a red aiming

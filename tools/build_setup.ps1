@@ -63,6 +63,11 @@ if ($LASTEXITCODE -ne 0) { throw 'HUD customization variants failed' }
 & $Python (Join-Path $PSScriptRoot 'build_white_hud.py') (Join-Path $payload 'customization\white')
 if ($LASTEXITCODE -ne 0) { throw 'white HUD buttons failed' }
 
+# Alpha does not disable a Forts control's mouse rectangle. Run after all
+# layouts and opacity variants are complete; retain every interactive child.
+& $Python (Join-Path $PSScriptRoot 'hud_input.py') $payload $Game
+if ($LASTEXITCODE -ne 0) { throw 'HUD click-through layouts failed' }
+
 # The development pipeline may use scripts. The shipped installer is a native
 # C# WPF application with embedded assets/payload and no interpreter dependency.
 $icon = Join-Path $root "build\forts-setup.ico"
