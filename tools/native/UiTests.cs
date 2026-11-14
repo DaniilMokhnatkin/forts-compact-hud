@@ -31,7 +31,14 @@ static class NativeUiTests {
             Check(c.Layout=="compact"&&c.Theme.Current=="default","startup stays Compact/neutral even with Zors installed");
             Check(c.Window.OwnedWindows.Count==0,"startup does not open gallery");
             double normalWidth=c.Window.ActualWidth,normalHeight=c.Window.ActualHeight;
-            c.UI<RadioButton>("NavCross").IsChecked=true;Pump(400);
+            var widths=new System.Collections.Generic.List<double>();
+            var resizeSampler=new DispatcherTimer{Interval=TimeSpan.FromMilliseconds(12)};
+            resizeSampler.Tick+=(s,e)=>widths.Add(c.Window.ActualWidth);resizeSampler.Start();
+            c.UI<RadioButton>("NavCross").IsChecked=true;Pump(400);resizeSampler.Stop();
+            if(SystemParameters.ClientAreaAnimation&&c.Window.ActualWidth-normalWidth>100){
+                Check(widths.Count>=4&&widths[0]<normalWidth+140,"resize starts gradually without jumping to its final width");
+                Check(widths.Zip(widths.Skip(1),(a,b)=>b>=a-1).All(ok=>ok),"resize progresses without reversing direction");
+            }
             Check(c.Window.ActualWidth>=normalWidth&&c.Window.ActualHeight>=normalHeight,"crosshair page expands without shrinking the window");
             var area=System.Windows.Forms.Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(c.Window).Handle).WorkingArea;
             var scale=PresentationSource.FromVisual(c.Window).CompositionTarget.TransformFromDevice;
@@ -40,6 +47,8 @@ static class NativeUiTests {
             Check(c.UI<System.Windows.Controls.Primitives.UniformGrid>("Tiles").Columns==(c.Window.ActualWidth>=1160?8:6),"crosshair columns adapt to available width");
             c.UI<RadioButton>("NavHud").IsChecked=true;Pump(400);
             Check(Math.Abs(c.Window.ActualWidth-normalWidth)<1&&Math.Abs(c.Window.ActualHeight-normalHeight)<1,"returning to HUD restores the normal window size");
+            c.UI<RadioButton>("NavCross").IsChecked=true;Pump(80);c.UI<RadioButton>("NavHud").IsChecked=true;Pump(450);
+            Check(Math.Abs(c.Window.ActualWidth-normalWidth)<1&&Math.Abs(c.Window.ActualHeight-normalHeight)<1,"rapid page switching finishes at the current page size");
             foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackground","NavBackup","NavAbout"}){c.UI<RadioButton>(nav).IsChecked=true;Pump(50);var scroll=(ScrollViewer)c.Window.FindName((string)c.UI<RadioButton>(nav).Tag);Check(scroll.ScrollableHeight<0.5,nav+" fits without unnecessary scrolling at the normal window size");}
             c.UI<RadioButton>("NavHud").IsChecked=true;Pump(50);
 

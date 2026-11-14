@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.16.1 — 2026-11-14
+
+- Fixed jerky window resizing when opening the crosshair page. The window now moves and resizes together without jumping.
+
 ## 1.16.0 — 2026-11-14
 
 - The setup window expands smoothly on the crosshair page to show more choices, then returns to its regular size. It stays within the current screen.
