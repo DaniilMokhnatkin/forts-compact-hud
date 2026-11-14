@@ -61,6 +61,9 @@ namespace FortsSetup {
         public string Page {get;private set;}
         public PackStatus Installed {get;private set;}
         readonly Engine engine;
+        readonly Preferences preferences;
+        bool replacingWindow;
+        public string PreferredPage {get;set;}
         readonly string assets,lang;
         string game,skin="dlc3",cross="cross",color="white",updateRepo,lastPage="HudPage";
         readonly bool noMotion;
@@ -107,7 +110,8 @@ namespace FortsSetup {
             AutomationProperties.SetName(b,group+": "+title);AutomationProperties.SetAutomationId(b,group+"-"+id);
             b.Checked+=(s,e)=>select();parent.Children.Add(b);return b;
         }
-        public WindowController(string packRoot,string gamePath,string language,bool reduced,Options selection=null) {
+        public WindowController(string packRoot,string gamePath,string language,bool reduced,Options selection=null,Preferences preferences=null) {
+            this.preferences=preferences;
             engine=new Engine(packRoot);assets=Path.Combine(packRoot,"app","assets");game=gamePath;lang=language;noMotion=reduced||!SystemParameters.ClientAreaAnimation;
             string strings=Path.Combine(packRoot,"app","en.json");english=File.Exists(strings)?new JavaScriptSerializer().Deserialize<Dictionary<string,string>>(File.ReadAllText(strings)):new Dictionary<string,string>();
             string xaml=String.Join("\n",Directory.GetFiles(Path.Combine(packRoot,"app","xaml"),"*.xaml").OrderBy(p=>p).Select(File.ReadAllText)).Replace("{SPRING}",noMotion?"0:0:0":"0:0:0.32");
@@ -191,15 +195,16 @@ namespace FortsSetup {
             UI<RadioButton>(lang=="en"?"LangEn":"LangRu").IsChecked=true;
             UI<RadioButton>("LangEn").Click+=(s,e)=>SwitchLanguage("en");UI<RadioButton>("LangRu").Click+=(s,e)=>SwitchLanguage("ru");
             Window.KeyDown+=(s,e)=>{if(e.Key==Key.Escape)Window.Close();};
-            Window.Closing+=(s,e)=>{if(busy){e.Cancel=true;Text("WorkText",L("Устанавливаю…"));}};
-            swatches[selection==null?"white":selection.Color].IsChecked=true;
+            Window.Closing+=(s,e)=>{if(busy){e.Cancel=true;Text("WorkText",L("Устанавливаю…"));}else if(!replacingWindow)SavePreferences();};
+            swatches[selection==null?"white":selection.ColorChoice??selection.Color].IsChecked=true;
             if(selection!=null&&selection.Customization!=null){customization=selection.Customization.Clone();customizationChosen=true;}
-            tiles[selection==null?"cross":selection.Crosshair??"cross"].IsChecked=true;
+            string chosenCross=selection==null?"cross":selection.CrosshairChoice??selection.Crosshair??"cross";
+            if(!tiles.ContainsKey(chosenCross))chosenCross="cross";tiles[chosenCross].IsChecked=true;
             UI<Slider>("SizeSlider").Value=selection==null?100:selection.Size;
             layouts[selection==null?"compact":selection.Layout].IsChecked=true;
             UI<RadioButton>("NavHud").IsChecked=true;
             initializing=false;
-            Window.Loaded+=async(s,e)=>{Animate(UI<UIElement>("Shell"),UIElement.OpacityProperty,1,220);Ready=Refresh();await Ready;if(selection!=null){UI<CheckBox>("HudSwitch").IsChecked=selection.Hud;UI<CheckBox>("ClickThroughSwitch").IsChecked=selection.ClickThrough;UI<CheckBox>("CrossSwitch").IsChecked=selection.Crosshair!=null;UI<CheckBox>("IntroSwitch").IsChecked=selection.SkipIntro;foreach(var p in selection.Icons)iconSliders[p.Key].Value=p.Value;UpdateCross();}CheckUpdates();};
+            Window.Loaded+=async(s,e)=>{Animate(UI<UIElement>("Shell"),UIElement.OpacityProperty,1,220);Ready=Refresh();await Ready;if(selection!=null){UI<CheckBox>("HudSwitch").IsChecked=selection.Hud&&UI<CheckBox>("HudSwitch").IsEnabled;skins[selection.Skin].IsChecked=true;UI<CheckBox>("ClickThroughSwitch").IsChecked=selection.ClickThrough;UI<CheckBox>("CrossSwitch").IsChecked=selection.Crosshair!=null;UI<CheckBox>("IntroSwitch").IsChecked=selection.SkipIntro;foreach(var p in selection.Icons)iconSliders[p.Key].Value=p.Value;UpdateCross();}if(PreferredPage!=null)foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackground","NavAbout"})if((string)UI<RadioButton>(nav).Tag==PreferredPage)UI<RadioButton>(nav).IsChecked=true;CheckUpdates();};
         }
         byte[] menuBackground, screensBackground,menuSource,screensSource;
         Int32Rect? menuCrop,screensCrop;
@@ -328,7 +333,7 @@ namespace FortsSetup {
             image.Source=enabled?Tinted(Image("crosshair_"+cross+"_"+size+".png"),Engine.Colors[Engine.PreservesCrosshairColours(cross)?"white":color]):Image("crosshair_vanilla.png");
             Text("AfterLabel",enabled?L(crossNames[cross])+" · "+size+"%":L("Не меняется"));UpdateSummary();
         }
-        public Options Selection() {return new Options{BackgroundLogo=On("BackgroundLogoSwitch"),MenuBackground=menuBackground,ScreensBackground=screensBackground,MenuBackgroundSource=menuSource,ScreensBackgroundSource=screensSource,MenuCrop=SaveCrop(menuCrop),ScreensCrop=SaveCrop(screensCrop),RestoreBackground=On("RestoreBackgroundSwitch"),Hud=On("HudSwitch"),ClickThrough=On("ClickThroughSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=Engine.PreservesCrosshairColours(cross)?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
+        public Options Selection() {return new Options{CrosshairChoice=cross,ColorChoice=color,BackgroundLogo=On("BackgroundLogoSwitch"),MenuBackground=menuBackground,ScreensBackground=screensBackground,MenuBackgroundSource=menuSource,ScreensBackgroundSource=screensSource,MenuCrop=SaveCrop(menuCrop),ScreensCrop=SaveCrop(screensCrop),RestoreBackground=On("RestoreBackgroundSwitch"),Hud=On("HudSwitch"),ClickThrough=On("ClickThroughSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=Engine.PreservesCrosshairColours(cross)?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
         public void ShowPage(string name) {
             Page=name;foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackgroundPage","BackupPage","AboutPage","WorkPage"})Visible(page,page==name);
             if(name!="WorkPage"){
@@ -405,8 +410,10 @@ namespace FortsSetup {
             } catch(Exception e){Visible("Bar",false);Visible("ErrorCircle",true);Visible("ErrorMark",true);Text("WorkTitle",L("Не получилось"));Text("WorkText",L(e.Message));Visible("BackBtn",true);}
             finally {busy=false;UI<RadioButton>("LangRu").IsEnabled=true;UI<RadioButton>("LangEn").IsEnabled=true;Visible("DoneBtn",true);UI<Button>("DoneBtn").Focus();}
         }
-        void SwitchLanguage(string to) {if(lang==to||busy)return;var next=new WindowController(engine.PackRoot,game,to,noMotion,Selection());Application.Current.MainWindow=next.Window;next.Window.Show();Window.Close();}
+        void SavePreferences(string language=null) {if(preferences!=null)preferences.Save(new SavedPreferences{Language=language??lang,GamePath=game,Page=Page=="WorkPage"?lastPage:Page,Selection=Selection()});}
+        void SwitchLanguage(string to) {if(lang==to||busy)return;SavePreferences(to);var next=new WindowController(engine.PackRoot,game,to,noMotion,Selection(),preferences);next.PreferredPage=Page;replacingWindow=true;Application.Current.MainWindow=next.Window;next.Window.Show();Window.Close();}
         public void CompleteSelfUpdate(string file,Action<string> start=null){
+            SavePreferences();
             if(start!=null)start(file);else SelfUpdate.Start(file);
             Window.Close();
         }

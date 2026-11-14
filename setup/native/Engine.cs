@@ -16,6 +16,7 @@ namespace FortsSetup {
         public bool ClickThrough=true;
         public string Layout="compact", Skin="dlc3", Crosshair, Color="white";
         public int Size=100;
+        public string CrosshairChoice,ColorChoice;
         public HudCustomization Customization;
         public bool? SkipIntro;
         public byte[] MenuBackground, ScreensBackground;

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.18.0 — 2026-11-14
+
+- Remember HUD, skin, customization, crosshair, icon opacity, intro, backgrounds,
+  crop frames, language, game folder and last settings page across launches and
+  installer updates. Cache background originals independently of source files.
+- Save preferences before starting the updater. Corrupt profiles and missing
+  images fall back safely. Backup restoration remains an explicit action.
+
 ## 1.17.1 — 2026-11-14
 
 - Compensate for the game's menu background overscan, which stretched even

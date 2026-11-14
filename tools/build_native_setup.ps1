@@ -31,6 +31,10 @@ if ($Test) {
     if ($LASTEXITCODE -ne 0) { throw 'Background tests did not compile' }
     & (Join-Path $build 'BackgroundTests.exe') $root
     if ($LASTEXITCODE -ne 0) { throw 'Background tests failed' }
+    & $csc /nologo /target:exe /main:PreferencesTests "/out:$build\PreferencesTests.exe" @refs @sources (Join-Path $PSScriptRoot 'native\PreferencesTests.cs')
+    if ($LASTEXITCODE -ne 0) { throw 'Preferences tests did not compile' }
+    & (Join-Path $build 'PreferencesTests.exe') $root
+    if ($LASTEXITCODE -ne 0) { throw 'Preferences tests failed' }
     & $csc /nologo /target:exe /main:NativeUiTests "/out:$build\NativeUiTests.exe" @refs @sources (Join-Path $PSScriptRoot 'native\UiTests.cs')
     if ($LASTEXITCODE -ne 0) { throw 'Native UI tests did not compile' }
     & (Join-Path $build 'NativeUiTests.exe') $root

@@ -11,8 +11,8 @@ using System.Linq;
 [assembly:AssemblyTitle("Forts Setup")]
 [assembly:AssemblyProduct("Forts Setup")]
 [assembly:AssemblyDescription("Native HUD and crosshair installer for Forts")]
-[assembly:AssemblyVersion("1.17.1.0")]
-[assembly:AssemblyFileVersion("1.17.1.0")]
+[assembly:AssemblyVersion("1.18.0.0")]
+[assembly:AssemblyFileVersion("1.18.0.0")]
 namespace FortsSetup {
     public static class EmbeddedPack {
         public static string Extract() {
@@ -42,10 +42,21 @@ namespace FortsSetup {
             if(args.Length>0&&args[0]=="--apply-update")return SelfUpdate.Run(args);
             try {
                 var app=new Application{ShutdownMode=ShutdownMode.OnLastWindowClose};
-                string game=Arg(args,"game")??Engine.FindGame();
-                string language=Arg(args,"lang")??Engine.DefaultLanguage(game);if(language!="en")language="ru";
+                var preferences=Preferences.Default();var saved=preferences.Load();
+                string game=Arg(args,"game")??(saved!=null&&Engine.IsGame(saved.GamePath)?saved.GamePath:Engine.FindGame());
+                string language=Arg(args,"lang")??(saved==null?Engine.DefaultLanguage(game):saved.Language);if(language!="en")language="ru";
                 string pack=EmbeddedPack.Extract();
-                var controller=new WindowController(pack,game,language,args.Any(a=>a.TrimStart('-').Equals("NoMotion",StringComparison.OrdinalIgnoreCase)));
+                Options selection=saved==null?null:saved.Selection;
+                // Older versions kept installation receipts but had no selection profile.
+                if(selection==null&&Engine.IsGame(game))try{
+                    var installed=new Engine(pack).Status(game);
+                    if(installed.HudInstalled||installed.Crosshair!=null)selection=new Options{
+                        Hud=installed.HudInstalled,Layout=installed.Layout??"compact",Skin=installed.Skin??"dlc3",
+                        ClickThrough=installed.ClickThrough,Crosshair=installed.Crosshair,Color=installed.Color,
+                        Size=installed.Size,Customization=installed.Customization,Icons=installed.Icons,SkipIntro=installed.SkipIntro};
+                }catch(Exception e){System.Diagnostics.Trace.WriteLine("Read installed preferences: "+e.Message);}
+                var controller=new WindowController(pack,game,language,args.Any(a=>a.TrimStart('-').Equals("NoMotion",StringComparison.OrdinalIgnoreCase)),selection,preferences);
+                controller.PreferredPage=saved==null?null:saved.Page;
                 app.DispatcherUnhandledException+=(s,e)=>{MessageBox.Show(e.Exception.Message,"Forts Setup",MessageBoxButton.OK,MessageBoxImage.Error);e.Handled=true;};
                 return app.Run(controller.Window);
             } catch(Exception e){MessageBox.Show(e.Message,"Forts Setup",MessageBoxButton.OK,MessageBoxImage.Error);return 1;}
