@@ -47,7 +47,7 @@
                 </Grid>
                 <Border Grid.Row="1" Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
                 <!-- soft edges instead of a hard cut through a row of tiles -->
-                <ScrollViewer Grid.Row="2" Style="{StaticResource PageScroll}" MaxHeight="232">
+                <ScrollViewer x:Name="CrossTilesScroll" Grid.Row="2" Style="{StaticResource PageScroll}" MaxHeight="232">
                   <ScrollViewer.OpacityMask>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                       <GradientStop Color="#00000000" Offset="0"/><GradientStop Color="#FF000000" Offset="0.05"/>

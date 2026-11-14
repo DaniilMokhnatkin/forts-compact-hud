@@ -30,10 +30,20 @@ static class NativeUiTests {
             Check(c.Installed.Layout=="zors","fixture really has Zors installed");
             Check(c.Layout=="compact"&&c.Theme.Current=="default","startup stays Compact/neutral even with Zors installed");
             Check(c.Window.OwnedWindows.Count==0,"startup does not open gallery");
+            double normalWidth=c.Window.ActualWidth,normalHeight=c.Window.ActualHeight;
+            c.UI<RadioButton>("NavCross").IsChecked=true;Pump(400);
+            Check(c.Window.ActualWidth>=normalWidth&&c.Window.ActualHeight>=normalHeight,"crosshair page expands without shrinking the window");
+            var area=System.Windows.Forms.Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(c.Window).Handle).WorkingArea;
+            var scale=PresentationSource.FromVisual(c.Window).CompositionTarget.TransformFromDevice;
+            var min=scale.Transform(new Point(area.Left,area.Top));var max=scale.Transform(new Point(area.Right,area.Bottom));
+            Check(c.Window.Left>=min.X&&c.Window.Top>=min.Y&&c.Window.Left+c.Window.ActualWidth<=max.X+1&&c.Window.Top+c.Window.ActualHeight<=max.Y+1,"expanded window stays inside the current monitor work area");
+            Check(c.UI<System.Windows.Controls.Primitives.UniformGrid>("Tiles").Columns==(c.Window.ActualWidth>=1160?8:6),"crosshair columns adapt to available width");
+            c.UI<RadioButton>("NavHud").IsChecked=true;Pump(400);
+            Check(Math.Abs(c.Window.ActualWidth-normalWidth)<1&&Math.Abs(c.Window.ActualHeight-normalHeight)<1,"returning to HUD restores the normal window size");
             foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackground","NavBackup","NavAbout"}){c.UI<RadioButton>(nav).IsChecked=true;Pump(50);var scroll=(ScrollViewer)c.Window.FindName((string)c.UI<RadioButton>(nav).Tag);Check(scroll.ScrollableHeight<0.5,nav+" fits without unnecessary scrolling at the normal window size");}
             c.UI<RadioButton>("NavHud").IsChecked=true;Pump(50);
 
-            c.Window.Height=600;c.UI<RadioButton>("NavCross").IsChecked=true;Pump(100);c.UI<ScrollViewer>("CrossPage").ScrollToEnd();Pump(60);c.Window.UpdateLayout();
+            c.UI<RadioButton>("NavCross").IsChecked=true;Pump(400);c.Window.BeginAnimation(Window.HeightProperty,null);c.Window.Height=600;Pump(100);c.UI<ScrollViewer>("CrossPage").ScrollToEnd();Pump(60);c.Window.UpdateLayout();
             var crossSize=c.UI<Grid>("SizeControls");var footer=c.UI<Border>("FooterRule");
             double controlsBottom=crossSize.TranslatePoint(new Point(0,crossSize.ActualHeight),c.Window).Y;
             double footerTop=footer.TranslatePoint(new Point(0,0),c.Window).Y;
@@ -120,14 +130,15 @@ static class NativeUiTests {
              Check(pick.Name=="Matchroom.Next.v1.2.3.exe"&&pick.HashUrl!=null&&pick.Url.StartsWith("https://github.com/DaniilMokhnatkin/MatchroomNext/releases/download/"),"Matchroom download picks the installer and its checksum from the official repository only");
              Check(Matchroom.ExpectedHash("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef  file.exe")!=null&&Matchroom.ExpectedHash("nonsense")==null,"checksum file is parsed strictly");}
             {string rel="https://github.com/DaniilMokhnatkin/forts-compact-hud/releases/download/v1.7.1/";var own=Matchroom.Pick("{\"tag_name\":\"v1.7.1\",\"assets\":[{\"name\":\"Forts-Setup.zip\",\"browser_download_url\":\""+rel+"Forts-Setup.zip\"},{\"name\":\"Forts.Setup.exe\",\"browser_download_url\":\""+rel+"Forts.Setup.exe\"},{\"name\":\"SHA256SUMS.txt\",\"browser_download_url\":\""+rel+"SHA256SUMS.txt\"}]}","DaniilMokhnatkin/forts-compact-hud");Check(own.Name=="Forts.Setup.exe"&&own.HashUrl!=null,"in-app update picks the installer exe and checksum, not the zip");}
-            c.UI<RadioButton>("NavCross").IsChecked=true;c.UI<Slider>("SizeSlider").Value=75;
+            c.UI<RadioButton>("NavCross").IsChecked=true;Pump(400);c.UI<Slider>("SizeSlider").Value=75;
             Check(c.UI<TextBlock>("SizeValue").Text=="75%","native slider updates preview");
             c.Window.UpdateLayout();var picker=c.UI<Panel>("Tiles");
-            var first=(RadioButton)picker.Children[0];var sixth=(RadioButton)picker.Children[5];
+            int columnCount=c.UI<System.Windows.Controls.Primitives.UniformGrid>("Tiles").Columns;
+            var first=(RadioButton)picker.Children[0];var sixth=(RadioButton)picker.Children[columnCount-1];
             var firstWell=(Border)first.Template.FindName("Well",first);var sixthWell=(Border)sixth.Template.FindName("Well",sixth);
             double leftGap=firstWell.TranslatePoint(new Point(),picker).X;
             double rightGap=picker.ActualWidth-sixthWell.TranslatePoint(new Point(sixthWell.ActualWidth,0),picker).X;
-            Check(Math.Abs(leftGap-rightGap)<1&&rightGap<12,"six crosshair columns fill the panel with balanced side gaps");
+            Check(Math.Abs(leftGap-rightGap)<1&&rightGap<12,"crosshair columns fill the panel with balanced side gaps");
             var newTiles=c.UI<Panel>("Tiles").Children.OfType<RadioButton>().Where(t=>System.Windows.Automation.AutomationProperties.GetAutomationId(t).StartsWith("Crosshair-duo_")||System.Windows.Automation.AutomationProperties.GetAutomationId(t).StartsWith("Crosshair-neo_")).ToArray();
             Check(newTiles.Length==32,"all 32 Duo / Neo crosshairs appear in the picker");
             foreach(var tile in newTiles){

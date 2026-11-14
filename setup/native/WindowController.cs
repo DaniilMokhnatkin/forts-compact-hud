@@ -115,6 +115,7 @@ namespace FortsSetup {
             if(lang=="en")foreach(XmlElement element in xml.SelectNodes("//*"))foreach(XmlAttribute a in element.Attributes)if(english.ContainsKey(a.Value))a.Value=L(a.Value);
             using(var reader=new XmlNodeReader(xml))Window=(Window)XamlReader.Load(reader);
             Window.MaxHeight=Math.Max(600,SystemParameters.WorkArea.Height-32);
+            Window.SizeChanged+=(s,e)=>UpdateCrossLayout();
             // The controller is constructed before Application.Run, which normally installs
             // this context. Early asynchronous gallery loads must also resume on the UI thread.
             if(!(SynchronizationContext.Current is DispatcherSynchronizationContext))
@@ -313,6 +314,7 @@ namespace FortsSetup {
         public Options Selection() {return new Options{BackgroundLogo=On("BackgroundLogoSwitch"),MenuBackground=menuBackground,ScreensBackground=screensBackground,RestoreBackground=On("RestoreBackgroundSwitch"),Hud=On("HudSwitch"),ClickThrough=On("ClickThroughSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=Engine.PreservesCrosshairColours(cross)?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
         public void ShowPage(string name) {
             Page=name;foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackgroundPage","BackupPage","AboutPage","WorkPage"})Visible(page,page==name);
+            if(Window.IsLoaded&&name!="WorkPage")ResizeForPage(name);
             if(name!="WorkPage"){
                 bool backup=name=="BackupPage",about=name=="AboutPage";UI<Button>("InstallBtn").Content=L(name=="HudPage"||name=="CrossPage"?"Далее":"Установить");Visible("InstallBtn",!backup&&!about);Visible("RestoreBtn",backup);UI<Button>("InstallBtn").IsDefault=!backup;UI<Button>("RestoreBtn").IsDefault=backup;UI<TextBlock>("Summary").Opacity=backup||about?0:1;
                 foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackground","NavBackup","NavAbout"}){var item=UI<RadioButton>(nav);if((string)item.Tag==name){Window.UpdateLayout();Animate(UI<TranslateTransform>("NavPillY"),TranslateTransform.YProperty,item.TranslatePoint(new Point(0,0),UI<StackPanel>("Nav")).Y,220);break;}}
@@ -320,6 +322,37 @@ namespace FortsSetup {
             UpdateSummary();UpdateFooterRule();
             // the new page has not been measured yet; check again once layout has run
             Window.Dispatcher.BeginInvoke(DispatcherPriority.Loaded,new Action(UpdateFooterRule));
+        }
+        void UpdateCrossLayout(){
+            var tiles=UI<System.Windows.Controls.Primitives.UniformGrid>("Tiles");
+            var scroll=UI<ScrollViewer>("CrossTilesScroll");
+            if(tiles==null||scroll==null)return;
+            tiles.Columns=Window.ActualWidth>=1160?8:6;
+            scroll.MaxHeight=Math.Max(232,Math.Min(352,Window.ActualHeight-568));
+        }
+        void ResizeForPage(string page){
+            var source=PresentationSource.FromVisual(Window);
+            if(source==null||source.CompositionTarget==null)return;
+            var work=System.Windows.Forms.Screen.FromHandle(new WindowInteropHelper(Window).Handle).WorkingArea;
+            var transform=source.CompositionTarget.TransformFromDevice;
+            var upper=transform.Transform(new Point(work.Left,work.Top));var lower=transform.Transform(new Point(work.Right,work.Bottom));
+            double areaWidth=lower.X-upper.X,areaHeight=lower.Y-upper.Y;
+            double width=Math.Min(page=="CrossPage"?1200:1000,Math.Max(320,areaWidth-32));
+            double height=Math.Min(page=="CrossPage"?900:780,Math.Max(320,areaHeight-32));
+            Window.MaxHeight=Math.Max(320,areaHeight-32);
+            double left=Math.Max(upper.X+16,Math.Min(Window.Left-(width-Window.ActualWidth)/2,lower.X-16-width));
+            double top=Math.Max(upper.Y+16,Math.Min(Window.Top-(height-Window.ActualHeight)/2,lower.Y-16-height));
+            ResizeProperty(Window.WidthProperty,width);ResizeProperty(Window.HeightProperty,height);
+            ResizeProperty(Window.LeftProperty,left);ResizeProperty(Window.TopProperty,top);
+        }
+        void ResizeProperty(DependencyProperty property,double target){
+            double from=(double)Window.GetValue(property);
+            Window.BeginAnimation(property,null);
+            Window.SetValue(property,target);
+            if(!noMotion&&Math.Abs(from-target)>0.5){
+                var animation=new DoubleAnimation(from,target,TimeSpan.FromMilliseconds(260)){EasingFunction=new CubicEase{EasingMode=EasingMode.EaseOut},FillBehavior=FillBehavior.Stop};
+                Window.BeginAnimation(property,animation);
+            }
         }
         // Scroll-edge hairline: separates the footer only while content continues beneath it.
         void UpdateFooterRule() {

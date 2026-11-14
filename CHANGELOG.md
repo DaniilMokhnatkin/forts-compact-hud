@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.16.0 — 2026-11-14
+
+- The setup window expands smoothly on the crosshair page to show more choices, then returns to its regular size. It stays within the current screen.
+
 ## 1.15.2 — 2026-11-14
 
 - Restored the individual headings above the Matchroom Next and Kadr cards.
