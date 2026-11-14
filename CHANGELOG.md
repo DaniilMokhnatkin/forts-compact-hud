@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.15.2 — 2026-11-14
+
+- Restored the individual headings above the Matchroom Next and Kadr cards.
+
 ## 1.15.1 — 2026-11-14
 
 - Restored full Matchroom Next and Kadr descriptions on the developer page.

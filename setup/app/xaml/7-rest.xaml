@@ -18,10 +18,12 @@
                 </StackPanel>
               </Grid>
             </Border>
-            <TextBlock Text="Мои проекты" Style="{StaticResource Section}" Margin="4,18,0,8"/>
-            <Grid>
+            <Grid Margin="0,18,0,0">
               <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="12"/><ColumnDefinition/></Grid.ColumnDefinitions>
-              <Border CornerRadius="12" Background="{DynamicResource Group}">
+              <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+              <TextBlock Text="Ещё для Forts" Style="{StaticResource Section}" Margin="4,0,0,8"/>
+              <TextBlock Grid.Column="2" Text="А ещё у меня есть крутой скриншотер!" Style="{StaticResource Section}" Margin="4,0,0,8"/>
+              <Border Grid.Row="1" CornerRadius="12" Background="{DynamicResource Group}">
                 <StackPanel Margin="16,14">
                   <StackPanel Orientation="Horizontal">
                     <Image x:Name="MatchroomIcon" Width="38" Height="38" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="Matchroom Next"/>
@@ -34,7 +36,7 @@
                   <TextBlock x:Name="MatchroomStatus" Style="{StaticResource StatusNote}"/>
                 </StackPanel>
               </Border>
-              <Border Grid.Column="2" CornerRadius="12" Background="{DynamicResource Group}">
+              <Border Grid.Row="1" Grid.Column="2" CornerRadius="12" Background="{DynamicResource Group}">
                 <StackPanel Margin="16,14">
                   <StackPanel Orientation="Horizontal">
                     <Image x:Name="KadrIcon" Width="38" Height="38" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="Kadr"/>

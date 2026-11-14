@@ -170,7 +170,6 @@ $script:English = @{
     "GitHub ↗" = "GitHub ↗"
     "GitHub разработчика" = "Developer's GitHub"
     "Портрет Starkoff с ошейником и медалью" = "Starkoff portrait with collar and medal"
-    "Мои проекты" = "My projects"
 
 }
 
