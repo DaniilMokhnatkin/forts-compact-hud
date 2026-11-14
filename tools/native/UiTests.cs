@@ -30,6 +30,27 @@ static class NativeUiTests {
             Check(c.Installed.Layout=="zors","fixture really has Zors installed");
             Check(c.Layout=="compact"&&c.Theme.Current=="default","startup stays Compact/neutral even with Zors installed");
             Check(c.Window.OwnedWindows.Count==0,"startup does not open gallery");
+            c.UI<RadioButton>("NavBackground").IsChecked=true;
+            Check(c.UI<StackPanel>("BackgroundPage").Visibility==Visibility.Visible&&!c.UI<Button>("InstallBtn").IsEnabled,"background page starts without a pending operation");
+            var background=BackgroundImage.Encode(Path.Combine(root,@"setup\app\assets\scene.png"));
+            c.SetBackground(false,background,"scene.png");
+            Check(c.UI<Button>("InstallBtn").IsEnabled&&c.Selection().MenuBackground==background&&c.UI<Image>("MenuBackgroundPreview").Source!=null,"selected background enables installation and shows converted preview");
+            Pump(300);Render(c.Window,Path.Combine(root,@"build\native-background.png"));
+            c.SetBackground(true,background,"clean.png");
+            var preserved=new WindowController(Path.Combine(root,"setup"),game,"en",true,c.Selection());
+            preserved.Window.Show();Wait(()=>preserved.Ready!=null&&preserved.Ready.IsCompleted);
+            preserved.UI<RadioButton>("NavBackground").IsChecked=true;
+            Check(preserved.Selection().MenuBackground==background&&preserved.Selection().ScreensBackground==background&&preserved.UI<TextBlock>("MenuBackgroundName").Text=="Selected image","language change preserves both selected images");
+            Pump(50);Render(preserved.Window,Path.Combine(root,@"build\native-background-en.png"));
+            string hudBeforeBackground=Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"));
+            preserved.UI<Button>("InstallBtn").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+            Wait(()=>preserved.UI<Button>("DoneBtn").Visibility==Visibility.Visible);
+            Check(preserved.UI<TextBlock>("WorkTitle").Text=="Done"&&Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"))==hudBeforeBackground&&engine.Status(game).MenuBackground,"background page installs only art even with HUD selected elsewhere");
+            preserved.Window.Close();
+            c.SetBackground(false,null,null);c.SetBackground(true,null,null);
+            Check(!c.UI<Button>("InstallBtn").IsEnabled&&c.UI<Image>("MenuBackgroundPreview").Source==null,"clearing choices leaves installed files unchanged");
+            c.UI<RadioButton>("NavHud").IsChecked=true;
+
             Wait(()=>c.UI<TextBlock>("PhotoCount").Text=="1 / 4");
             var firstPhoto=c.UI<System.Windows.Controls.Border>("HudShot").Background;
             c.UI<Button>("PhotoNext").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));

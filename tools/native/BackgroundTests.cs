@@ -1,0 +1,68 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using FortsSetup;
+
+static class BackgroundTests {
+    static void Check(bool ok,string name){if(!ok)throw new Exception(name);Console.WriteLine("PASS "+name);}
+    static void Reject(Action action,string name){try{action();}catch{Console.WriteLine("PASS "+name);return;}throw new Exception(name);}
+    static string MainRel(string skin){return @"data\ui\textures\menu_backgrounds\"+skin+@"\FE-MainMenu-BG.dds";}
+    [STAThread] static int Main(string[] args){
+        string root=Path.GetFullPath(args[0]),dir=Path.Combine(root,"build","background-test-"+Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try{
+            string png=Path.Combine(dir,"картинка.png");
+            byte[] pixels=Enumerable.Range(0,80*60).SelectMany(i=>new byte[]{30,60,200,255}).ToArray();
+            var image=BitmapSource.Create(80,60,96,96,PixelFormats.Bgra32,null,pixels,80*4);
+            var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(image));using(var file=File.Create(png))encoder.Save(file);
+            var dds=BackgroundImage.Encode(png);
+            Check(BitConverter.ToInt32(dds,16)==1920&&BitConverter.ToInt32(dds,12)==1080&&dds.Length==128+1920*1080*4,"image becomes a 1920x1080 DDS");
+            Check(dds[128]==30&&dds[129]==60&&dds[130]==200&&dds[131]==255,"DDS keeps BGRA colours and opaque alpha");
+            Check(BackgroundImage.Preview(dds).PixelWidth==1920,"preview uses the exact converted texture");
+            foreach(string extension in new[]{"jpg","bmp"}){
+                BitmapEncoder other=extension=="jpg"?(BitmapEncoder)new JpegBitmapEncoder():new BmpBitmapEncoder();
+                other.Frames.Add(BitmapFrame.Create(image));string file=Path.Combine(dir,"source."+extension);using(var output=File.Create(file))other.Save(output);
+                Check(BackgroundImage.Encode(file).Length==dds.Length,extension+" input converts without an external tool");
+            }
+            var translucent=BitmapSource.Create(1,1,96,96,PixelFormats.Bgra32,null,new byte[]{40,80,120,128},4);
+            var transparentEncoder=new PngBitmapEncoder();transparentEncoder.Frames.Add(BitmapFrame.Create(translucent));
+            string alphaFile=Path.Combine(dir,"alpha.png");using(var output=File.Create(alphaFile))transparentEncoder.Save(output);
+            var opaque=BackgroundImage.Encode(alphaFile);
+            Check(opaque[128]==20&&opaque[129]==40&&opaque[130]==60&&opaque[131]==255,"transparent colours are composited on black");
+            string bad=Path.Combine(dir,"bad.png");File.WriteAllText(bad,"invalid");Reject(()=>BackgroundImage.Encode(bad),"invalid image refused");
+            string game=Path.Combine(dir,"game");Directory.CreateDirectory(Path.Combine(game,@"data\ui\screens"));File.WriteAllText(Path.Combine(game,"Forts.exe"),"fixture");
+            foreach(string file in new[]{"hud.lua","transaction.lua"})File.Copy(Path.Combine(root,"original",file),Path.Combine(game,@"data\ui\screens",file));
+            File.Copy(Path.Combine(root,@"original\uisprites.lua"),Path.Combine(game,@"data\ui\uisprites.lua"));
+            foreach(string skin in Engine.MenuSkins){string target=Path.Combine(game,MainRel(skin));Directory.CreateDirectory(Path.GetDirectoryName(target));File.WriteAllText(target,"original "+skin);}
+            var engine=new Engine(Path.Combine(root,"setup"));
+            engine.Install(game,new Options{MenuBackground=dds},null);
+            Check(Engine.MenuSkins.All(skin=>File.ReadAllBytes(Path.Combine(game,MainRel(skin))).SequenceEqual(dds)),"background-only install covers all six regular menu skins");
+            Check(!File.Exists(Path.Combine(game,@"data\ui\textures\menu_backgrounds\base\FE-AllScreens-BG.dds")),"main menu leaves other screens alone");
+            Check(engine.Status(game).MenuBackground,"installed background is detected");
+            engine.Install(game,new Options{MenuBackground=dds,ScreensBackground=dds},null);
+            Check(File.Exists(Path.Combine(game,@"data\ui\textures\menu_backgrounds\dlc3\FE-AllScreens-BG.dds")),"optional clean image covers DLC screens");
+            engine.Install(game,new Options{Hud=true,Layout="zors"},null);
+            Check(Engine.MenuSkins.All(skin=>File.ReadAllBytes(Path.Combine(game,MainRel(skin))).SequenceEqual(dds)),"Zors installation preserves custom menu backgrounds");
+            engine.Install(game,new Options{Hud=true,Layout="compact"},null);
+            Check(File.ReadAllBytes(Path.Combine(game,MainRel("base"))).SequenceEqual(dds),"switching away from Zors preserves custom art");
+            string hudBeforeReset=Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"));
+            string state=Path.Combine(game,Engine.BackupName,"state.json"),before=File.ReadAllText(state);
+            var different=(byte[])dds.Clone();different[128]=100;
+            Reject(()=>engine.Install(game,new Options{MenuBackground=different},(step,total,text)=>{if(step==3)throw new IOException("injected");}),"write failure is surfaced");
+            Check(File.ReadAllText(state)==before&&File.ReadAllBytes(Path.Combine(game,MainRel("base"))).SequenceEqual(dds),"failed background install rolls back texture and state");
+            Reject(()=>engine.Install(game,new Options{MenuBackground=new byte[128]},null),"invalid DDS refused before writes");
+            engine.Install(game,new Options{RestoreBackground=true},null);
+            Check(Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"))==hudBeforeReset,"background reset leaves the installed HUD intact");
+            Check(Engine.MenuSkins.All(skin=>File.ReadAllText(Path.Combine(game,MainRel(skin)))=="original "+skin),"background reset returns originals");
+            Check(!engine.Status(game).MenuBackground&&!File.Exists(Path.Combine(game,@"data\ui\textures\menu_backgrounds\dlc3\FE-AllScreens-BG.dds")),"reset removes newly created textures and status");
+            engine.Install(game,new Options{MenuBackground=dds},null);
+            File.WriteAllText(Path.Combine(game,MainRel("dlc3")),"Steam update");
+            Reject(()=>engine.Install(game,new Options{RestoreBackground=true},null),"reset refuses to overwrite an external update");
+            var skipped=engine.Restore(game,null);
+            Check(skipped.Contains(MainRel("dlc3"))&&File.ReadAllText(Path.Combine(game,MainRel("dlc3")))=="Steam update","global restore preserves updated textures");
+            return 0;
+        }finally{Directory.Delete(dir,true);}
+    }
+}

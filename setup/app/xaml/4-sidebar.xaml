@@ -80,6 +80,14 @@
               <TextBlock x:Name="NavIconsValue" Grid.Column="2" Opacity="0.6" FontSize="12" FontWeight="Normal" VerticalAlignment="Center"/>
             </Grid>
           </RadioButton>
+          <RadioButton x:Name="NavBackground" Style="{StaticResource Nav}" Tag="BackgroundPage" AutomationProperties.Name="Фон меню">
+            <Grid>
+              <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+              <Border Width="22" Height="22" CornerRadius="6" Background="#AF52DE"><TextBlock Text="▧" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+              <TextBlock Grid.Column="1" Text="Фон меню" Margin="10,0,0,0" VerticalAlignment="Center"/>
+              <TextBlock x:Name="NavBackgroundValue" Grid.Column="2" Opacity="0.6" FontSize="12" VerticalAlignment="Center"/>
+            </Grid>
+          </RadioButton>
           <RadioButton x:Name="NavBackup" Style="{StaticResource Nav}" Tag="BackupPage" AutomationProperties.Name="Резервная копия">
             <Grid>
               <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>

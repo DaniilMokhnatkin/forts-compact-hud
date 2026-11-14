@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.12.0 — 2026-11-14
+
+- Added a Menu background page with independent images for the main menu and
+  other screens. PNG, JPG and BMP are centre-cropped to 1920×1080 with an exact
+  preview and converted to DDS inside the installer.
+- Backgrounds work across six regular menu themes, including DLC, independently
+  of HUD installation. Custom images survive HUD changes; saved backgrounds can
+  be restored separately. External changes are protected and write failures roll back.
+
+
 ## 1.11.3 — 2026-11-12
 
 - Fixed the demolition (scrap) icon turning grey when its opacity is lowered.

@@ -128,7 +128,14 @@ namespace FortsSetup {
             foreach(var pair in crossNames){if(!engine.Crosshairs.Contains(pair.Key))continue;string key=pair.Key;var b=Choice(UI<Panel>("Tiles"),"Tile",L(pair.Value),"Crosshair",key,()=>{cross=key;UpdateCross();UpdateSummary();});b.Tag=Image("crosshair_"+key+".png");b.ToolTip=L(pair.Value);tiles[key]=b;}
             foreach(var pair in Engine.Colors){string key=pair.Key;var b=Choice(UI<StackPanel>("Swatches"),"Swatch",null,"Colour",key,()=>{color=key;UpdateCross();});b.Background=(Brush)new BrushConverter().ConvertFrom("#"+pair.Value);b.ToolTip=L(colorNames[key]);AutomationProperties.SetName(b,L("Цвет: ")+L(colorNames[key]));swatches[key]=b;}
             MakeIcons();
-            foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackup","NavAbout"}) {var b=UI<RadioButton>(nav);b.Checked+=(s,e)=>ShowPage((string)b.Tag);}
+            UI<Button>("ChooseMenuBackground").Click+=(s,e)=>ChooseBackground(false);
+            UI<Button>("ChooseScreensBackground").Click+=(s,e)=>ChooseBackground(true);
+            UI<Button>("ClearMenuBackground").Click+=(s,e)=>SetBackground(false,null,null);
+            UI<Button>("ClearScreensBackground").Click+=(s,e)=>SetBackground(true,null,null);
+            UI<CheckBox>("RestoreBackgroundSwitch").Click+=(s,e)=>{if(On("RestoreBackgroundSwitch")){SetBackground(false,null,null);SetBackground(true,null,null);}UpdateSummary();};
+            if(selection!=null){SetBackground(false,selection.MenuBackground,selection.MenuBackground==null?null:L("Выбранное изображение"));SetBackground(true,selection.ScreensBackground,selection.ScreensBackground==null?null:L("Выбранное изображение"));UI<CheckBox>("RestoreBackgroundSwitch").IsChecked=selection.RestoreBackground;}
+            else{SetBackground(false,null,null);SetBackground(true,null,null);}
+            foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackground","NavBackup","NavAbout"}) {var b=UI<RadioButton>(nav);b.Checked+=(s,e)=>ShowPage((string)b.Tag);}
             UI<Slider>("SizeSlider").ValueChanged+=(s,e)=>UpdateCross();
             UI<CheckBox>("HudSwitch").Click+=(s,e)=>UpdateSummary();UI<CheckBox>("CrossSwitch").Click+=(s,e)=>UpdateCross();UI<CheckBox>("IntroSwitch").Click+=(s,e)=>UpdateSummary();
             UI<Button>("IconsReset").Click+=(s,e)=>{foreach(var slider in iconSliders.Values)slider.Value=100;};
@@ -179,6 +186,24 @@ namespace FortsSetup {
             UI<RadioButton>("NavHud").IsChecked=true;
             initializing=false;
             Window.Loaded+=async(s,e)=>{Animate(UI<UIElement>("Shell"),UIElement.OpacityProperty,1,220);Ready=Refresh();await Ready;if(selection!=null){UI<CheckBox>("HudSwitch").IsChecked=selection.Hud;UI<CheckBox>("ClickThroughSwitch").IsChecked=selection.ClickThrough;UI<CheckBox>("CrossSwitch").IsChecked=selection.Crosshair!=null;UI<CheckBox>("IntroSwitch").IsChecked=selection.SkipIntro;foreach(var p in selection.Icons)iconSliders[p.Key].Value=p.Value;UpdateCross();}CheckUpdates();};
+        }
+        byte[] menuBackground, screensBackground;
+        public void SetBackground(bool screens,byte[] data,string name) {
+            var preview=data==null?null:BackgroundImage.Preview(data);
+            if(screens)screensBackground=data;else menuBackground=data;
+            string prefix=screens?"Screens":"Menu";
+            UI<Image>(prefix+"BackgroundPreview").Source=preview;
+            Text(prefix+"BackgroundName",name??L("Без изменений"));
+            UI<TextBlock>(prefix+"BackgroundName").ToolTip=name;
+            UI<Button>("Clear"+prefix+"Background").IsEnabled=data!=null;
+            if(data!=null)UI<CheckBox>("RestoreBackgroundSwitch").IsChecked=false;
+            UpdateSummary();
+        }
+        void ChooseBackground(bool screens) {
+            var dialog=new Microsoft.Win32.OpenFileDialog{Title=L(screens?"Лобби и другие экраны":"Главное меню"),Filter="PNG, JPG, BMP|*.png;*.jpg;*.jpeg;*.bmp",CheckFileExists=true};
+            if(dialog.ShowDialog(Window)!=true)return;
+            try{SetBackground(screens,BackgroundImage.Encode(dialog.FileName),Path.GetFileName(dialog.FileName));Text("BackgroundStatus","");}
+            catch(Exception e){Text("BackgroundStatus",L("Не удалось открыть изображение. ")+L(e.Message));}
         }
         void MakeIcons() {
             foreach(var pair in iconNames){string id=pair.Key;var row=new Grid{Margin=new Thickness(16,6,16,6)};foreach(double width in new[]{40,120,0,46})row.ColumnDefinitions.Add(new ColumnDefinition{Width=width==0?new GridLength(1,GridUnitType.Star):new GridLength(width)});
@@ -257,12 +282,12 @@ namespace FortsSetup {
             image.Source=enabled?Tinted(Image("crosshair_"+cross+"_"+size+".png"),Engine.Colors[Engine.PreservesCrosshairColours(cross)?"white":color]):Image("crosshair_vanilla.png");
             Text("AfterLabel",enabled?L(crossNames[cross])+" · "+size+"%":L("Не меняется"));UpdateSummary();
         }
-        public Options Selection() {return new Options{Hud=On("HudSwitch"),ClickThrough=On("ClickThroughSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=Engine.PreservesCrosshairColours(cross)?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
+        public Options Selection() {return new Options{MenuBackground=menuBackground,ScreensBackground=screensBackground,RestoreBackground=On("RestoreBackgroundSwitch"),Hud=On("HudSwitch"),ClickThrough=On("ClickThroughSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=Engine.PreservesCrosshairColours(cross)?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
         public void ShowPage(string name) {
-            Page=name;foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackupPage","AboutPage","WorkPage"})Visible(page,page==name);
+            Page=name;foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackgroundPage","BackupPage","AboutPage","WorkPage"})Visible(page,page==name);
             if(name!="WorkPage"){
                 bool backup=name=="BackupPage",about=name=="AboutPage";UI<Button>("InstallBtn").Content=L(name=="HudPage"||name=="CrossPage"?"Далее":"Установить");Visible("InstallBtn",!backup&&!about);Visible("RestoreBtn",backup);UI<Button>("InstallBtn").IsDefault=!backup;UI<Button>("RestoreBtn").IsDefault=backup;UI<TextBlock>("Summary").Opacity=backup||about?0:1;
-                foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackup","NavAbout"}){var item=UI<RadioButton>(nav);if((string)item.Tag==name){Window.UpdateLayout();Animate(UI<TranslateTransform>("NavPillY"),TranslateTransform.YProperty,item.TranslatePoint(new Point(0,0),UI<StackPanel>("Nav")).Y,220);break;}}
+                foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackground","NavBackup","NavAbout"}){var item=UI<RadioButton>(nav);if((string)item.Tag==name){Window.UpdateLayout();Animate(UI<TranslateTransform>("NavPillY"),TranslateTransform.YProperty,item.TranslatePoint(new Point(0,0),UI<StackPanel>("Nav")).Y,220);break;}}
             }
             UpdateSummary();
         }
@@ -270,11 +295,15 @@ namespace FortsSetup {
             if(Layout==null||iconSliders.Count!=Engine.IconIds.Length)return;
             var o=Selection();var parts=new List<string>();if(o.Hud)parts.Add("HUD «"+L(layoutNames[Layout])+"»");if(o.Crosshair!=null)parts.Add(L("Прицел")+" «"+L(crossNames[cross])+"» "+o.Size+"%");
             foreach(var p in o.Icons)if(p.Value<100)parts.Add(L(iconNames[p.Key])+" "+p.Value+"%");if(Installed!=null&&o.SkipIntro!=Installed.SkipIntro)parts.Add(L(o.SkipIntro==true?"без заставки":"с заставкой"));
+            if(o.MenuBackground!=null||o.ScreensBackground!=null)parts.Add(L("свой фон"));if(o.RestoreBackground)parts.Add(L("возврат фонов"));
+            if(Page=="BackgroundPage"){parts.Clear();if(o.MenuBackground!=null)parts.Add(L("Главное меню"));if(o.ScreensBackground!=null)parts.Add(L("Лобби и другие экраны"));if(o.RestoreBackground)parts.Add(L("возврат фонов"));}
+            Text("NavBackgroundValue",o.MenuBackground!=null||o.ScreensBackground!=null?L("Выбран"):Installed!=null&&(Installed.MenuBackground||Installed.ScreensBackground)?L("Есть"):"");
             Text("Summary",parts.Count>0?L("Будет установлено: ")+String.Join("; ",parts):L("Ничего не выбрано"));Text("NavHudValue",o.Hud?L(layoutNames[Layout]):L("Выкл."));Text("NavCrossValue",o.Crosshair==null?L("Выкл."):L(crossNames[cross]));Text("NavIconsValue",o.Icons.Count(p=>p.Value<100)>0?o.Icons.Count(p=>p.Value<100)+" изм.":"");
             UI<Button>("CustomizationBtn").ToolTip=(customization.Resources=="corner"?L("Ресурсы справа внизу"):L("Ресурсы по центру"))+(Layout=="tactical"?" · "+customization.Cards+"% · "+CustomizationDialog.ColourLabel(Layout,customization,lang=="en"):"");
             UI<Panel>("Tiles").IsEnabled=o.Crosshair!=null;UI<Grid>("SizeControls").IsEnabled=o.Crosshair!=null;UI<Grid>("ColourControls").IsEnabled=o.Crosshair!=null&&!Engine.PreservesCrosshairColours(cross);UI<StackPanel>("Skins").IsEnabled=o.Hud;
             bool changes=Installed!=null&&(o.Icons.Any(p=>p.Value!=Installed.Icons[p.Key])||o.SkipIntro!=Installed.SkipIntro);
-            UI<Button>("InstallBtn").IsEnabled=!busy&&statusReady&&Engine.IsGame(game)&&(o.Hud||o.Crosshair!=null||changes||Page!="IconsPage");
+            UI<CheckBox>("RestoreBackgroundSwitch").IsEnabled=Installed!=null&&(Installed.MenuBackground||Installed.ScreensBackground);
+            UI<Button>("InstallBtn").IsEnabled=!busy&&statusReady&&Engine.IsGame(game)&&(Page=="BackgroundPage"?(o.MenuBackground!=null||o.ScreensBackground!=null||o.RestoreBackground):(o.Hud||o.Crosshair!=null||changes||Page!="IconsPage"));
         }
         async Task Refresh() {
             int version=++refreshVersion;statusReady=false;UpdateSummary();
@@ -300,7 +329,9 @@ namespace FortsSetup {
             } catch(Exception e){if(version==refreshVersion){Visible("Status",true);Text("Status",e.Message);}}
         }
         async Task RunInstall(bool restore) {
-            if(busy)return;Options options=Selection();lastPage=Page;busy=true;ShowPage("WorkPage");Visible("InstallBtn",false);Visible("RestoreBtn",false);Visible("DoneBtn",false);Visible("BackBtn",false);Visible("Bar",true);Visible("ErrorCircle",false);Visible("ErrorMark",false);
+            if(busy)return;Options options=Selection();
+            if(!restore&&Page=="BackgroundPage")options=new Options{MenuBackground=menuBackground,ScreensBackground=screensBackground,RestoreBackground=On("RestoreBackgroundSwitch")};
+            lastPage=Page;busy=true;ShowPage("WorkPage");Visible("InstallBtn",false);Visible("RestoreBtn",false);Visible("DoneBtn",false);Visible("BackBtn",false);Visible("Bar",true);Visible("ErrorCircle",false);Visible("ErrorMark",false);
             UI<StackPanel>("Nav").IsEnabled=false;UI<Button>("ChangeFolder").IsEnabled=false;UI<RadioButton>("LangRu").IsEnabled=false;UI<RadioButton>("LangEn").IsEnabled=false;
             UI<UIElement>("DoneCircle").BeginAnimation(UIElement.OpacityProperty,null);UI<UIElement>("DoneCircle").Opacity=0;UI<System.Windows.Shapes.Path>("DoneCheck").BeginAnimation(System.Windows.Shapes.Shape.StrokeDashOffsetProperty,null);UI<System.Windows.Shapes.Path>("DoneCheck").StrokeDashOffset=11;
             Text("WorkTitle",L(restore?"Возвращаю оригинал…":"Устанавливаю…"));Text("WorkText",L("Сохраняю оригинальные файлы игры"));UI<Border>("BarFill").Width=0;

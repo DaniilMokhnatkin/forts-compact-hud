@@ -18,11 +18,14 @@ namespace FortsSetup {
         public int Size=100;
         public HudCustomization Customization;
         public bool? SkipIntro;
+        public byte[] MenuBackground, ScreensBackground;
+        public bool RestoreBackground;
         public Dictionary<string,int> Icons=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
     }
     public sealed class PackStatus {
         public bool HudCompatible=true, HudInstalled, HasBackup, SkipIntro;
         public bool ClickThrough=true;
+        public bool MenuBackground, ScreensBackground;
         public string Layout, Skin, Crosshair, Color="white";
         public int Size=100;
         public HudCustomization Customization;
@@ -41,6 +44,11 @@ namespace FortsSetup {
         public const string BackupName="Forts-Setup-Backup", TextureDir=@"data\ui\textures\HUD\custom";
         public static readonly string[] LayoutIds={"compact","zors","minimalist","tactical","grib"}, SkinIds={"dlc3","base","dlc1","dlc2","pro","elite"};
         public static readonly string[] IconIds={"extinguisher","under_construction","repair","scrap"};
+        public static readonly string[] MenuSkins={"base","classic","tog","dlc1","dlc2","dlc3"};
+        public static void ValidateBackground(byte[] data) {
+            if(data==null)return;
+            if(data.Length!=128+1920*1080*4||BitConverter.ToInt32(data,0)!=0x20534444||BitConverter.ToInt32(data,4)!=124||BitConverter.ToInt32(data,12)!=1080||BitConverter.ToInt32(data,16)!=1920||BitConverter.ToInt32(data,80)!=0x41||BitConverter.ToInt32(data,84)!=0||BitConverter.ToInt32(data,88)!=32||BitConverter.ToInt32(data,92)!=0x00FF0000||BitConverter.ToInt32(data,96)!=0x0000FF00||BitConverter.ToInt32(data,100)!=0x000000FF||BitConverter.ToUInt32(data,104)!=0xFF000000)throw new ArgumentException("Некорректная текстура фона.");
+        }
         public static bool CanCustomize(string layout){return layout=="compact"||layout=="tactical"||layout=="zors"||layout=="grib";}
         public static bool PreservesCrosshairColours(string id){return id=="zors"||id=="grib"||(id!=null&&(id.StartsWith("duo_",StringComparison.Ordinal)||id.StartsWith("neo_",StringComparison.Ordinal)));}
         public static bool RequiresDefaultHudSkin(string layout){return layout=="zors"||layout=="grib"||layout=="minimalist"||layout=="tactical";}
@@ -111,6 +119,8 @@ namespace FortsSetup {
         public PackStatus Status(string game) {
             var s=new PackStatus(); if(!IsGame(game)){s.HudCompatible=false;return s;}
             var state=ReadState(game);s.HasBackup=state.Count>0;
+            s.MenuBackground=state.Values.Any(e=>e.owner=="background"&&Path.GetFileName(e.path)=="FE-MainMenu-BG.dds"&&Hash(SafePath(game,e.path))==e.installed);
+            s.ScreensBackground=state.Values.Any(e=>e.owner=="background"&&Path.GetFileName(e.path)=="FE-AllScreens-BG.dds"&&Hash(SafePath(game,e.path))==e.installed);
             string hudNow=Hash(SafePath(game,@"data\ui\screens\hud.lua"));
             foreach(string layout in LayoutIds) if(hudNow!=null && hudNow==Hash(LayoutHud(layout)))s.Layout=layout;
             string profileFile=Path.Combine(game,BackupName,"hud-profile.json");
@@ -167,7 +177,9 @@ namespace FortsSetup {
         }
         public void Install(string game,Options o,Action<int,int,string> progress) {
             CheckGame(game);
-            if(!o.Hud&&o.Crosshair==null&&o.Icons.Count==0&&!o.SkipIntro.HasValue)throw new ArgumentException("Ничего не выбрано");
+            if(!o.Hud&&o.Crosshair==null&&o.Icons.Count==0&&!o.SkipIntro.HasValue&&o.MenuBackground==null&&o.ScreensBackground==null&&!o.RestoreBackground)throw new ArgumentException("Ничего не выбрано");
+            ValidateBackground(o.MenuBackground);ValidateBackground(o.ScreensBackground);
+            if(o.RestoreBackground&&(o.MenuBackground!=null||o.ScreensBackground!=null))throw new ArgumentException("Выбери установку или возврат фона.");
             if(o.Hud&&!LayoutIds.Contains(o.Layout))throw new ArgumentException("Неизвестный HUD.");
             var customization=CanCustomize(o.Layout)&&o.Customization!=null?o.Customization.For(o.Layout):null;
             if(customization!=null)customization.Validate();
@@ -224,7 +236,14 @@ namespace FortsSetup {
             const string configRel=@"data\db\constants_user.lua";string config=SafePath(game,configRel),before=File.Exists(config)?File.ReadAllText(config):"",after=ConfigText(before,cursor,o.SkipIntro);
             if(after!=before)plan[configRel]=new PlannedFile{Rel=configRel,Bytes=new UTF8Encoding(false).GetBytes(after),Owner="config"};
             foreach(var p in plan.Values){SafePath(game,p.Rel);if(p.Bytes==null&&!File.Exists(p.Source))throw new FileNotFoundException("Не хватает файла установщика.",p.Source);}
-            var state=ReadState(game);var reverting=state.Values.Where(e=>((o.Hud&&e.owner=="hud")||(o.Icons.Count>0&&e.owner=="icons"))&&!plan.ContainsKey(e.path)).ToArray();
+            var state=ReadState(game);
+            // A HUD may bundle menu art. Keep explicitly installed player backgrounds.
+            foreach(var e in state.Values.Where(e=>e.owner=="background"))plan.Remove(e.path);
+            foreach(string skin in MenuSkins)foreach(var item in new[]{new {Name="FE-MainMenu-BG.dds",Data=o.MenuBackground},new {Name="FE-AllScreens-BG.dds",Data=o.ScreensBackground}}){
+                if(item.Data!=null){string rel=@"data\ui\textures\menu_backgrounds\"+skin+"\\"+item.Name;plan[rel]=new PlannedFile{Rel=rel,Bytes=item.Data,Owner="background"};}
+            }
+            var reverting=state.Values.Where(e=>((o.Hud&&e.owner=="hud")||(o.Icons.Count>0&&e.owner=="icons")||(o.RestoreBackground&&e.owner=="background"))&&!plan.ContainsKey(e.path)).ToArray();
+            foreach(var e in reverting.Where(e=>e.owner=="background"))if(Hash(SafePath(game,e.path))!=e.installed)throw new IOException("Файл изменился после установки: "+e.path+". Проверь файлы через Steam.");
             string backup=SafePath(game,BackupName);Directory.CreateDirectory(backup);
             var written=new List<KeyValuePair<string,byte[]>>();int step=0,total=plan.Count+reverting.Length+1;
             Action<string,byte[]> write=(path,data)=>{written.Add(new KeyValuePair<string,byte[]>(path,File.Exists(path)?File.ReadAllBytes(path):null));WriteBytes(path,data);};

@@ -1,0 +1,35 @@
+          <StackPanel x:Name="BackgroundPage" Visibility="Collapsed">
+            <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
+            <TextBlock Text="Свой фон Forts" Style="{StaticResource PageTitle}"/>
+            <TextBlock Text="Выбери картинку для главного меню. Для лобби и остальных экранов можно добавить отдельный фон без надписей." Style="{StaticResource PageNote}"/>
+            <Grid Margin="0,20,0,0">
+              <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="16"/><ColumnDefinition/></Grid.ColumnDefinitions>
+              <StackPanel>
+                <TextBlock Text="Главное меню" Style="{StaticResource RowTitle}" Margin="0,0,0,8"/>
+                <Border Height="150" CornerRadius="12" Background="{DynamicResource Group}" ClipToBounds="True">
+                  <Grid><TextBlock Text="Изображение не выбрано" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource SecondaryText}"/><Image x:Name="MenuBackgroundPreview" Stretch="Uniform"/></Grid>
+                </Border>
+                <TextBlock x:Name="MenuBackgroundName" Text="Без изменений" Style="{StaticResource RowNote}" TextTrimming="CharacterEllipsis" Margin="0,8,0,6"/>
+                <StackPanel Orientation="Horizontal">
+                  <Button x:Name="ChooseMenuBackground" Content="Выбрать изображение…" Style="{StaticResource Link}" AutomationProperties.Name="Выбрать фон главного меню"/>
+                  <Button x:Name="ClearMenuBackground" Content="Убрать" Style="{StaticResource Link}" Margin="12,0,0,0" AutomationProperties.Name="Убрать выбранный фон главного меню"/>
+                </StackPanel>
+              </StackPanel>
+              <StackPanel Grid.Column="2">
+                <TextBlock Text="Лобби и другие экраны" Style="{StaticResource RowTitle}" Margin="0,0,0,8"/>
+                <Border Height="150" CornerRadius="12" Background="{DynamicResource Group}" ClipToBounds="True">
+                  <Grid><TextBlock Text="Изображение не выбрано" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource SecondaryText}"/><Image x:Name="ScreensBackgroundPreview" Stretch="Uniform"/></Grid>
+                </Border>
+                <TextBlock x:Name="ScreensBackgroundName" Text="Без изменений" Style="{StaticResource RowNote}" TextTrimming="CharacterEllipsis" Margin="0,8,0,6"/>
+                <StackPanel Orientation="Horizontal">
+                  <Button x:Name="ChooseScreensBackground" Content="Выбрать изображение…" Style="{StaticResource Link}" AutomationProperties.Name="Выбрать фон остальных экранов"/>
+                  <Button x:Name="ClearScreensBackground" Content="Убрать" Style="{StaticResource Link}" Margin="12,0,0,0" AutomationProperties.Name="Убрать выбранный фон остальных экранов"/>
+                </StackPanel>
+              </StackPanel>
+            </Grid>
+            <TextBlock Text="PNG, JPG или BMP · обрезка по центру до 16:9 · 1920×1080. Прозрачные области станут чёрными." Style="{StaticResource PageNote}" Margin="0,16,0,0"/>
+            <TextBlock Text="Применяется к обычным темам меню, включая DLC. Сезонные темы могут показывать свой фон. После установки перезапусти Forts." Style="{StaticResource PageNote}" Margin="0,8,0,0"/>
+            <CheckBox x:Name="RestoreBackgroundSwitch" Content="Вернуть сохранённые фоны" Margin="0,18,0,0" AutomationProperties.Name="Вернуть сохранённые фоны"/>
+            <TextBlock x:Name="BackgroundStatus" Style="{StaticResource PageNote}" Margin="0,10,0,0"/>
+            <TextBlock Text="На этой странице устанавливаются только фоны. HUD, прицел и иконки настраиваются отдельно." Style="{StaticResource PageNote}" Margin="0,8,0,0"/>
+          </StackPanel>
