@@ -2,60 +2,10 @@
 
 ## 1.16.2 — 2026-11-14
 
-- Keep the setup window at a fixed size when switching pages.
-
-## 1.16.1 — 2026-11-14
-
-- Fixed jerky window resizing when opening the crosshair page. The window now moves and resizes together without jumping.
-
-## 1.16.0 — 2026-11-14
-
-- The setup window expands smoothly on the crosshair page to show more choices, then returns to its regular size. It stays within the current screen.
-
-## 1.15.2 — 2026-11-14
-
-- Restored the individual headings above the Matchroom Next and Kadr cards.
-
-## 1.15.1 — 2026-11-14
-
-- Restored full Matchroom Next and Kadr descriptions on the developer page.
-
-## 1.15.0 — 2026-11-14
-
-- Redesigned the developer page with the complete Starkoff portrait and clearer project cards.
-
-## 1.14.2 — 2026-11-14
-
-- Removed unnecessary scrolling on setup pages at the standard window size; smaller windows remain scrollable.
-- Updates now replace the current executable and reopen it automatically. A failed restart restores the previous file.
-
-## 1.14.1 — 2026-11-14
-
-- Refined the background page with grouped image choices and a clearer logo switch.
-- Improved scrolling and spacing across setup pages, including the crosshair picker.
-
-## 1.14.0 — 2026-11-14
-
-- Added Keep the Forts logo, enabled by default for selected backgrounds.
-  The original wordmark appears in the main-menu preview and installed texture;
-  other screens stay clean. Turn it off to use the background without a logo.
-
-## 1.13.0 — 2026-11-14
-
-- Added three bundled background sets: Mountain sunset, Zors.o and Mushroom
-  forest. Select a set without choosing files, or replace either image with
-  your own. Each set fills the main-menu and other-screen previews.
-- Added a scrollable background page for smaller windows.
-
-## 1.12.0 — 2026-11-14
-
-- Added a Menu background page with independent images for the main menu and
-  other screens. PNG, JPG and BMP are centre-cropped to 1920×1080 with an exact
-  preview and converted to DDS inside the installer.
-- Backgrounds work across six regular menu themes, including DLC, independently
-  of HUD installation. Custom images survive HUD changes; saved backgrounds can
-  be restored separately. External changes are protected and write failures roll back.
-
+- Added custom Forts menu backgrounds with three built-in sets, separate main-menu and other-screen images, previews and an optional Forts logo. Existing backgrounds are backed up and can be restored.
+- Refined the setup layout, scrolling, crosshair picker and developer page with the full Starkoff portrait.
+- Updates now replace the current installer and restart it automatically; a failed restart restores the previous executable.
+- The setup window stays at a fixed size when switching pages.
 
 ## 1.11.3 — 2026-11-12
 
