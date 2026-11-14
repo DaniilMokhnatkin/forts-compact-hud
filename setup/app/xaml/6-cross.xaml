@@ -2,7 +2,7 @@
           <!-- crosshair: previews and controls stay put; only the tile grid scrolls, in whatever height is left -->
           <ScrollViewer x:Name="CrossPage" Visibility="Collapsed" Style="{StaticResource PageScroll}">
             <ScrollViewer.RenderTransform><TranslateTransform/></ScrollViewer.RenderTransform>
-          <Grid Margin="32,26,32,20">
+          <Grid Margin="32,26,32,12">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
             <TextBlock Text="Прицел" Style="{StaticResource PageTitle}"/>
             <TextBlock Grid.Row="1" Style="{StaticResource PageNote}" Text="Выбери вариант, цвет и размер. Слева — стандартный прицел игры."/>

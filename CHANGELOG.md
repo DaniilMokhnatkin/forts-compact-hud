@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.14.2 — 2026-11-14
+
+- Removed unnecessary scrolling on setup pages at the standard window size; smaller windows remain scrollable.
+- Updates now replace the current executable and reopen it automatically. A failed restart restores the previous file.
+
 ## 1.14.1 — 2026-11-14
 
 - Refined the background page with grouped image choices and a clearer logo switch.

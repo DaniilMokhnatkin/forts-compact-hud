@@ -164,6 +164,8 @@ $script:English = @{
     "Свои изображения" = "Your images"
     "Не выбрано" = "Not selected"
 
+    "Обновить" = "Update"
+
 }
 
 $script:English['Готово. Запускай Forts.'] = 'Done. Start Forts.'

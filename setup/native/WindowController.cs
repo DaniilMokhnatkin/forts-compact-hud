@@ -130,7 +130,7 @@ namespace FortsSetup {
             MakeIcons();
             foreach(string id in BackgroundImage.PresetIds){
                 string key=id;var content=new StackPanel();
-                var picture=new Border{Height=70,ClipToBounds=true,CornerRadius=new CornerRadius(6),Child=new Image{Source=Bitmap(BackgroundImage.PresetFile(assets,id,false)),Stretch=Stretch.UniformToFill}};
+                var picture=new Border{Height=55,ClipToBounds=true,CornerRadius=new CornerRadius(6),Child=new Image{Source=Bitmap(BackgroundImage.PresetFile(assets,id,false)),Stretch=Stretch.UniformToFill}};
                 content.Children.Add(picture);content.Children.Add(new TextBlock{Text=BackgroundPresetTitle(id),Margin=new Thickness(2,6,2,2),FontWeight=FontWeights.Medium});
                 var button=new Button{Content=content,Tag=id,Style=(Style)UI<Panel>("BackgroundPresets").FindResource("BackgroundPreset")};
                 AutomationProperties.SetName(button,BackgroundPresetTitle(id));AutomationProperties.SetAutomationId(button,"BackgroundPreset-"+id);
@@ -388,9 +388,8 @@ namespace FortsSetup {
             finally {busy=false;UI<RadioButton>("LangRu").IsEnabled=true;UI<RadioButton>("LangEn").IsEnabled=true;Visible("DoneBtn",true);UI<Button>("DoneBtn").Focus();}
         }
         void SwitchLanguage(string to) {if(lang==to||busy)return;var next=new WindowController(engine.PackRoot,game,to,noMotion,Selection());Application.Current.MainWindow=next.Window;next.Window.Show();Window.Close();}
-        public void CompleteSelfUpdate(string file,Action<string> reveal=null){
-            try{if(reveal!=null)reveal(file);else Process.Start("explorer.exe","/select,\""+file+"\"");}
-            catch(Exception e){Trace.WriteLine("Reveal downloaded update: "+e.Message);}
+        public void CompleteSelfUpdate(string file,Action<string> start=null){
+            if(start!=null)start(file);else SelfUpdate.Start(file);
             Window.Close();
         }
         static void OpenUrl(string url) {Process.Start(new ProcessStartInfo(url){UseShellExecute=true});}

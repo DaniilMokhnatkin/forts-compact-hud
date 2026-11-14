@@ -20,8 +20,8 @@
               </Style>
               <!-- 16:9 thumbnail well shared by both image rows -->
               <Style x:Key="BackgroundThumb" TargetType="Border">
-                <Setter Property="Width" Value="160"/>
-                <Setter Property="Height" Value="90"/>
+                <Setter Property="Width" Value="124"/>
+                <Setter Property="Height" Value="70"/>
                 <Setter Property="CornerRadius" Value="8"/>
                 <Setter Property="Background" Value="#E8E8ED"/>
                 <Setter Property="ClipToBounds" Value="True"/>
@@ -29,17 +29,17 @@
               </Style>
             </ScrollViewer.Resources>
             <ScrollViewer.RenderTransform><TranslateTransform/></ScrollViewer.RenderTransform>
-            <StackPanel Margin="32,26,32,24">
+            <StackPanel Margin="32,26,32,16">
             <TextBlock Text="Свой фон Forts" Style="{StaticResource PageTitle}"/>
             <TextBlock Text="Выбери картинку для главного меню. Для лобби и остальных экранов можно добавить отдельный фон без надписей." Style="{StaticResource PageNote}"/>
 
-            <TextBlock Text="Готовые фоны" Style="{StaticResource Section}"/>
+            <TextBlock Text="Готовые фоны" Style="{StaticResource Section}" Margin="4,16,0,8"/>
             <UniformGrid x:Name="BackgroundPresets" Rows="1" Columns="3" Margin="-4,0"/>
 
-            <TextBlock Text="Свои изображения" Style="{StaticResource Section}"/>
+            <TextBlock Text="Свои изображения" Style="{StaticResource Section}" Margin="4,16,0,8"/>
             <Border CornerRadius="12" Background="{DynamicResource Group}">
               <StackPanel>
-                <Grid Margin="12,12,16,12">
+                <Grid Margin="12,8,16,8">
                   <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
                   <Border Style="{StaticResource BackgroundThumb}">
                     <Grid><TextBlock Text="Не выбрано" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource Tertiary}"/><Image x:Name="MenuBackgroundPreview" Stretch="UniformToFill"/></Grid>
@@ -54,7 +54,7 @@
                   </StackPanel>
                 </Grid>
                 <Border Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
-                <Grid Margin="12,12,16,12">
+                <Grid Margin="12,8,16,8">
                   <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
                   <Border Style="{StaticResource BackgroundThumb}">
                     <Grid><TextBlock Text="Не выбрано" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource Tertiary}"/><Image x:Name="ScreensBackgroundPreview" Stretch="UniformToFill"/></Grid>

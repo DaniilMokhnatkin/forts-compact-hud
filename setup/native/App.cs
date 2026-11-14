@@ -11,8 +11,8 @@ using System.Linq;
 [assembly:AssemblyTitle("Forts Setup")]
 [assembly:AssemblyProduct("Forts Setup")]
 [assembly:AssemblyDescription("Native HUD and crosshair installer for Forts")]
-[assembly:AssemblyVersion("1.14.1.0")]
-[assembly:AssemblyFileVersion("1.14.1.0")]
+[assembly:AssemblyVersion("1.14.2.0")]
+[assembly:AssemblyFileVersion("1.14.2.0")]
 namespace FortsSetup {
     public static class EmbeddedPack {
         public static string Extract() {
@@ -39,6 +39,7 @@ namespace FortsSetup {
     public static class Program {
         static string Arg(string[] args,string name) {for(int i=0;i+1<args.Length;i++)if(args[i].TrimStart('-').Equals(name,StringComparison.OrdinalIgnoreCase))return args[i+1];return null;}
         [STAThread] public static int Main(string[] args) {
+            if(args.Length>0&&args[0]=="--apply-update")return SelfUpdate.Run(args);
             try {
                 var app=new Application{ShutdownMode=ShutdownMode.OnLastWindowClose};
                 string game=Arg(args,"game")??Engine.FindGame();

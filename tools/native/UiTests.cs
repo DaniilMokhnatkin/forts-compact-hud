@@ -30,6 +30,9 @@ static class NativeUiTests {
             Check(c.Installed.Layout=="zors","fixture really has Zors installed");
             Check(c.Layout=="compact"&&c.Theme.Current=="default","startup stays Compact/neutral even with Zors installed");
             Check(c.Window.OwnedWindows.Count==0,"startup does not open gallery");
+            foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackground","NavBackup","NavAbout"}){c.UI<RadioButton>(nav).IsChecked=true;Pump(50);var scroll=(ScrollViewer)c.Window.FindName((string)c.UI<RadioButton>(nav).Tag);Check(scroll.ScrollableHeight<0.5,nav+" fits without unnecessary scrolling at the normal window size");}
+            c.UI<RadioButton>("NavHud").IsChecked=true;Pump(50);
+
             c.Window.Height=600;c.UI<RadioButton>("NavCross").IsChecked=true;Pump(100);c.UI<ScrollViewer>("CrossPage").ScrollToEnd();Pump(60);c.Window.UpdateLayout();
             var crossSize=c.UI<Grid>("SizeControls");var footer=c.UI<Border>("FooterRule");
             double controlsBottom=crossSize.TranslatePoint(new Point(0,crossSize.ActualHeight),c.Window).Y;
@@ -220,8 +223,15 @@ static class NativeUiTests {
             Check(HudSkinWarningDialog.Message(false,false,"Firebird").Contains("Firebird")&&HudSkinWarningDialog.Message(false,false,"Firebird").Contains("совпадать"),"Starkoff warning names the selected skin and requires matching the game");
             {var warning=new HudSkinWarningDialog(reduced.Window,false,false,"Firebird");warning.Show();Pump(30);Render(warning,Path.Combine(root,@"build\native-starkoff-skin-warning.png"));warning.Close();}reduced.Window.Close();
             var updater=new WindowController(Path.Combine(root,"setup"),game,"ru",true);updater.Window.Show();Wait(()=>updater.Ready!=null&&updater.Ready.IsCompleted);bool revealed=false;
-            updater.CompleteSelfUpdate("Forts.Setup-1.8.4.exe",file=>{Check(updater.Window.IsVisible&&file=="Forts.Setup-1.8.4.exe","new update is revealed before closing the old installer");revealed=true;});
+            updater.CompleteSelfUpdate("Forts.Setup-1.8.4.exe",file=>{Check(updater.Window.IsVisible&&file=="Forts.Setup-1.8.4.exe","update helper starts before the old installer closes");revealed=true;});
             Check(revealed&&!updater.Window.IsVisible,"old installer closes after a successful update download");
+            string updateDir=Path.Combine(game,"update-test");Directory.CreateDirectory(updateDir);
+            string target=Path.Combine(updateDir,"Forts Setup.exe"),source=Path.Combine(updateDir,"download.exe");
+            File.WriteAllText(target,"old");File.WriteAllText(source,"new");bool started=false;
+            SelfUpdate.Apply(source,target,path=>{Check(path==target&&File.ReadAllText(path)=="new","new installer replaces the current file before launch");started=true;});
+            Check(started&&File.ReadAllText(target)=="new"&&!File.Exists(source),"successful update restarts the replacement and removes its download");
+            File.WriteAllText(source,"next");bool failed=false;try{SelfUpdate.Apply(source,target,path=>{throw new IOException("simulated launch failure");});}catch(IOException){failed=true;}
+            Check(failed&&File.ReadAllText(target)=="new"&&File.ReadAllText(source)=="next","failed restart restores the old executable and keeps the download");
             engine.Restore(game,null);Console.WriteLine(checks+" UI CHECKS PASSED");return 0;
         }catch(Exception e){Console.Error.WriteLine(e);return 1;}
         finally{if(c!=null)c.Window.Close();app.Shutdown();if(game.StartsWith(Path.Combine(root,"build")+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase))Directory.Delete(game,true);}

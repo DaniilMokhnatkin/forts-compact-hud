@@ -9,7 +9,7 @@
           <!-- HUD -->
           <ScrollViewer x:Name="HudPage" Style="{StaticResource PageScroll}">
             <ScrollViewer.RenderTransform><TranslateTransform/></ScrollViewer.RenderTransform>
-            <StackPanel Margin="32,26,32,24">
+            <StackPanel Margin="32,26,32,16">
             <Grid>
               <TextBlock x:Name="HudTitle" Text="HUD" Style="{StaticResource PageTitle}"/>
               <Button x:Name="CustomizationBtn" Content="Настроить HUD" Style="{StaticResource Secondary}" HorizontalAlignment="Right" VerticalAlignment="Center" AutomationProperties.Name="Настроить HUD"/>
