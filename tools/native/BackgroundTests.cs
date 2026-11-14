@@ -9,6 +9,30 @@ static class BackgroundTests {
     static void Check(bool ok,string name){if(!ok)throw new Exception(name);Console.WriteLine("PASS "+name);}
     static void Reject(Action action,string name){try{action();}catch{Console.WriteLine("PASS "+name);return;}throw new Exception(name);}
     static string MainRel(string skin){return @"data\ui\textures\menu_backgrounds\"+skin+@"\FE-MainMenu-BG.dds";}
+    // Replay the game's Background control: x=0, y=-37, size=1067 x 673.90,
+    // clipped to the 1067 x 600 virtual screen. Do not use encoder constants here.
+    static byte[] DisplayPixel(byte[] texture,int x,int y) {
+        int width=BitConverter.ToInt32(texture,16),height=BitConverter.ToInt32(texture,12);
+        int sx=Math.Min(width-1,(int)((x+0.5)/960*width));
+        int sy=Math.Min(height-1,(int)(((y+0.5)/540*600+37)/673.90*height));
+        int offset=128+(sy*width+sx)*4;return texture.Skip(offset).Take(4).ToArray();
+    }
+    static void CheckDisplayedCircle(byte[] texture,string name,bool corners=true) {
+        int left=960,right=-1,top=540,bottom=-1;
+        int width=BitConverter.ToInt32(texture,16),height=BitConverter.ToInt32(texture,12);
+        for(int y=0;y<540;y++)for(int x=0;x<960;x++) {
+            int sx=Math.Min(width-1,(int)((x+0.5)/960*width));
+            int sy=Math.Min(height-1,(int)(((y+0.5)/540*600+37)/673.90*height));
+            int offset=128+(sy*width+sx)*4;
+            if(texture[offset+1]<200||texture[offset]>30||texture[offset+2]>30)continue;
+            left=Math.Min(left,x);right=Math.Max(right,x);top=Math.Min(top,y);bottom=Math.Max(bottom,y);
+        }
+        int w=right-left+1,h=bottom-top+1;
+        Console.WriteLine("Displayed circle "+name+": "+w+" x "+h);
+        Check(right>=left&&Math.Abs(w-h)<=2,name+" keeps a circle round after Forts overscan");
+        Check(Math.Abs((left+right)/2.0-479.5)<=2&&Math.Abs((top+bottom)/2.0-269.5)<=2,name+" centres the complete visible image");
+        if(corners)Check(DisplayPixel(texture,8,8)[2]>200&&DisplayPixel(texture,951,531)[0]>200,name+" retains both opposite image corners on screen");
+    }
     [STAThread] static int Main(string[] args){
         string root=Path.GetFullPath(args[0]),dir=Path.Combine(root,"build","background-test-"+Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
@@ -19,6 +43,7 @@ static class BackgroundTests {
             var image=BitmapSource.Create(80,60,96,96,PixelFormats.Bgra32,null,pixels,80*4);
             var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(image));using(var file=File.Create(png))encoder.Save(file);
             var dds=BackgroundImage.Encode(png);
+            var installedDds=BackgroundTexture.Prepare(dds);
             Check(BitConverter.ToInt32(dds,16)==80&&BitConverter.ToInt32(dds,12)==60&&dds.Length==128+80*60*4,"non-16:9 image retains its dimensions without cropping");
             Check(dds[128]==30&&dds[129]==60&&dds[130]==200&&dds[131]==255,"DDS keeps BGRA colours and opaque alpha");
             Check(dds[dds.Length-4]==230&&dds[dds.Length-3]==120&&dds[dds.Length-2]==10,"image edges are retained");
@@ -52,20 +77,43 @@ static class BackgroundTests {
             foreach(string skin in Engine.MenuSkins){string target=Path.Combine(game,MainRel(skin));Directory.CreateDirectory(Path.GetDirectoryName(target));File.WriteAllText(target,"original "+skin);}
             var engine=new Engine(Path.Combine(root,"setup"));
             engine.Install(game,new Options{MenuBackground=dds},null);
-            Check(Engine.MenuSkins.All(skin=>File.ReadAllBytes(Path.Combine(game,MainRel(skin))).SequenceEqual(dds)),"background-only install covers all six regular menu skins");
+            Check(Engine.MenuSkins.All(skin=>File.ReadAllBytes(Path.Combine(game,MainRel(skin))).SequenceEqual(installedDds)),"background-only install covers all six regular menu skins");
+            Check(DisplayPixel(installedDds,8,270).Take(3).All(c=>c==0)&&DisplayPixel(installedDds,480,8)[2]==200,"full 4:3 image fits the visible screen with side bars");
             Check(!File.Exists(Path.Combine(game,@"data\ui\textures\menu_backgrounds\base\FE-AllScreens-BG.dds")),"main menu leaves other screens alone");
             Check(engine.Status(game).MenuBackground,"installed background is detected");
             engine.Install(game,new Options{MenuBackground=dds,ScreensBackground=dds},null);
             Check(File.Exists(Path.Combine(game,@"data\ui\textures\menu_backgrounds\dlc3\FE-AllScreens-BG.dds")),"optional clean image covers DLC screens");
+            var circle=new byte[128+160*90*4];Buffer.BlockCopy(dds,0,circle,0,128);
+            Buffer.BlockCopy(BitConverter.GetBytes(90),0,circle,12,4);Buffer.BlockCopy(BitConverter.GetBytes(160),0,circle,16,4);Buffer.BlockCopy(BitConverter.GetBytes(640),0,circle,20,4);
+            for(int y=0;y<90;y++)for(int x=0;x<160;x++){
+                int offset=128+(y*160+x)*4;circle[offset+3]=255;
+                if((x-79.5)*(x-79.5)+(y-44.5)*(y-44.5)<400)circle[offset+1]=255;
+                if(x<8&&y<8)circle[offset+2]=255;
+                if(x>=152&&y>=82)circle[offset]=255;
+            }
+            var originalCircle=(byte[])circle.Clone();
+            engine.Install(game,new Options{MenuBackground=circle,ScreensBackground=circle},null);
+            CheckDisplayedCircle(File.ReadAllBytes(Path.Combine(game,MainRel("base"))),"main menu 16:9");
+            CheckDisplayedCircle(File.ReadAllBytes(Path.Combine(game,@"data\ui\textures\menu_backgrounds\base\FE-AllScreens-BG.dds")),"other screens 16:9");
+            var croppedCircle=BackgroundImage.Crop(circle,BackgroundImage.CropFrame(160,90,160.0/96,0.5,0.5));
+            engine.Install(game,new Options{MenuBackground=croppedCircle},null);
+            CheckDisplayedCircle(File.ReadAllBytes(Path.Combine(game,MainRel("base"))),"cropped image",false);
+            var portrait=BackgroundImage.Crop(circle,new System.Windows.Int32Rect(50,0,60,90));
+            engine.Install(game,new Options{MenuBackground=portrait},null);
+            var portraitTexture=File.ReadAllBytes(Path.Combine(game,MainRel("base")));
+            CheckDisplayedCircle(portraitTexture,"portrait image",false);
+            Check(DisplayPixel(portraitTexture,8,270).Take(3).All(c=>c==0)&&DisplayPixel(portraitTexture,951,270).Take(3).All(c=>c==0),"portrait image keeps side bars instead of stretching");
+            Check(circle.SequenceEqual(originalCircle),"installation keeps the original editing pixels intact");
+            engine.Install(game,new Options{MenuBackground=dds,ScreensBackground=dds},null);
             engine.Install(game,new Options{Hud=true,Layout="zors"},null);
-            Check(Engine.MenuSkins.All(skin=>File.ReadAllBytes(Path.Combine(game,MainRel(skin))).SequenceEqual(dds)),"Zors installation preserves custom menu backgrounds");
+            Check(Engine.MenuSkins.All(skin=>File.ReadAllBytes(Path.Combine(game,MainRel(skin))).SequenceEqual(installedDds)),"Zors installation preserves custom menu backgrounds");
             engine.Install(game,new Options{Hud=true,Layout="compact"},null);
-            Check(File.ReadAllBytes(Path.Combine(game,MainRel("base"))).SequenceEqual(dds),"switching away from Zors preserves custom art");
+            Check(File.ReadAllBytes(Path.Combine(game,MainRel("base"))).SequenceEqual(installedDds),"switching away from Zors preserves custom art");
             string hudBeforeReset=Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"));
             string state=Path.Combine(game,Engine.BackupName,"state.json"),before=File.ReadAllText(state);
             var different=(byte[])dds.Clone();different[128]=100;
             Reject(()=>engine.Install(game,new Options{MenuBackground=different},(step,total,text)=>{if(step==3)throw new IOException("injected");}),"write failure is surfaced");
-            Check(File.ReadAllText(state)==before&&File.ReadAllBytes(Path.Combine(game,MainRel("base"))).SequenceEqual(dds),"failed background install rolls back texture and state");
+            Check(File.ReadAllText(state)==before&&File.ReadAllBytes(Path.Combine(game,MainRel("base"))).SequenceEqual(installedDds),"failed background install rolls back texture and state");
             Reject(()=>engine.Install(game,new Options{MenuBackground=new byte[128]},null),"invalid DDS refused before writes");
             engine.Install(game,new Options{RestoreBackground=true},null);
             Check(Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"))==hudBeforeReset,"background reset leaves the installed HUD intact");

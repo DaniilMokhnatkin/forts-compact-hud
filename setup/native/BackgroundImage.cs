@@ -5,7 +5,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace FortsSetup {
-    // Decode once when selected: the preview and installation share the same bytes.
+    // Decode once when selected; retain these pixels for preview and reversible cropping.
+    // BackgroundTexture prepares the game's padded canvas at installation time.
     public static class BackgroundImage {
         public const int MaxDimension=2048;
         public static readonly string[] PresetIds={"sunset","zors","grib"};

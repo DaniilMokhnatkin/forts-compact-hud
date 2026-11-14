@@ -23,11 +23,11 @@ if ($Test) {
     if ($LASTEXITCODE -ne 0) { throw 'Native download tests did not compile' }
     & (Join-Path $build 'NativeDownloadTests.exe') $root
     if ($LASTEXITCODE -ne 0) { throw 'Native download tests failed' }
-    & $csc /nologo /target:exe "/out:$build\NativeEngineTests.exe" /r:System.Web.Extensions.dll (Join-Path $PSScriptRoot 'native\EngineTests.cs') (Join-Path $native 'Engine.cs') (Join-Path $native 'Customization.cs')
+    & $csc /nologo /target:exe "/out:$build\NativeEngineTests.exe" /r:System.Web.Extensions.dll (Join-Path $PSScriptRoot 'native\EngineTests.cs') (Join-Path $native 'Engine.cs') (Join-Path $native 'BackgroundTexture.cs') (Join-Path $native 'Customization.cs')
     if ($LASTEXITCODE -ne 0) { throw 'Native engine tests did not compile' }
     & (Join-Path $build 'NativeEngineTests.exe') $root
     if ($LASTEXITCODE -ne 0) { throw 'Native engine tests failed' }
-    & $csc /nologo /target:exe "/out:$build\BackgroundTests.exe" @refs (Join-Path $PSScriptRoot 'native\BackgroundTests.cs') (Join-Path $native 'Engine.cs') (Join-Path $native 'Customization.cs') (Join-Path $native 'BackgroundImage.cs')
+    & $csc /nologo /target:exe "/out:$build\BackgroundTests.exe" @refs (Join-Path $PSScriptRoot 'native\BackgroundTests.cs') (Join-Path $native 'Engine.cs') (Join-Path $native 'BackgroundTexture.cs') (Join-Path $native 'Customization.cs') (Join-Path $native 'BackgroundImage.cs')
     if ($LASTEXITCODE -ne 0) { throw 'Background tests did not compile' }
     & (Join-Path $build 'BackgroundTests.exe') $root
     if ($LASTEXITCODE -ne 0) { throw 'Background tests failed' }

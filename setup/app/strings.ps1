@@ -207,6 +207,8 @@ $script:English['• Для грибных вкладок и командира 
 $script:English['Прицел можно выбрать отдельно. В галерее — скриншот из игры.'] = 'Select the cursor independently. The gallery shows a gameplay screenshot.'
 $script:English['В игре'] = 'Gameplay'
 
+$script:English['PNG, JPG или BMP · без растягивания и потери краёв. Прозрачные области станут чёрными.'] = 'PNG, JPG or BMP · no stretching or lost edges. Transparent areas become black.'
+
 function Lower-First([string]$s) { $s.Substring(0, 1).ToLower() + $s.Substring(1) }
 
 function L([string]$s) {

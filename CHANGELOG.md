@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.17.1 — 2026-11-14
+
+- Compensate for the game's menu background overscan, which stretched even
+  16:9 images vertically and clipped their edges. Main-menu and other-screen
+  textures now fit the full selected image into the visible area; other aspect
+  ratios use black bars. Cropping and the optional logo are applied beforehand.
+- Added a regression that replays the game's background rectangle and checks
+  circles, image corners, cropped images and portrait images.
+- Reinstall the selected backgrounds with this version to update existing files.
+
 ## 1.17.0 — 2026-11-14
 
 - Added an optional background crop editor with zoom, drag and position controls. The full image can be restored at any time.

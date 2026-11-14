@@ -100,7 +100,7 @@ static class NativeUiTests {
             preserved.UI<Button>("InstallBtn").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
             Wait(()=>preserved.UI<Button>("DoneBtn").Visibility==Visibility.Visible);
             Check(preserved.UI<TextBlock>("WorkTitle").Text=="Done"&&Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"))==hudBeforeBackground&&engine.Status(game).MenuBackground,"background page installs only art even with HUD selected elsewhere");
-            Check(File.ReadAllBytes(Path.Combine(game,@"data\ui\textures\menu_backgrounds\base\FE-MainMenu-BG.dds")).SequenceEqual(BackgroundImage.AddLogo(background,Path.Combine(root,@"setup\payload\backgrounds\forts-logo.png")))&&File.ReadAllBytes(Path.Combine(game,@"data\ui\textures\menu_backgrounds\base\FE-AllScreens-BG.dds")).SequenceEqual(background),"installed main menu matches the logo preview while other screens stay clean");
+            Check(File.ReadAllBytes(Path.Combine(game,@"data\ui\textures\menu_backgrounds\base\FE-MainMenu-BG.dds")).SequenceEqual(BackgroundTexture.Prepare(BackgroundImage.AddLogo(background,Path.Combine(root,@"setup\payload\backgrounds\forts-logo.png"))))&&File.ReadAllBytes(Path.Combine(game,@"data\ui\textures\menu_backgrounds\base\FE-AllScreens-BG.dds")).SequenceEqual(BackgroundTexture.Prepare(background)),"installed backgrounds compensate Forts overscan after logo composition");
             preserved.Window.Close();
             c.SetBackground(false,null,null);c.SetBackground(true,null,null);
             Check(!c.UI<Button>("InstallBtn").IsEnabled&&c.UI<Image>("MenuBackgroundPreview").Source==null,"clearing choices leaves installed files unchanged");

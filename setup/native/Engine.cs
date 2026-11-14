@@ -192,6 +192,7 @@ namespace FortsSetup {
             if(!SkinIds.Contains(o.Skin)||!Colors.ContainsKey(o.Color)||o.Size<50||o.Size>200||o.Size%5!=0)throw new ArgumentException("Недопустимые настройки прицела или скина.");
             if(o.Icons.Any(p=>!IconIds.Contains(p.Key)||p.Value<10||p.Value>100))throw new ArgumentException("Прозрачность иконок: от 10 до 100%.");
             if(o.Crosshair!=null&&!Crosshairs.Contains(o.Crosshair))throw new ArgumentException("Неизвестный прицел.");
+            byte[] menuTexture=BackgroundTexture.Prepare(o.MenuBackground),screensTexture=BackgroundTexture.Prepare(o.ScreensBackground);
             string crossColor=PreservesCrosshairColours(o.Crosshair)?"white":o.Color;
             var plan=new Dictionary<string,PlannedFile>(StringComparer.OrdinalIgnoreCase);
             Action<string,string,string> add=(rel,source,owner)=>plan[rel]=new PlannedFile{Rel=rel,Source=source,Owner=owner};
@@ -245,7 +246,7 @@ namespace FortsSetup {
             var state=ReadState(game);
             // A HUD may bundle menu art. Keep explicitly installed player backgrounds.
             foreach(var e in state.Values.Where(e=>e.owner=="background"))plan.Remove(e.path);
-            foreach(string skin in MenuSkins)foreach(var item in new[]{new {Name="FE-MainMenu-BG.dds",Data=o.MenuBackground},new {Name="FE-AllScreens-BG.dds",Data=o.ScreensBackground}}){
+            foreach(string skin in MenuSkins)foreach(var item in new[]{new {Name="FE-MainMenu-BG.dds",Data=menuTexture},new {Name="FE-AllScreens-BG.dds",Data=screensTexture}}){
                 if(item.Data!=null){string rel=@"data\ui\textures\menu_backgrounds\"+skin+"\\"+item.Name;plan[rel]=new PlannedFile{Rel=rel,Bytes=item.Data,Owner="background"};}
             }
             var reverting=state.Values.Where(e=>((o.Hud&&e.owner=="hud")||(o.Icons.Count>0&&e.owner=="icons")||(o.RestoreBackground&&e.owner=="background"))&&!plan.ContainsKey(e.path)).ToArray();

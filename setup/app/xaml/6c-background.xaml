@@ -23,7 +23,7 @@
                 <Setter Property="Width" Value="124"/>
                 <Setter Property="Height" Value="70"/>
                 <Setter Property="CornerRadius" Value="8"/>
-                <Setter Property="Background" Value="#E8E8ED"/>
+                <Setter Property="Background" Value="Black"/>
                 <Setter Property="ClipToBounds" Value="True"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
               </Style>
@@ -81,7 +81,7 @@
               </StackPanel>
             </Border>
             <TextBlock x:Name="BackgroundStatus" Style="{StaticResource StatusNote}" Foreground="{StaticResource Danger}" Margin="4,8,4,0"/>
-            <TextBlock Text="PNG, JPG или BMP · изображение сохраняется целиком. Прозрачные области станут чёрными." Style="{StaticResource Footnote}"/>
+            <TextBlock Text="PNG, JPG или BMP · без растягивания и потери краёв. Прозрачные области станут чёрными." Style="{StaticResource Footnote}"/>
             <TextBlock Text="Применяется к обычным темам меню, включая DLC. Сезонные темы могут показывать свой фон. После установки перезапусти Forts." Style="{StaticResource Footnote}" Margin="4,4,4,0"/>
 
             <Border CornerRadius="12" Background="{DynamicResource Group}" Margin="0,20,0,0">
