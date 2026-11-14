@@ -1,8 +1,9 @@
 # Build-time tooling only. The shipped executable contains C# + XAML/assets/payload,
 # and never starts PowerShell or another script interpreter.
-param([switch]$Test)
+param([switch]$Test, [string]$OutputName = 'Forts Setup.exe')
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
+if ([IO.Path]::GetFileName($OutputName) -ne $OutputName -or -not $OutputName.EndsWith('.exe',[StringComparison]::OrdinalIgnoreCase)) { throw 'OutputName must be a simple executable filename.' }
 $native=Join-Path $root 'setup\native'
 $build=Join-Path $root 'build'
 $framework=Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319'
@@ -45,7 +46,7 @@ try {
     # Archive destination must be outside its source tree.
     $archive=Join-Path $build ('native-pack-'+[guid]::NewGuid().ToString('N')+'.zip')
     [IO.Compression.ZipFile]::CreateFromDirectory($stage,$archive)
-    $exe=Join-Path $root 'dist\Forts Setup.exe'
+    $exe=Join-Path (Join-Path $root 'dist') $OutputName
     $icon=Join-Path $build 'forts-setup.ico'
     $options=@('/nologo','/target:winexe','/optimize+',"/out:$exe","/win32manifest:$native\app.manifest","/resource:$archive,pack.zip")
     if(Test-Path -LiteralPath $icon){$options+="/win32icon:$icon"}

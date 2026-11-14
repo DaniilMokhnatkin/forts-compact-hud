@@ -4,63 +4,49 @@
             <ScrollViewer.RenderTransform><TranslateTransform/></ScrollViewer.RenderTransform>
             <StackPanel Margin="32,26,32,24">
             <TextBlock Text="О разработчике" Style="{StaticResource PageTitle}"/>
-            <TextBlock Style="{StaticResource PageNote}" Text="Forts Setup делаю я. Установщик бесплатный и без модов."/>
-            <Border CornerRadius="12" Background="{DynamicResource Group}" Margin="0,18,0,0">
-              <Grid Margin="16,14">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <Grid Width="46" Height="46">
-                  <Image x:Name="AuthorAvatar" Width="46" Height="46" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="Даниил">
-                    <Image.Clip><EllipseGeometry Center="23,23" RadiusX="23" RadiusY="23"/></Image.Clip>
-                  </Image>
-                  <Ellipse Width="46" Height="46" Stroke="#1F000000" StrokeThickness="0.5"/>
-                </Grid>
-                <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
-                  <TextBlock Text="Даниил · Starkoff" FontFamily="{StaticResource Display}" FontSize="16" FontWeight="SemiBold"/>
-                  <TextBlock Text="Автор Forts Setup и компактного HUD Starkoff" Foreground="{StaticResource SecondaryText}" FontSize="12"/>
+            <Border CornerRadius="16" Background="#FFF6ED" Margin="0,16,0,0" ClipToBounds="True">
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="272"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                <Image x:Name="AuthorAvatar" Width="272" Height="272" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="Портрет Starkoff с ошейником и медалью"/>
+                <StackPanel Grid.Column="1" Margin="26,20,20,20" VerticalAlignment="Center">
+                  <TextBlock Text="ПРИВЕТ, Я" FontSize="11" FontWeight="SemiBold" Foreground="#A6644F"/>
+                  <TextBlock Text="Starkoff" FontFamily="{StaticResource Display}" FontSize="32" FontWeight="Bold" Foreground="#3A2523" Margin="0,6,0,0"/>
+                  <TextBlock Text="Даниил" FontSize="15" FontWeight="Medium" Foreground="#73514B" Margin="1,0,0,12"/>
+                  <TextBlock Text="Автор Forts Setup и компактного HUD Starkoff" FontSize="13" Foreground="#73514B" TextWrapping="Wrap"/>
+                  <Button x:Name="AuthorLink" Style="{StaticResource Link}" Content="GitHub ↗" HorizontalAlignment="Left" Margin="0,16,0,0" AutomationProperties.Name="GitHub разработчика"/>
                 </StackPanel>
-                <Button x:Name="AuthorLink" Grid.Column="2" Style="{StaticResource Link}" Content="GitHub" VerticalAlignment="Center"/>
               </Grid>
             </Border>
-            <TextBlock Text="Ещё для Forts" Style="{StaticResource Section}"/>
-            <Border CornerRadius="12" Background="{DynamicResource Group}">
-              <StackPanel Margin="16,14">
-                <Grid>
-                  <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
-                  <Image x:Name="MatchroomIcon" Width="46" Height="46" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="Matchroom Next"/>
-                  <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
-                    <TextBlock Text="Matchroom Next" FontFamily="{StaticResource Display}" FontSize="16" FontWeight="SemiBold"/>
-                    <TextBlock Text="Программа для Forts: история матчей и рейтинг 1v1 по реплеям, твоя эффективность в каждом матче, аватарки и ники Steam, радар сильных игроков." Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap"/>
+            <TextBlock Text="Мои проекты" Style="{StaticResource Section}" Margin="4,18,0,8"/>
+            <Grid>
+              <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="12"/><ColumnDefinition/></Grid.ColumnDefinitions>
+              <Border CornerRadius="12" Background="{DynamicResource Group}">
+                <StackPanel Margin="16,14">
+                  <StackPanel Orientation="Horizontal">
+                    <Image x:Name="MatchroomIcon" Width="38" Height="38" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="Matchroom Next"/>
+                    <TextBlock Text="Matchroom Next" FontFamily="{StaticResource Display}" FontSize="16" FontWeight="SemiBold" Margin="12,0,0,0" VerticalAlignment="Center"/>
                   </StackPanel>
-                </Grid>
-                <Border Height="1" Background="{DynamicResource Separator}" Margin="0,14,0,12"/>
-                <StackPanel Orientation="Horizontal">
-                  <Button x:Name="MatchroomDownload" Style="{StaticResource Primary}" Content="Скачать последнюю версию"/>
-                  <Button x:Name="MatchroomPage" Style="{StaticResource Link}" Content="Страница на GitHub" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                  <TextBlock Text="История матчей Forts, рейтинг и анализ реплеев." Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap" Margin="0,12,0,0" MinHeight="34"/>
+                  <Button x:Name="MatchroomDownload" Style="{StaticResource Primary}" Content="Скачать последнюю версию" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+                  <Button x:Name="MatchroomPage" Style="{StaticResource Link}" Content="Страница на GitHub" HorizontalAlignment="Left" Margin="0,10,0,0"/>
+                  <ProgressBar x:Name="MatchroomProgress" Height="4" Minimum="0" Maximum="100" Margin="0,12,0,0" Visibility="Collapsed"/>
+                  <TextBlock x:Name="MatchroomStatus" Style="{StaticResource StatusNote}"/>
                 </StackPanel>
-                <ProgressBar x:Name="MatchroomProgress" Height="4" Minimum="0" Maximum="100" Margin="0,12,0,0" Visibility="Collapsed"/>
-                <TextBlock x:Name="MatchroomStatus" Style="{StaticResource StatusNote}"/>
-              </StackPanel>
-            </Border>
-            <TextBlock Text="А ещё у меня есть крутой скриншотер!" Style="{StaticResource Section}"/>
-            <Border CornerRadius="12" Background="{DynamicResource Group}">
-              <StackPanel Margin="16,14">
-                <Grid>
-                  <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
-                  <Image x:Name="KadrIcon" Width="46" Height="46" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="Kadr"/>
-                  <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
-                    <TextBlock Text="Kadr" FontFamily="{StaticResource Display}" FontSize="16" FontWeight="SemiBold"/>
-                    <TextBlock Text="Очень быстрый скриншотер на Rust: запись экрана, мгновенный перевод текста на экране, блюр важных данных. Помнит 25 последних снимков и 50 скопированных текстов, вызов по Win+V." Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap"/>
+              </Border>
+              <Border Grid.Column="2" CornerRadius="12" Background="{DynamicResource Group}">
+                <StackPanel Margin="16,14">
+                  <StackPanel Orientation="Horizontal">
+                    <Image x:Name="KadrIcon" Width="38" Height="38" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="Kadr"/>
+                    <TextBlock Text="Kadr" FontFamily="{StaticResource Display}" FontSize="16" FontWeight="SemiBold" Margin="12,0,0,0" VerticalAlignment="Center"/>
                   </StackPanel>
-                </Grid>
-                <Border Height="1" Background="{DynamicResource Separator}" Margin="0,14,0,12"/>
-                <StackPanel Orientation="Horizontal">
-                  <Button x:Name="KadrDownload" Style="{StaticResource Primary}" Content="Скачать Kadr"/>
-                  <Button x:Name="KadrPage" Style="{StaticResource Link}" Content="Страница на GitHub" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                  <TextBlock Text="Снимки экрана, запись и перевод текста." Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap" Margin="0,12,0,0" MinHeight="34"/>
+                  <Button x:Name="KadrDownload" Style="{StaticResource Primary}" Content="Скачать Kadr" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+                  <Button x:Name="KadrPage" Style="{StaticResource Link}" Content="Страница на GitHub" HorizontalAlignment="Left" Margin="0,10,0,0"/>
+                  <ProgressBar x:Name="KadrProgress" Height="4" Minimum="0" Maximum="100" Margin="0,12,0,0" Visibility="Collapsed"/>
+                  <TextBlock x:Name="KadrStatus" Style="{StaticResource StatusNote}"/>
                 </StackPanel>
-                <ProgressBar x:Name="KadrProgress" Height="4" Minimum="0" Maximum="100" Margin="0,12,0,0" Visibility="Collapsed"/>
-                <TextBlock x:Name="KadrStatus" Style="{StaticResource StatusNote}"/>
-              </StackPanel>
-            </Border>
+              </Border>
+            </Grid>
             </StackPanel>
           </ScrollViewer>
 

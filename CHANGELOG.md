@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.15.0 — 2026-11-14
+
+- Redesigned the developer page with the complete Starkoff portrait and clearer project cards.
+
 ## 1.14.2 — 2026-11-14
 
 - Removed unnecessary scrolling on setup pages at the standard window size; smaller windows remain scrollable.
