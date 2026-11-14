@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.15.1 — 2026-11-14
+
+- Restored full Matchroom Next and Kadr descriptions on the developer page.
+
 ## 1.15.0 — 2026-11-14
 
 - Redesigned the developer page with the complete Starkoff portrait and clearer project cards.

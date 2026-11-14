@@ -166,14 +166,11 @@ $script:English = @{
 
     "Обновить" = "Update"
 
-    "ПРИВЕТ, Я" = "HELLO, I'M"
     "Даниил" = "Daniil"
     "GitHub ↗" = "GitHub ↗"
     "GitHub разработчика" = "Developer's GitHub"
     "Портрет Starkoff с ошейником и медалью" = "Starkoff portrait with collar and medal"
     "Мои проекты" = "My projects"
-    "История матчей Forts, рейтинг и анализ реплеев." = "Forts match history, ratings and replay analysis."
-    "Снимки экрана, запись и перевод текста." = "Screenshots, recording and text translation."
 
 }
 
