@@ -31,7 +31,17 @@ static class NativeUiTests {
             Check(c.Layout=="compact"&&c.Theme.Current=="default","startup stays Compact/neutral even with Zors installed");
             Check(c.Window.OwnedWindows.Count==0,"startup does not open gallery");
             c.UI<RadioButton>("NavBackground").IsChecked=true;
-            Check(c.UI<StackPanel>("BackgroundPage").Visibility==Visibility.Visible&&!c.UI<Button>("InstallBtn").IsEnabled,"background page starts without a pending operation");
+            Check(c.UI<ScrollViewer>("BackgroundPage").Visibility==Visibility.Visible&&!c.UI<Button>("InstallBtn").IsEnabled,"background page starts without a pending operation");
+            Check(c.UI<Panel>("BackgroundPresets").Children.Count==3,"three built-in background sets are available");
+            foreach(string id in BackgroundImage.PresetIds){
+                c.UI<Panel>("BackgroundPresets").Children.OfType<Button>().Single(button=>(string)button.Tag==id).RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));var choice=c.Selection();
+                Check(choice.MenuBackground.SequenceEqual(BackgroundImage.Encode(BackgroundImage.PresetFile(Path.Combine(root,@"setup\app\assets"),id,false)))&&choice.ScreensBackground.SequenceEqual(BackgroundImage.Encode(BackgroundImage.PresetFile(Path.Combine(root,@"setup\app\assets"),id,true))),id+" selects the bundled main and other-screen art without a file picker");
+            }
+            Pump(300);Render(c.Window,Path.Combine(root,@"build\native-background-presets.png"));
+            c.Window.Height=600;c.Window.UpdateLayout();var backgroundPage=c.UI<ScrollViewer>("BackgroundPage");backgroundPage.ScrollToEnd();Pump(60);
+            double resetBottom=c.UI<CheckBox>("RestoreBackgroundSwitch").TranslatePoint(new Point(0,c.UI<CheckBox>("RestoreBackgroundSwitch").ActualHeight),backgroundPage).Y;
+            Check(backgroundPage.ScrollableHeight>0&&resetBottom>0&&resetBottom<=backgroundPage.ActualHeight,"background restore remains reachable in a short window");
+            c.Window.Height=780;backgroundPage.ScrollToHome();Pump(60);
             var background=BackgroundImage.Encode(Path.Combine(root,@"setup\app\assets\scene.png"));
             c.SetBackground(false,background,"scene.png");
             Check(c.UI<Button>("InstallBtn").IsEnabled&&c.Selection().MenuBackground==background&&c.UI<Image>("MenuBackgroundPreview").Source!=null,"selected background enables installation and shows converted preview");

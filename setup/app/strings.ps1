@@ -153,6 +153,12 @@ $script:English = @{
     "Изображение слишком большое: максимум 40 мегапикселей." = "Image is too large: maximum 40 megapixels."
     "Некорректная текстура фона." = "Invalid background texture."
     "Выбери установку или возврат фона." = "Choose either installing or restoring backgrounds."
+    "Готовые фоны" = "Built-in backgrounds"
+    "Выбери набор сразу для меню и остальных экранов — искать файл не нужно." = "Choose a set for the menu and other screens — no file needed."
+    "Горный закат" = "Mountain sunset"
+    "Грибной лес" = "Mushroom forest"
+    "Неизвестный набор фонов." = "Unknown background set."
+
 }
 
 $script:English['Готово. Запускай Forts.'] = 'Done. Start Forts.'

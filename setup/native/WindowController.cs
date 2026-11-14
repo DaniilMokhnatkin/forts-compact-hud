@@ -128,6 +128,15 @@ namespace FortsSetup {
             foreach(var pair in crossNames){if(!engine.Crosshairs.Contains(pair.Key))continue;string key=pair.Key;var b=Choice(UI<Panel>("Tiles"),"Tile",L(pair.Value),"Crosshair",key,()=>{cross=key;UpdateCross();UpdateSummary();});b.Tag=Image("crosshair_"+key+".png");b.ToolTip=L(pair.Value);tiles[key]=b;}
             foreach(var pair in Engine.Colors){string key=pair.Key;var b=Choice(UI<StackPanel>("Swatches"),"Swatch",null,"Colour",key,()=>{color=key;UpdateCross();});b.Background=(Brush)new BrushConverter().ConvertFrom("#"+pair.Value);b.ToolTip=L(colorNames[key]);AutomationProperties.SetName(b,L("Цвет: ")+L(colorNames[key]));swatches[key]=b;}
             MakeIcons();
+            foreach(string id in BackgroundImage.PresetIds){
+                string key=id;var content=new StackPanel();
+                var picture=new Border{Height=70,ClipToBounds=true,CornerRadius=new CornerRadius(6),Child=new Image{Source=Bitmap(BackgroundImage.PresetFile(assets,id,false)),Stretch=Stretch.UniformToFill}};
+                content.Children.Add(picture);content.Children.Add(new TextBlock{Text=BackgroundPresetTitle(id),Margin=new Thickness(2,6,2,2),FontWeight=FontWeights.Medium});
+                var button=new Button{Content=content,Tag=id,Style=(Style)UI<Panel>("BackgroundPresets").FindResource("BackgroundPreset")};
+                AutomationProperties.SetName(button,BackgroundPresetTitle(id));AutomationProperties.SetAutomationId(button,"BackgroundPreset-"+id);
+                button.Click+=(s,e)=>{try{SelectBackgroundPreset(key);}catch(Exception ex){Text("BackgroundStatus",L("Не удалось открыть изображение. ")+L(ex.Message));}};
+                UI<Panel>("BackgroundPresets").Children.Add(button);
+            }
             UI<Button>("ChooseMenuBackground").Click+=(s,e)=>ChooseBackground(false);
             UI<Button>("ChooseScreensBackground").Click+=(s,e)=>ChooseBackground(true);
             UI<Button>("ClearMenuBackground").Click+=(s,e)=>SetBackground(false,null,null);
@@ -188,9 +197,19 @@ namespace FortsSetup {
             Window.Loaded+=async(s,e)=>{Animate(UI<UIElement>("Shell"),UIElement.OpacityProperty,1,220);Ready=Refresh();await Ready;if(selection!=null){UI<CheckBox>("HudSwitch").IsChecked=selection.Hud;UI<CheckBox>("ClickThroughSwitch").IsChecked=selection.ClickThrough;UI<CheckBox>("CrossSwitch").IsChecked=selection.Crosshair!=null;UI<CheckBox>("IntroSwitch").IsChecked=selection.SkipIntro;foreach(var p in selection.Icons)iconSliders[p.Key].Value=p.Value;UpdateCross();}CheckUpdates();};
         }
         byte[] menuBackground, screensBackground;
+        string BackgroundPresetTitle(string id){return id=="sunset"?L("Горный закат"):id=="grib"?L("Грибной лес"):"Zors.o";}
+        public void SelectBackgroundPreset(string id) {
+            string main=BackgroundImage.PresetFile(assets,id,false),screens=BackgroundImage.PresetFile(assets,id,true);
+            byte[] mainData=BackgroundImage.Encode(main),screensData=main==screens?mainData:BackgroundImage.Encode(screens);
+            string title=BackgroundPresetTitle(id);
+            SetBackground(false,mainData,title);SetBackground(true,screensData,title);
+            foreach(Button button in UI<Panel>("BackgroundPresets").Children)button.BorderBrush=(string)button.Tag==id?(Brush)Window.FindResource("Accent"):Brushes.Transparent;
+            Text("BackgroundStatus","");
+        }
         public void SetBackground(bool screens,byte[] data,string name) {
             var preview=data==null?null:BackgroundImage.Preview(data);
             if(screens)screensBackground=data;else menuBackground=data;
+            foreach(Button button in UI<Panel>("BackgroundPresets").Children)button.BorderBrush=Brushes.Transparent;
             string prefix=screens?"Screens":"Menu";
             UI<Image>(prefix+"BackgroundPreview").Source=preview;
             Text(prefix+"BackgroundName",name??L("Без изменений"));

@@ -8,6 +8,17 @@ namespace FortsSetup {
     // Decode once when selected: the preview and installation share the same bytes.
     public static class BackgroundImage {
         public const int Width=1920, Height=1080;
+        public static readonly string[] PresetIds={"sunset","zors","grib"};
+        public static string PresetFile(string assets,string id,bool screens) {
+            string file;
+            switch(id){
+                case "sunset":file="sunset.png";break;
+                case "zors":file=screens?"zors-screens.png":"zors-main.png";break;
+                case "grib":file="grib-forest.png";break;
+                default:throw new ArgumentException("Неизвестный набор фонов.");
+            }
+            return Path.Combine(assets,"backgrounds",file);
+        }
         public static byte[] Encode(string path) {
             string ext=Path.GetExtension(path).ToLowerInvariant();
             if(ext!=".png"&&ext!=".jpg"&&ext!=".jpeg"&&ext!=".bmp")throw new IOException("Выбери PNG, JPG или BMP.");

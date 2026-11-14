@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.13.0 — 2026-11-14
+
+- Added three bundled background sets: Mountain sunset, Zors.o and Mushroom
+  forest. Select a set without choosing files, or replace either image with
+  your own. Each set fills the main-menu and other-screen previews.
+- Added a scrollable background page for smaller windows.
+
 ## 1.12.0 — 2026-11-14
 
 - Added a Menu background page with independent images for the main menu and
