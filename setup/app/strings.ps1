@@ -171,6 +171,10 @@ $script:English = @{
     "GitHub разработчика" = "Developer's GitHub"
     "Портрет Starkoff с ошейником и медалью" = "Starkoff portrait with collar and medal"
 
+    "Добавить логотип Forts" = "Add the Forts logo"
+    "Только для главного меню. Если логотип уже есть на картинке, не включай." = "Main menu only. Leave off if the image already has a logo."
+    "PNG, JPG или BMP · изображение сохраняется целиком. Прозрачные области станут чёрными." = "PNG, JPG or BMP · the full image is preserved. Transparent areas become black."
+
 }
 
 $script:English['Готово. Запускай Forts.'] = 'Done. Start Forts.'

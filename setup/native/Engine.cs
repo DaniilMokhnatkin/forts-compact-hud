@@ -20,7 +20,7 @@ namespace FortsSetup {
         public bool? SkipIntro;
         public byte[] MenuBackground, ScreensBackground;
         public bool RestoreBackground;
-        public bool BackgroundLogo=true;
+        public bool BackgroundLogo;
         public Dictionary<string,int> Icons=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
     }
     public sealed class PackStatus {
@@ -48,7 +48,9 @@ namespace FortsSetup {
         public static readonly string[] MenuSkins={"base","classic","tog","dlc1","dlc2","dlc3"};
         public static void ValidateBackground(byte[] data) {
             if(data==null)return;
-            if(data.Length!=128+1920*1080*4||BitConverter.ToInt32(data,0)!=0x20534444||BitConverter.ToInt32(data,4)!=124||BitConverter.ToInt32(data,12)!=1080||BitConverter.ToInt32(data,16)!=1920||BitConverter.ToInt32(data,80)!=0x41||BitConverter.ToInt32(data,84)!=0||BitConverter.ToInt32(data,88)!=32||BitConverter.ToInt32(data,92)!=0x00FF0000||BitConverter.ToInt32(data,96)!=0x0000FF00||BitConverter.ToInt32(data,100)!=0x000000FF||BitConverter.ToUInt32(data,104)!=0xFF000000)throw new ArgumentException("Некорректная текстура фона.");
+            if(data.Length<128)throw new ArgumentException("Некорректная текстура фона.");
+            int width=BitConverter.ToInt32(data,16),height=BitConverter.ToInt32(data,12);
+            if(width<1||height<1||width>2048||height>2048||data.Length!=128+width*height*4||BitConverter.ToInt32(data,0)!=0x20534444||BitConverter.ToInt32(data,4)!=124||BitConverter.ToInt32(data,80)!=0x41||BitConverter.ToInt32(data,84)!=0||BitConverter.ToInt32(data,88)!=32||BitConverter.ToInt32(data,92)!=0x00FF0000||BitConverter.ToInt32(data,96)!=0x0000FF00||BitConverter.ToInt32(data,100)!=0x000000FF||BitConverter.ToUInt32(data,104)!=0xFF000000)throw new ArgumentException("Некорректная текстура фона.");
         }
         public static bool CanCustomize(string layout){return layout=="compact"||layout=="tactical"||layout=="zors"||layout=="grib";}
         public static bool PreservesCrosshairColours(string id){return id=="zors"||id=="grib"||(id!=null&&(id.StartsWith("duo_",StringComparison.Ordinal)||id.StartsWith("neo_",StringComparison.Ordinal)));}

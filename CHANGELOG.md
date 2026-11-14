@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.16.3 — 2026-11-14
+
+- Preserve the full background image and its aspect ratio instead of cropping it to 16:9. Logo overlay is now optional and disabled by default.
+
 ## 1.16.2 — 2026-11-14
 
 - Added custom Forts menu backgrounds with three built-in sets, separate main-menu and other-screen images, previews and an optional Forts logo. Existing backgrounds are backed up and can be restored.

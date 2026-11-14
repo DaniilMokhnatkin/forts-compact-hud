@@ -42,7 +42,7 @@
                 <Grid Margin="12,8,16,8">
                   <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
                   <Border Style="{StaticResource BackgroundThumb}">
-                    <Grid><TextBlock Text="Не выбрано" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource Tertiary}"/><Image x:Name="MenuBackgroundPreview" Stretch="UniformToFill"/></Grid>
+                    <Grid><TextBlock Text="Не выбрано" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource Tertiary}"/><Image x:Name="MenuBackgroundPreview" Stretch="Uniform"/></Grid>
                   </Border>
                   <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="Главное меню" Style="{StaticResource RowTitle}"/>
@@ -57,7 +57,7 @@
                 <Grid Margin="12,8,16,8">
                   <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
                   <Border Style="{StaticResource BackgroundThumb}">
-                    <Grid><TextBlock Text="Не выбрано" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource Tertiary}"/><Image x:Name="ScreensBackgroundPreview" Stretch="UniformToFill"/></Grid>
+                    <Grid><TextBlock Text="Не выбрано" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource Tertiary}"/><Image x:Name="ScreensBackgroundPreview" Stretch="Uniform"/></Grid>
                   </Border>
                   <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="Лобби и другие экраны" Style="{StaticResource RowTitle}"/>
@@ -71,15 +71,15 @@
                 <Border Height="1" Background="{DynamicResource Separator}" Margin="16,0"/>
                 <Grid Margin="16,11">
                   <StackPanel Margin="0,0,60,0">
-                    <TextBlock Text="Оставить надпись Forts" Style="{StaticResource RowTitle}"/>
-                    <TextBlock Text="Логотип добавляется только в главное меню." Style="{StaticResource RowNote}"/>
+                    <TextBlock Text="Добавить логотип Forts" Style="{StaticResource RowTitle}"/>
+                    <TextBlock Text="Только для главного меню. Если логотип уже есть на картинке, не включай." Style="{StaticResource RowNote}"/>
                   </StackPanel>
-                  <CheckBox x:Name="BackgroundLogoSwitch" Style="{StaticResource Switch}" IsChecked="True" HorizontalAlignment="Right" VerticalAlignment="Center" AutomationProperties.Name="Оставить надпись Forts"/>
+                  <CheckBox x:Name="BackgroundLogoSwitch" Style="{StaticResource Switch}" IsChecked="False" HorizontalAlignment="Right" VerticalAlignment="Center" AutomationProperties.Name="Добавить логотип Forts"/>
                 </Grid>
               </StackPanel>
             </Border>
             <TextBlock x:Name="BackgroundStatus" Style="{StaticResource StatusNote}" Foreground="{StaticResource Danger}" Margin="4,8,4,0"/>
-            <TextBlock Text="PNG, JPG или BMP · обрезка по центру до 16:9 · 1920×1080. Прозрачные области станут чёрными." Style="{StaticResource Footnote}"/>
+            <TextBlock Text="PNG, JPG или BMP · изображение сохраняется целиком. Прозрачные области станут чёрными." Style="{StaticResource Footnote}"/>
             <TextBlock Text="Применяется к обычным темам меню, включая DLC. Сезонные темы могут показывать свой фон. После установки перезапусти Forts." Style="{StaticResource Footnote}" Margin="4,4,4,0"/>
 
             <Border CornerRadius="12" Background="{DynamicResource Group}" Margin="0,20,0,0">

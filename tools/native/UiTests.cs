@@ -48,11 +48,13 @@ static class NativeUiTests {
                 Check(choice.MenuBackground.SequenceEqual(BackgroundImage.Encode(BackgroundImage.PresetFile(Path.Combine(root,@"setup\app\assets"),id,false)))&&choice.ScreensBackground.SequenceEqual(BackgroundImage.Encode(BackgroundImage.PresetFile(Path.Combine(root,@"setup\app\assets"),id,true))),id+" selects the bundled main and other-screen art without a file picker");
             }
             Pump(300);Render(c.Window,Path.Combine(root,@"build\native-background-presets.png"));
-            Check(c.Selection().BackgroundLogo,"Forts logo is enabled by default");
-            var logoPreview=new byte[1920*1080*4];((BitmapSource)c.UI<Image>("MenuBackgroundPreview").Source).CopyPixels(logoPreview,1920*4,0);
-            Check(!logoPreview.SequenceEqual(c.Selection().MenuBackground.Skip(128)),"main-menu preview includes the original Forts logo");
+            Check(!c.Selection().BackgroundLogo,"Forts logo is off by default so existing artwork is not duplicated");
+            c.UI<CheckBox>("BackgroundLogoSwitch").IsChecked=true;c.UI<CheckBox>("BackgroundLogoSwitch").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+            var selectedImage=(BitmapSource)c.UI<Image>("MenuBackgroundPreview").Source;
+            var logoPreview=new byte[selectedImage.PixelWidth*selectedImage.PixelHeight*4];selectedImage.CopyPixels(logoPreview,selectedImage.PixelWidth*4,0);
+            Check(!logoPreview.SequenceEqual(c.Selection().MenuBackground.Skip(128)),"main-menu preview includes the selected Forts logo");
             c.UI<CheckBox>("BackgroundLogoSwitch").IsChecked=false;c.UI<CheckBox>("BackgroundLogoSwitch").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
-            ((BitmapSource)c.UI<Image>("MenuBackgroundPreview").Source).CopyPixels(logoPreview,1920*4,0);
+            ((BitmapSource)c.UI<Image>("MenuBackgroundPreview").Source).CopyPixels(logoPreview,selectedImage.PixelWidth*4,0);
             Check(logoPreview.SequenceEqual(c.Selection().MenuBackground.Skip(128)),"disabling the logo returns the clean image without changing the source");
             c.Window.Height=600;c.Window.UpdateLayout();var backgroundPage=c.UI<ScrollViewer>("BackgroundPage");backgroundPage.ScrollToEnd();Pump(60);
             double resetBottom=c.UI<CheckBox>("RestoreBackgroundSwitch").TranslatePoint(new Point(0,c.UI<CheckBox>("RestoreBackgroundSwitch").ActualHeight),backgroundPage).Y;

@@ -15,12 +15,14 @@ static class BackgroundTests {
         try{
             string png=Path.Combine(dir,"картинка.png");
             byte[] pixels=Enumerable.Range(0,80*60).SelectMany(i=>new byte[]{30,60,200,255}).ToArray();
+            pixels[pixels.Length-4]=230;pixels[pixels.Length-3]=120;pixels[pixels.Length-2]=10;
             var image=BitmapSource.Create(80,60,96,96,PixelFormats.Bgra32,null,pixels,80*4);
             var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(image));using(var file=File.Create(png))encoder.Save(file);
             var dds=BackgroundImage.Encode(png);
-            Check(BitConverter.ToInt32(dds,16)==1920&&BitConverter.ToInt32(dds,12)==1080&&dds.Length==128+1920*1080*4,"image becomes a 1920x1080 DDS");
+            Check(BitConverter.ToInt32(dds,16)==80&&BitConverter.ToInt32(dds,12)==60&&dds.Length==128+80*60*4,"non-16:9 image retains its dimensions without cropping");
             Check(dds[128]==30&&dds[129]==60&&dds[130]==200&&dds[131]==255,"DDS keeps BGRA colours and opaque alpha");
-            Check(BackgroundImage.Preview(dds).PixelWidth==1920,"preview uses the exact converted texture");
+            Check(dds[dds.Length-4]==230&&dds[dds.Length-3]==120&&dds[dds.Length-2]==10,"image edges are retained");
+            Check(BackgroundImage.Preview(dds).PixelWidth==80&&BackgroundImage.Preview(dds).PixelHeight==60,"preview shows the complete image");
             foreach(string extension in new[]{"jpg","bmp"}){
                 BitmapEncoder other=extension=="jpg"?(BitmapEncoder)new JpegBitmapEncoder():new BmpBitmapEncoder();
                 other.Frames.Add(BitmapFrame.Create(image));string file=Path.Combine(dir,"source."+extension);using(var output=File.Create(file))other.Save(output);
@@ -30,10 +32,10 @@ static class BackgroundTests {
             var transparentEncoder=new PngBitmapEncoder();transparentEncoder.Frames.Add(BitmapFrame.Create(translucent));
             string alphaFile=Path.Combine(dir,"alpha.png");using(var output=File.Create(alphaFile))transparentEncoder.Save(output);
             var opaque=BackgroundImage.Encode(alphaFile);
-            var withLogo=BackgroundImage.AddLogo(dds,alphaFile);int logoPixel=128+(60*1920+180)*4;
+            var withLogo=BackgroundImage.AddLogo(dds,alphaFile);int logoPixel=128+(8*80+12)*4;
             Check(!Object.ReferenceEquals(dds,withLogo)&&dds.SequenceEqual(BackgroundImage.Encode(png)),"logo composition leaves the original background available");
             Check(withLogo[logoPixel]==35&&withLogo[logoPixel+1]==70&&withLogo[logoPixel+2]==160,"logo alpha blends with the background");
-            Check(withLogo.Skip(128+1080*1920*4-4).SequenceEqual(dds.Skip(128+1080*1920*4-4)),"logo composition preserves pixels outside the logo");
+            Check(withLogo.Skip(dds.Length-4).SequenceEqual(dds.Skip(dds.Length-4)),"logo composition preserves pixels outside the logo");
             Check(opaque[128]==20&&opaque[129]==40&&opaque[130]==60&&opaque[131]==255,"transparent colours are composited on black");
             string bad=Path.Combine(dir,"bad.png");File.WriteAllText(bad,"invalid");Reject(()=>BackgroundImage.Encode(bad),"invalid image refused");
             string game=Path.Combine(dir,"game");Directory.CreateDirectory(Path.Combine(game,@"data\ui\screens"));File.WriteAllText(Path.Combine(game,"Forts.exe"),"fixture");
