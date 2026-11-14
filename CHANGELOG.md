@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.17.0 — 2026-11-14
+
+- Added an optional background crop editor with zoom, drag and position controls. The full image can be restored at any time.
+
 ## 1.16.3 — 2026-11-14
 
 - Preserve the full background image and its aspect ratio instead of cropping it to 16:9. Logo overlay is now optional and disabled by default.

@@ -175,6 +175,10 @@ $script:English = @{
     "Только для главного меню. Если логотип уже есть на картинке, не включай." = "Main menu only. Leave off if the image already has a logo."
     "PNG, JPG или BMP · изображение сохраняется целиком. Прозрачные области станут чёрными." = "PNG, JPG or BMP · the full image is preserved. Transparent areas become black."
 
+    "Обрезать" = "Crop"
+    "Обрезать фон главного меню" = "Crop main menu background"
+    "Обрезать фон остальных экранов" = "Crop other screens background"
+
 }
 
 $script:English['Готово. Запускай Forts.'] = 'Done. Start Forts.'

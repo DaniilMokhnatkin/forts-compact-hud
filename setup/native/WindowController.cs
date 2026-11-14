@@ -141,10 +141,12 @@ namespace FortsSetup {
             if(selection!=null)UI<CheckBox>("BackgroundLogoSwitch").IsChecked=selection.BackgroundLogo;
             UI<Button>("ChooseMenuBackground").Click+=(s,e)=>ChooseBackground(false);
             UI<Button>("ChooseScreensBackground").Click+=(s,e)=>ChooseBackground(true);
+            UI<Button>("CropMenuBackground").Click+=(s,e)=>EditBackground(false);
+            UI<Button>("CropScreensBackground").Click+=(s,e)=>EditBackground(true);
             UI<Button>("ClearMenuBackground").Click+=(s,e)=>SetBackground(false,null,null);
             UI<Button>("ClearScreensBackground").Click+=(s,e)=>SetBackground(true,null,null);
             UI<CheckBox>("RestoreBackgroundSwitch").Click+=(s,e)=>{if(On("RestoreBackgroundSwitch")){SetBackground(false,null,null);SetBackground(true,null,null);}UpdateSummary();};
-            if(selection!=null){SetBackground(false,selection.MenuBackground,selection.MenuBackground==null?null:L("Выбранное изображение"));SetBackground(true,selection.ScreensBackground,selection.ScreensBackground==null?null:L("Выбранное изображение"));UI<CheckBox>("RestoreBackgroundSwitch").IsChecked=selection.RestoreBackground;}
+            if(selection!=null){SetBackground(false,selection.MenuBackground,selection.MenuBackground==null?null:L("Выбранное изображение"));SetBackground(true,selection.ScreensBackground,selection.ScreensBackground==null?null:L("Выбранное изображение"));menuSource=selection.MenuBackgroundSource??selection.MenuBackground;screensSource=selection.ScreensBackgroundSource??selection.ScreensBackground;menuCrop=ReadCrop(selection.MenuCrop);screensCrop=ReadCrop(selection.ScreensCrop);UI<CheckBox>("RestoreBackgroundSwitch").IsChecked=selection.RestoreBackground;}
             else{SetBackground(false,null,null);SetBackground(true,null,null);}
             foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackground","NavBackup","NavAbout"}) {var b=UI<RadioButton>(nav);b.Checked+=(s,e)=>ShowPage((string)b.Tag);}
             foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackgroundPage","BackupPage","AboutPage"}){string name=page;var scroller=UI<ScrollViewer>(name);scroller.ScrollChanged+=(s,e)=>{if(Page==name)UpdateFooterRule();};}
@@ -199,7 +201,10 @@ namespace FortsSetup {
             initializing=false;
             Window.Loaded+=async(s,e)=>{Animate(UI<UIElement>("Shell"),UIElement.OpacityProperty,1,220);Ready=Refresh();await Ready;if(selection!=null){UI<CheckBox>("HudSwitch").IsChecked=selection.Hud;UI<CheckBox>("ClickThroughSwitch").IsChecked=selection.ClickThrough;UI<CheckBox>("CrossSwitch").IsChecked=selection.Crosshair!=null;UI<CheckBox>("IntroSwitch").IsChecked=selection.SkipIntro;foreach(var p in selection.Icons)iconSliders[p.Key].Value=p.Value;UpdateCross();}CheckUpdates();};
         }
-        byte[] menuBackground, screensBackground;
+        byte[] menuBackground, screensBackground,menuSource,screensSource;
+        Int32Rect? menuCrop,screensCrop;
+        static int[] SaveCrop(Int32Rect? frame){return frame.HasValue?new[]{frame.Value.X,frame.Value.Y,frame.Value.Width,frame.Value.Height}:null;}
+        static Int32Rect? ReadCrop(int[] data){return data!=null&&data.Length==4?(Int32Rect?)new Int32Rect(data[0],data[1],data[2],data[3]):null;}
         string BackgroundPresetTitle(string id){return id=="sunset"?L("Горный закат"):id=="grib"?L("Грибной лес"):"Zors.o";}
         public void SelectBackgroundPreset(string id) {
             string main=BackgroundImage.PresetFile(assets,id,false),screens=BackgroundImage.PresetFile(assets,id,true);
@@ -211,7 +216,7 @@ namespace FortsSetup {
         }
         public void SetBackground(bool screens,byte[] data,string name) {
             var preview=data==null?null:BackgroundImage.Preview(data);
-            if(screens)screensBackground=data;else menuBackground=data;
+            if(screens){screensBackground=data;screensSource=data;screensCrop=null;}else{menuBackground=data;menuSource=data;menuCrop=null;}
             foreach(Button button in UI<Panel>("BackgroundPresets").Children)button.BorderBrush=Brushes.Transparent;
             string prefix=screens?"Screens":"Menu";
             UI<Image>(prefix+"BackgroundPreview").Source=preview;
@@ -219,8 +224,21 @@ namespace FortsSetup {
             Text(prefix+"BackgroundName",name??L("Без изменений"));
             UI<TextBlock>(prefix+"BackgroundName").ToolTip=name;
             UI<Button>("Clear"+prefix+"Background").IsEnabled=data!=null;
+            UI<Button>("Crop"+prefix+"Background").IsEnabled=data!=null;
             if(data!=null)UI<CheckBox>("RestoreBackgroundSwitch").IsChecked=false;
             UpdateSummary();
+        }
+        public void ApplyBackgroundCrop(bool screens,Int32Rect? frame){
+            byte[] source=screens?screensSource:menuSource;if(source==null)throw new InvalidOperationException("Изображение не выбрано.");
+            byte[] data=frame.HasValue?BackgroundImage.Crop(source,frame.Value):source;
+            string prefix=screens?"Screens":"Menu";string name=UI<TextBlock>(prefix+"BackgroundName").ToolTip as string;
+            SetBackground(screens,data,name);
+            if(screens){screensSource=source;screensCrop=frame;}else{menuSource=source;menuCrop=frame;}
+        }
+        void EditBackground(bool screens){
+            byte[] source=screens?screensSource:menuSource;if(source==null)return;
+            var dialog=new BackgroundCropDialog(Window,source,lang=="en",screens?screensCrop:menuCrop);
+            if(dialog.ShowDialog()==true)ApplyBackgroundCrop(screens,dialog.UseOriginal?(Int32Rect?)null:dialog.Frame);
         }
         void UpdateBackgroundLogo() {
             byte[] data=menuBackground;
@@ -230,7 +248,7 @@ namespace FortsSetup {
         void ChooseBackground(bool screens) {
             var dialog=new Microsoft.Win32.OpenFileDialog{Title=L(screens?"Лобби и другие экраны":"Главное меню"),Filter="PNG, JPG, BMP|*.png;*.jpg;*.jpeg;*.bmp",CheckFileExists=true};
             if(dialog.ShowDialog(Window)!=true)return;
-            try{SetBackground(screens,BackgroundImage.Encode(dialog.FileName),Path.GetFileName(dialog.FileName));Text("BackgroundStatus","");}
+            try{byte[] source=BackgroundImage.Encode(dialog.FileName);var crop=new BackgroundCropDialog(Window,source,lang=="en");if(crop.ShowDialog()!=true)return;SetBackground(screens,source,Path.GetFileName(dialog.FileName));if(!crop.UseOriginal)ApplyBackgroundCrop(screens,crop.Frame);Text("BackgroundStatus","");}
             catch(Exception e){Text("BackgroundStatus",L("Не удалось открыть изображение. ")+L(e.Message));}
         }
         void MakeIcons() {
@@ -310,7 +328,7 @@ namespace FortsSetup {
             image.Source=enabled?Tinted(Image("crosshair_"+cross+"_"+size+".png"),Engine.Colors[Engine.PreservesCrosshairColours(cross)?"white":color]):Image("crosshair_vanilla.png");
             Text("AfterLabel",enabled?L(crossNames[cross])+" · "+size+"%":L("Не меняется"));UpdateSummary();
         }
-        public Options Selection() {return new Options{BackgroundLogo=On("BackgroundLogoSwitch"),MenuBackground=menuBackground,ScreensBackground=screensBackground,RestoreBackground=On("RestoreBackgroundSwitch"),Hud=On("HudSwitch"),ClickThrough=On("ClickThroughSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=Engine.PreservesCrosshairColours(cross)?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
+        public Options Selection() {return new Options{BackgroundLogo=On("BackgroundLogoSwitch"),MenuBackground=menuBackground,ScreensBackground=screensBackground,MenuBackgroundSource=menuSource,ScreensBackgroundSource=screensSource,MenuCrop=SaveCrop(menuCrop),ScreensCrop=SaveCrop(screensCrop),RestoreBackground=On("RestoreBackgroundSwitch"),Hud=On("HudSwitch"),ClickThrough=On("ClickThroughSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=Engine.PreservesCrosshairColours(cross)?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
         public void ShowPage(string name) {
             Page=name;foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackgroundPage","BackupPage","AboutPage","WorkPage"})Visible(page,page==name);
             if(name!="WorkPage"){

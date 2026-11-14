@@ -23,6 +23,14 @@ static class BackgroundTests {
             Check(dds[128]==30&&dds[129]==60&&dds[130]==200&&dds[131]==255,"DDS keeps BGRA colours and opaque alpha");
             Check(dds[dds.Length-4]==230&&dds[dds.Length-3]==120&&dds[dds.Length-2]==10,"image edges are retained");
             Check(BackgroundImage.Preview(dds).PixelWidth==80&&BackgroundImage.Preview(dds).PixelHeight==60,"preview shows the complete image");
+            var crop=BackgroundImage.Crop(dds,new System.Windows.Int32Rect(10,10,40,30));
+            Check(BitConverter.ToInt32(crop,16)==40&&BitConverter.ToInt32(crop,12)==30&&crop.Length==128+40*30*4,"crop returns the chosen image region");
+            Check(crop[128]==dds[128+(10*80+10)*4]&&crop[crop.Length-4]==dds[128+(39*80+49)*4],"crop copies the selected pixels without stretching");
+            Reject(()=>BackgroundImage.Crop(dds,new System.Windows.Int32Rect(50,0,40,30)),"crop outside the image is rejected");
+            var frame=BackgroundImage.CropFrame(80,60,1,0.5,0.5);
+            Check(frame.Width==80&&frame.Height==45&&frame.Y==7,"initial 16:9 frame is centred and fits the image");
+            var moved=BackgroundImage.CropFrame(80,60,2,1,1);
+            Check(moved.Width==40&&moved.Height==22&&moved.X==40&&moved.Y==38,"zoom and pan select the lower-right region");
             foreach(string extension in new[]{"jpg","bmp"}){
                 BitmapEncoder other=extension=="jpg"?(BitmapEncoder)new JpegBitmapEncoder():new BmpBitmapEncoder();
                 other.Frames.Add(BitmapFrame.Create(image));string file=Path.Combine(dir,"source."+extension);using(var output=File.Create(file))other.Save(output);

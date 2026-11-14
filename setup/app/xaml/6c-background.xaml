@@ -49,6 +49,7 @@
                     <TextBlock x:Name="MenuBackgroundName" Text="Без изменений" Style="{StaticResource RowNote}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                       <Button x:Name="ChooseMenuBackground" Content="Выбрать изображение…" Style="{StaticResource Link}" AutomationProperties.Name="Выбрать фон главного меню"/>
+                      <Button x:Name="CropMenuBackground" Content="Обрезать" Style="{StaticResource Link}" Margin="14,0,0,0" AutomationProperties.Name="Обрезать фон главного меню"/>
                       <Button x:Name="ClearMenuBackground" Content="Убрать" Style="{StaticResource Link}" Margin="14,0,0,0" AutomationProperties.Name="Убрать выбранный фон главного меню"/>
                     </StackPanel>
                   </StackPanel>
@@ -64,6 +65,7 @@
                     <TextBlock x:Name="ScreensBackgroundName" Text="Без изменений" Style="{StaticResource RowNote}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                       <Button x:Name="ChooseScreensBackground" Content="Выбрать изображение…" Style="{StaticResource Link}" AutomationProperties.Name="Выбрать фон остальных экранов"/>
+                      <Button x:Name="CropScreensBackground" Content="Обрезать" Style="{StaticResource Link}" Margin="14,0,0,0" AutomationProperties.Name="Обрезать фон остальных экранов"/>
                       <Button x:Name="ClearScreensBackground" Content="Убрать" Style="{StaticResource Link}" Margin="14,0,0,0" AutomationProperties.Name="Убрать выбранный фон остальных экранов"/>
                     </StackPanel>
                   </StackPanel>

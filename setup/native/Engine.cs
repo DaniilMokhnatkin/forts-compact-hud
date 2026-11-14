@@ -19,6 +19,9 @@ namespace FortsSetup {
         public HudCustomization Customization;
         public bool? SkipIntro;
         public byte[] MenuBackground, ScreensBackground;
+        // UI-only originals and crop coordinates keep editing reversible across language switches.
+        public byte[] MenuBackgroundSource, ScreensBackgroundSource;
+        public int[] MenuCrop, ScreensCrop;
         public bool RestoreBackground;
         public bool BackgroundLogo;
         public Dictionary<string,int> Icons=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);

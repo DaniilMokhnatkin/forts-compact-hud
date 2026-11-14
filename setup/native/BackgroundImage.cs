@@ -49,6 +49,22 @@ namespace FortsSetup {
             int width=BitConverter.ToInt32(data,16),height=BitConverter.ToInt32(data,12);
             var image=BitmapSource.Create(width,height,96,96,PixelFormats.Bgra32,null,Pixels(data),width*4);image.Freeze();return image;
         }
+        public static Int32Rect CropFrame(int width,int height,double zoom,double horizontal,double vertical) {
+            if(width<1||height<1||Double.IsNaN(zoom)||Double.IsInfinity(zoom)||Double.IsNaN(horizontal)||Double.IsNaN(vertical))throw new ArgumentException("Некорректный кадр.");
+            zoom=Math.Max(1,Math.Min(4,zoom));horizontal=Math.Max(0,Math.Min(1,horizontal));vertical=Math.Max(0,Math.Min(1,vertical));
+            int w=Math.Max(1,(int)(Math.Min(width,height*16.0/9)/zoom));
+            int h=Math.Min(height,Math.Max(1,(int)(w*9.0/16)));
+            return new Int32Rect((int)((width-w)*horizontal),(int)((height-h)*vertical),w,h);
+        }
+        public static byte[] Crop(byte[] data,Int32Rect frame) {
+            Engine.ValidateBackground(data);
+            int width=BitConverter.ToInt32(data,16),height=BitConverter.ToInt32(data,12);
+            if(frame.X<0||frame.Y<0||frame.Width<1||frame.Height<1||(long)frame.X+frame.Width>width||(long)frame.Y+frame.Height>height)throw new ArgumentException("Кадр выходит за границы изображения.");
+            byte[] result=new byte[128+frame.Width*frame.Height*4];Buffer.BlockCopy(data,0,result,0,128);
+            Buffer.BlockCopy(BitConverter.GetBytes(frame.Height),0,result,12,4);Buffer.BlockCopy(BitConverter.GetBytes(frame.Width),0,result,16,4);Buffer.BlockCopy(BitConverter.GetBytes(frame.Width*4),0,result,20,4);
+            for(int y=0;y<frame.Height;y++)Buffer.BlockCopy(data,128+((frame.Y+y)*width+frame.X)*4,result,128+y*frame.Width*4,frame.Width*4);
+            return result;
+        }
         public static byte[] AddLogo(byte[] background,string logoPath) {
             Engine.ValidateBackground(background);
             byte[] result=(byte[])background.Clone();
