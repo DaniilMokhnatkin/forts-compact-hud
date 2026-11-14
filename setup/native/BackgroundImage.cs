@@ -48,6 +48,23 @@ namespace FortsSetup {
             Engine.ValidateBackground(data);
             var image=BitmapSource.Create(Width,Height,96,96,PixelFormats.Bgra32,null,Pixels(data),Width*4);image.Freeze();return image;
         }
+        public static byte[] AddLogo(byte[] background,string logoPath) {
+            Engine.ValidateBackground(background);
+            byte[] result=(byte[])background.Clone();
+            using(var file=File.OpenRead(logoPath)){
+                var logo=BitmapDecoder.Create(file,BitmapCreateOptions.PreservePixelFormat,BitmapCacheOption.OnLoad).Frames[0];
+                double scale=Math.Min(640.0/logo.PixelWidth,216.0/logo.PixelHeight);
+                var resized=new TransformedBitmap(logo,new ScaleTransform(scale,scale));
+                var source=new FormatConvertedBitmap(resized,PixelFormats.Pbgra32,null,0);
+                int width=source.PixelWidth,height=source.PixelHeight;
+                byte[] pixels=new byte[width*height*4];source.CopyPixels(pixels,width*4,0);
+                for(int y=0;y<height;y++)for(int x=0;x<width;x++){
+                    int from=(y*width+x)*4,to=128+((y+26)*Width+x+150)*4,alpha=pixels[from+3];
+                    for(int channel=0;channel<3;channel++)result[to+channel]=(byte)Math.Min(255,pixels[from+channel]+(result[to+channel]*(255-alpha)+127)/255);
+                }
+            }
+            return result;
+        }
         static byte[] Pixels(byte[] data){byte[] pixels=new byte[data.Length-128];Buffer.BlockCopy(data,128,pixels,0,pixels.Length);return pixels;}
     }
 }

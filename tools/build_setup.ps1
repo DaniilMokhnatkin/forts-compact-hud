@@ -20,6 +20,8 @@ if ($payloadPath -ne (Join-Path $root 'setup\payload')) { throw 'Unexpected payl
 Remove-Item -LiteralPath $payloadPath -Recurse -Force -ErrorAction SilentlyContinue
 $hud = Join-Path $payload "hud\data\ui"
 New-Item -ItemType Directory -Force "$hud\screens", "$hud\textures\HUD\custom", $assets | Out-Null
+& $Python (Join-Path $PSScriptRoot 'prepare_background_logo.py') $Game $payload
+if ($LASTEXITCODE -ne 0) { throw 'Could not prepare the original Forts logo' }
 Copy-Item (Join-Path $root "build\hud.lua"), (Join-Path $root "build\transaction.lua") "$hud\screens\"
 Copy-Item (Join-Path $root "build\uisprites.lua") "$hud\"
 Copy-Item (Join-Path $root "textures\HUD\custom\*.dds") "$hud\textures\HUD\custom\"

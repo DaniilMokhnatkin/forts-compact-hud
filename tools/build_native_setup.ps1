@@ -16,6 +16,7 @@ $refs=@('/r:System.Web.Extensions.dll','/r:System.Net.Http.dll','/r:System.Xaml.
     '/r:System.IO.Compression.dll','/r:System.IO.Compression.FileSystem.dll',
     "/r:$wpf\PresentationFramework.dll","/r:$wpf\PresentationCore.dll","/r:$wpf\WindowsBase.dll")
 $sources=@(Get-ChildItem -LiteralPath $native -Filter '*.cs' | ForEach-Object FullName)
+if (-not (Test-Path -LiteralPath (Join-Path $root 'setup\payload\backgrounds\forts-logo.png'))) { throw 'Forts logo is missing. Rebuild the payload with tools/build_setup.ps1.' }
 if ($Test) {
     & $csc /nologo /target:exe "/out:$build\NativeDownloadTests.exe" /r:System.Net.Http.dll /r:System.Web.Extensions.dll (Join-Path $PSScriptRoot 'native\DownloadTests.cs') (Join-Path $native 'About.cs')
     if ($LASTEXITCODE -ne 0) { throw 'Native download tests did not compile' }

@@ -51,6 +51,8 @@
                 </StackPanel>
               </StackPanel>
             </Grid>
+            <CheckBox x:Name="BackgroundLogoSwitch" Content="Оставить надпись Forts" IsChecked="True" Margin="0,14,0,0" AutomationProperties.Name="Оставить надпись Forts"/>
+            <TextBlock Text="Логотип добавляется только в главное меню." Style="{StaticResource RowNote}" Margin="0,4,0,0"/>
             <TextBlock Text="PNG, JPG или BMP · обрезка по центру до 16:9 · 1920×1080. Прозрачные области станут чёрными." Style="{StaticResource PageNote}" Margin="0,16,0,0"/>
             <TextBlock Text="Применяется к обычным темам меню, включая DLC. Сезонные темы могут показывать свой фон. После установки перезапусти Forts." Style="{StaticResource PageNote}" Margin="0,8,0,0"/>
             <CheckBox x:Name="RestoreBackgroundSwitch" Content="Вернуть сохранённые фоны" Margin="0,18,0,0" AutomationProperties.Name="Вернуть сохранённые фоны"/>

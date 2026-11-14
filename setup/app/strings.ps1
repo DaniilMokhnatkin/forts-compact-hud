@@ -159,6 +159,9 @@ $script:English = @{
     "Грибной лес" = "Mushroom forest"
     "Неизвестный набор фонов." = "Unknown background set."
 
+    "Оставить надпись Forts" = "Keep the Forts logo"
+    "Логотип добавляется только в главное меню." = "The logo is added to the main menu only."
+
 }
 
 $script:English['Готово. Запускай Forts.'] = 'Done. Start Forts.'

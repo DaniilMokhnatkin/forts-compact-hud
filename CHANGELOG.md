@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.14.0 — 2026-11-14
+
+- Added Keep the Forts logo, enabled by default for selected backgrounds.
+  The original wordmark appears in the main-menu preview and installed texture;
+  other screens stay clean. Turn it off to use the background without a logo.
+
 ## 1.13.0 — 2026-11-14
 
 - Added three bundled background sets: Mountain sunset, Zors.o and Mushroom

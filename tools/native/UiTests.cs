@@ -38,6 +38,12 @@ static class NativeUiTests {
                 Check(choice.MenuBackground.SequenceEqual(BackgroundImage.Encode(BackgroundImage.PresetFile(Path.Combine(root,@"setup\app\assets"),id,false)))&&choice.ScreensBackground.SequenceEqual(BackgroundImage.Encode(BackgroundImage.PresetFile(Path.Combine(root,@"setup\app\assets"),id,true))),id+" selects the bundled main and other-screen art without a file picker");
             }
             Pump(300);Render(c.Window,Path.Combine(root,@"build\native-background-presets.png"));
+            Check(c.Selection().BackgroundLogo,"Forts logo is enabled by default");
+            var logoPreview=new byte[1920*1080*4];((BitmapSource)c.UI<Image>("MenuBackgroundPreview").Source).CopyPixels(logoPreview,1920*4,0);
+            Check(!logoPreview.SequenceEqual(c.Selection().MenuBackground.Skip(128)),"main-menu preview includes the original Forts logo");
+            c.UI<CheckBox>("BackgroundLogoSwitch").IsChecked=false;c.UI<CheckBox>("BackgroundLogoSwitch").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+            ((BitmapSource)c.UI<Image>("MenuBackgroundPreview").Source).CopyPixels(logoPreview,1920*4,0);
+            Check(logoPreview.SequenceEqual(c.Selection().MenuBackground.Skip(128)),"disabling the logo returns the clean image without changing the source");
             c.Window.Height=600;c.Window.UpdateLayout();var backgroundPage=c.UI<ScrollViewer>("BackgroundPage");backgroundPage.ScrollToEnd();Pump(60);
             double resetBottom=c.UI<CheckBox>("RestoreBackgroundSwitch").TranslatePoint(new Point(0,c.UI<CheckBox>("RestoreBackgroundSwitch").ActualHeight),backgroundPage).Y;
             Check(backgroundPage.ScrollableHeight>0&&resetBottom>0&&resetBottom<=backgroundPage.ActualHeight,"background restore remains reachable in a short window");
@@ -51,11 +57,14 @@ static class NativeUiTests {
             preserved.Window.Show();Wait(()=>preserved.Ready!=null&&preserved.Ready.IsCompleted);
             preserved.UI<RadioButton>("NavBackground").IsChecked=true;
             Check(preserved.Selection().MenuBackground==background&&preserved.Selection().ScreensBackground==background&&preserved.UI<TextBlock>("MenuBackgroundName").Text=="Selected image","language change preserves both selected images");
+            Check(!preserved.Selection().BackgroundLogo,"language change preserves the logo switch");
+            preserved.UI<CheckBox>("BackgroundLogoSwitch").IsChecked=true;preserved.UI<CheckBox>("BackgroundLogoSwitch").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
             Pump(50);Render(preserved.Window,Path.Combine(root,@"build\native-background-en.png"));
             string hudBeforeBackground=Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"));
             preserved.UI<Button>("InstallBtn").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
             Wait(()=>preserved.UI<Button>("DoneBtn").Visibility==Visibility.Visible);
             Check(preserved.UI<TextBlock>("WorkTitle").Text=="Done"&&Engine.Hash(Path.Combine(game,@"data\ui\screens\hud.lua"))==hudBeforeBackground&&engine.Status(game).MenuBackground,"background page installs only art even with HUD selected elsewhere");
+            Check(File.ReadAllBytes(Path.Combine(game,@"data\ui\textures\menu_backgrounds\base\FE-MainMenu-BG.dds")).SequenceEqual(BackgroundImage.AddLogo(background,Path.Combine(root,@"setup\payload\backgrounds\forts-logo.png")))&&File.ReadAllBytes(Path.Combine(game,@"data\ui\textures\menu_backgrounds\base\FE-AllScreens-BG.dds")).SequenceEqual(background),"installed main menu matches the logo preview while other screens stay clean");
             preserved.Window.Close();
             c.SetBackground(false,null,null);c.SetBackground(true,null,null);
             Check(!c.UI<Button>("InstallBtn").IsEnabled&&c.UI<Image>("MenuBackgroundPreview").Source==null,"clearing choices leaves installed files unchanged");

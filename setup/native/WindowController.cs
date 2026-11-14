@@ -137,6 +137,8 @@ namespace FortsSetup {
                 button.Click+=(s,e)=>{try{SelectBackgroundPreset(key);}catch(Exception ex){Text("BackgroundStatus",L("Не удалось открыть изображение. ")+L(ex.Message));}};
                 UI<Panel>("BackgroundPresets").Children.Add(button);
             }
+            UI<CheckBox>("BackgroundLogoSwitch").Click+=(s,e)=>{UpdateBackgroundLogo();UpdateSummary();};
+            if(selection!=null)UI<CheckBox>("BackgroundLogoSwitch").IsChecked=selection.BackgroundLogo;
             UI<Button>("ChooseMenuBackground").Click+=(s,e)=>ChooseBackground(false);
             UI<Button>("ChooseScreensBackground").Click+=(s,e)=>ChooseBackground(true);
             UI<Button>("ClearMenuBackground").Click+=(s,e)=>SetBackground(false,null,null);
@@ -212,11 +214,17 @@ namespace FortsSetup {
             foreach(Button button in UI<Panel>("BackgroundPresets").Children)button.BorderBrush=Brushes.Transparent;
             string prefix=screens?"Screens":"Menu";
             UI<Image>(prefix+"BackgroundPreview").Source=preview;
+            if(!screens)UpdateBackgroundLogo();
             Text(prefix+"BackgroundName",name??L("Без изменений"));
             UI<TextBlock>(prefix+"BackgroundName").ToolTip=name;
             UI<Button>("Clear"+prefix+"Background").IsEnabled=data!=null;
             if(data!=null)UI<CheckBox>("RestoreBackgroundSwitch").IsChecked=false;
             UpdateSummary();
+        }
+        void UpdateBackgroundLogo() {
+            byte[] data=menuBackground;
+            if(data!=null&&On("BackgroundLogoSwitch"))data=BackgroundImage.AddLogo(data,engine.Payload(@"backgrounds\forts-logo.png"));
+            UI<Image>("MenuBackgroundPreview").Source=data==null?null:BackgroundImage.Preview(data);
         }
         void ChooseBackground(bool screens) {
             var dialog=new Microsoft.Win32.OpenFileDialog{Title=L(screens?"Лобби и другие экраны":"Главное меню"),Filter="PNG, JPG, BMP|*.png;*.jpg;*.jpeg;*.bmp",CheckFileExists=true};
@@ -301,7 +309,7 @@ namespace FortsSetup {
             image.Source=enabled?Tinted(Image("crosshair_"+cross+"_"+size+".png"),Engine.Colors[Engine.PreservesCrosshairColours(cross)?"white":color]):Image("crosshair_vanilla.png");
             Text("AfterLabel",enabled?L(crossNames[cross])+" · "+size+"%":L("Не меняется"));UpdateSummary();
         }
-        public Options Selection() {return new Options{MenuBackground=menuBackground,ScreensBackground=screensBackground,RestoreBackground=On("RestoreBackgroundSwitch"),Hud=On("HudSwitch"),ClickThrough=On("ClickThroughSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=Engine.PreservesCrosshairColours(cross)?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
+        public Options Selection() {return new Options{BackgroundLogo=On("BackgroundLogoSwitch"),MenuBackground=menuBackground,ScreensBackground=screensBackground,RestoreBackground=On("RestoreBackgroundSwitch"),Hud=On("HudSwitch"),ClickThrough=On("ClickThroughSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=Engine.PreservesCrosshairColours(cross)?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
         public void ShowPage(string name) {
             Page=name;foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackgroundPage","BackupPage","AboutPage","WorkPage"})Visible(page,page==name);
             if(name!="WorkPage"){
@@ -349,7 +357,7 @@ namespace FortsSetup {
         }
         async Task RunInstall(bool restore) {
             if(busy)return;Options options=Selection();
-            if(!restore&&Page=="BackgroundPage")options=new Options{MenuBackground=menuBackground,ScreensBackground=screensBackground,RestoreBackground=On("RestoreBackgroundSwitch")};
+            if(!restore&&Page=="BackgroundPage")options=new Options{BackgroundLogo=On("BackgroundLogoSwitch"),MenuBackground=menuBackground,ScreensBackground=screensBackground,RestoreBackground=On("RestoreBackgroundSwitch")};
             lastPage=Page;busy=true;ShowPage("WorkPage");Visible("InstallBtn",false);Visible("RestoreBtn",false);Visible("DoneBtn",false);Visible("BackBtn",false);Visible("Bar",true);Visible("ErrorCircle",false);Visible("ErrorMark",false);
             UI<StackPanel>("Nav").IsEnabled=false;UI<Button>("ChangeFolder").IsEnabled=false;UI<RadioButton>("LangRu").IsEnabled=false;UI<RadioButton>("LangEn").IsEnabled=false;
             UI<UIElement>("DoneCircle").BeginAnimation(UIElement.OpacityProperty,null);UI<UIElement>("DoneCircle").Opacity=0;UI<System.Windows.Shapes.Path>("DoneCheck").BeginAnimation(System.Windows.Shapes.Shape.StrokeDashOffsetProperty,null);UI<System.Windows.Shapes.Path>("DoneCheck").StrokeDashOffset=11;
@@ -358,7 +366,7 @@ namespace FortsSetup {
             var progress=new Progress<Tuple<int,int,string>>(p=>{Text("WorkText",p.Item3);Animate(UI<Border>("BarFill"),FrameworkElement.WidthProperty,400.0*p.Item1/p.Item2,90);});
             Action<int,int,string> report=(step,total,text)=>((IProgress<Tuple<int,int,string>>)progress).Report(Tuple.Create(step,total,text));
             try {
-                var skipped=await Task.Run(()=>{if(restore)return engine.Restore(game,report);engine.Install(game,options,report);return new List<string>();});
+                var skipped=await Task.Run(()=>{if(restore)return engine.Restore(game,report);if(options.MenuBackground!=null&&options.BackgroundLogo)options.MenuBackground=BackgroundImage.AddLogo(options.MenuBackground,engine.Payload(@"backgrounds\forts-logo.png"));engine.Install(game,options,report);return new List<string>();});
                 Visible("Bar",false);Text("WorkTitle",L("Готово"));
                 string message=L(restore?"Файлы игры снова такие, какими были до установки.":"Готово. Запускай Forts.");if(skipped.Count>0)message+="\n"+L("Не тронул изменившиеся после установки: ")+String.Join(", ",skipped);
                 Text("WorkText",message);Animate(UI<UIElement>("DoneCircle"),UIElement.OpacityProperty,1,180);Animate(UI<System.Windows.Shapes.Path>("DoneCheck"),System.Windows.Shapes.Shape.StrokeDashOffsetProperty,0,260);

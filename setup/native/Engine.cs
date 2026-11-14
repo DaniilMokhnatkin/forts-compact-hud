@@ -20,6 +20,7 @@ namespace FortsSetup {
         public bool? SkipIntro;
         public byte[] MenuBackground, ScreensBackground;
         public bool RestoreBackground;
+        public bool BackgroundLogo=true;
         public Dictionary<string,int> Icons=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
     }
     public sealed class PackStatus {

@@ -30,6 +30,10 @@ static class BackgroundTests {
             var transparentEncoder=new PngBitmapEncoder();transparentEncoder.Frames.Add(BitmapFrame.Create(translucent));
             string alphaFile=Path.Combine(dir,"alpha.png");using(var output=File.Create(alphaFile))transparentEncoder.Save(output);
             var opaque=BackgroundImage.Encode(alphaFile);
+            var withLogo=BackgroundImage.AddLogo(dds,alphaFile);int logoPixel=128+(60*1920+180)*4;
+            Check(!Object.ReferenceEquals(dds,withLogo)&&dds.SequenceEqual(BackgroundImage.Encode(png)),"logo composition leaves the original background available");
+            Check(withLogo[logoPixel]==35&&withLogo[logoPixel+1]==70&&withLogo[logoPixel+2]==160,"logo alpha blends with the background");
+            Check(withLogo.Skip(128+1080*1920*4-4).SequenceEqual(dds.Skip(128+1080*1920*4-4)),"logo composition preserves pixels outside the logo");
             Check(opaque[128]==20&&opaque[129]==40&&opaque[130]==60&&opaque[131]==255,"transparent colours are composited on black");
             string bad=Path.Combine(dir,"bad.png");File.WriteAllText(bad,"invalid");Reject(()=>BackgroundImage.Encode(bad),"invalid image refused");
             string game=Path.Combine(dir,"game");Directory.CreateDirectory(Path.Combine(game,@"data\ui\screens"));File.WriteAllText(Path.Combine(game,"Forts.exe"),"fixture");
