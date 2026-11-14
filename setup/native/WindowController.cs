@@ -6,7 +6,6 @@ using System.Text;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Windows;
@@ -116,8 +115,6 @@ namespace FortsSetup {
             if(lang=="en")foreach(XmlElement element in xml.SelectNodes("//*"))foreach(XmlAttribute a in element.Attributes)if(english.ContainsKey(a.Value))a.Value=L(a.Value);
             using(var reader=new XmlNodeReader(xml))Window=(Window)XamlReader.Load(reader);
             Window.MaxHeight=Math.Max(600,SystemParameters.WorkArea.Height-32);
-            Window.SizeChanged+=(s,e)=>{if(resizeTimer==null)UpdateCrossLayout();};
-            Window.Closed+=(s,e)=>StopResize();
             // The controller is constructed before Application.Run, which normally installs
             // this context. Early asynchronous gallery loads must also resume on the UI thread.
             if(!(SynchronizationContext.Current is DispatcherSynchronizationContext))
@@ -316,7 +313,6 @@ namespace FortsSetup {
         public Options Selection() {return new Options{BackgroundLogo=On("BackgroundLogoSwitch"),MenuBackground=menuBackground,ScreensBackground=screensBackground,RestoreBackground=On("RestoreBackgroundSwitch"),Hud=On("HudSwitch"),ClickThrough=On("ClickThroughSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=Engine.PreservesCrosshairColours(cross)?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
         public void ShowPage(string name) {
             Page=name;foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackgroundPage","BackupPage","AboutPage","WorkPage"})Visible(page,page==name);
-            if(Window.IsLoaded&&name!="WorkPage")ResizeForPage(name);
             if(name!="WorkPage"){
                 bool backup=name=="BackupPage",about=name=="AboutPage";UI<Button>("InstallBtn").Content=L(name=="HudPage"||name=="CrossPage"?"Далее":"Установить");Visible("InstallBtn",!backup&&!about);Visible("RestoreBtn",backup);UI<Button>("InstallBtn").IsDefault=!backup;UI<Button>("RestoreBtn").IsDefault=backup;UI<TextBlock>("Summary").Opacity=backup||about?0:1;
                 foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackground","NavBackup","NavAbout"}){var item=UI<RadioButton>(nav);if((string)item.Tag==name){Window.UpdateLayout();Animate(UI<TranslateTransform>("NavPillY"),TranslateTransform.YProperty,item.TranslatePoint(new Point(0,0),UI<StackPanel>("Nav")).Y,220);break;}}
@@ -325,45 +321,6 @@ namespace FortsSetup {
             // the new page has not been measured yet; check again once layout has run
             Window.Dispatcher.BeginInvoke(DispatcherPriority.Loaded,new Action(UpdateFooterRule));
         }
-        void UpdateCrossLayout(){
-            var tiles=UI<System.Windows.Controls.Primitives.UniformGrid>("Tiles");
-            var scroll=UI<ScrollViewer>("CrossTilesScroll");
-            if(tiles==null||scroll==null)return;
-            tiles.Columns=Window.ActualWidth>=1160?8:6;
-            scroll.MaxHeight=Math.Max(232,Math.Min(352,Window.ActualHeight-568));
-        }
-        void ResizeForPage(string page){
-            var source=PresentationSource.FromVisual(Window);
-            if(source==null||source.CompositionTarget==null)return;
-            StopResize();
-            IntPtr handle=new WindowInteropHelper(Window).Handle;
-            var work=System.Windows.Forms.Screen.FromHandle(handle).WorkingArea;
-            NativeRect current;if(!GetWindowRect(handle,out current))return;
-            var scale=source.CompositionTarget.TransformToDevice;
-            int marginX=(int)Math.Round(16*scale.M11),marginY=(int)Math.Round(16*scale.M22);
-            int width=Math.Min((int)Math.Round((page=="CrossPage"?1200:1000)*scale.M11),work.Width-2*marginX);
-            int height=Math.Min((int)Math.Round((page=="CrossPage"?900:780)*scale.M22),work.Height-2*marginY);
-            Window.MaxHeight=Math.Max(320,(work.Height-2*marginY)/scale.M22);
-            int left=Math.Max(work.Left+marginX,Math.Min(current.Left+(current.Right-current.Left-width)/2,work.Right-marginX-width));
-            int top=Math.Max(work.Top+marginY,Math.Min(current.Top+(current.Bottom-current.Top-height)/2,work.Bottom-marginY-height));
-            var target=new NativeRect{Left=left,Top=top,Right=left+width,Bottom=top+height};
-            if(noMotion){ApplyBounds(handle,target);UpdateCrossLayout();return;}
-            var clock=Stopwatch.StartNew();
-            resizeTimer=new DispatcherTimer(DispatcherPriority.Render){Interval=TimeSpan.FromMilliseconds(16)};
-            resizeTimer.Tick+=(s,e)=>{
-                double t=Math.Min(1,clock.Elapsed.TotalMilliseconds/380.0);double eased=1-Math.Pow(1-t,3);
-                ApplyBounds(handle,new NativeRect{Left=Interpolate(current.Left,target.Left,eased),Top=Interpolate(current.Top,target.Top,eased),Right=Interpolate(current.Right,target.Right,eased),Bottom=Interpolate(current.Bottom,target.Bottom,eased)});
-                if(t>=1){StopResize();UpdateCrossLayout();}
-            };
-            resizeTimer.Start();
-        }
-        DispatcherTimer resizeTimer;
-        [StructLayout(LayoutKind.Sequential)] struct NativeRect{public int Left,Top,Right,Bottom;}
-        [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr hwnd,out NativeRect rect);
-        [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr hwnd,IntPtr after,int x,int y,int width,int height,uint flags);
-        static int Interpolate(int from,int to,double t){return (int)Math.Round(from+(to-from)*t);}
-        static void ApplyBounds(IntPtr handle,NativeRect rect){SetWindowPos(handle,IntPtr.Zero,rect.Left,rect.Top,rect.Right-rect.Left,rect.Bottom-rect.Top,0x0014);}
-        void StopResize(){if(resizeTimer!=null){resizeTimer.Stop();resizeTimer=null;}}
         // Scroll-edge hairline: separates the footer only while content continues beneath it.
         void UpdateFooterRule() {
             var scroller=UI<FrameworkElement>(Page??"") as ScrollViewer;

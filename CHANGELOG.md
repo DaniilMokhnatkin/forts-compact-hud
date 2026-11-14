@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.16.2 — 2026-11-14
+
+- Keep the setup window at a fixed size when switching pages.
+
 ## 1.16.1 — 2026-11-14
 
 - Fixed jerky window resizing when opening the crosshair page. The window now moves and resizes together without jumping.

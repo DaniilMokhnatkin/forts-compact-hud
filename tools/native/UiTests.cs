@@ -30,29 +30,11 @@ static class NativeUiTests {
             Check(c.Installed.Layout=="zors","fixture really has Zors installed");
             Check(c.Layout=="compact"&&c.Theme.Current=="default","startup stays Compact/neutral even with Zors installed");
             Check(c.Window.OwnedWindows.Count==0,"startup does not open gallery");
-            double normalWidth=c.Window.ActualWidth,normalHeight=c.Window.ActualHeight;
-            var widths=new System.Collections.Generic.List<double>();
-            var resizeSampler=new DispatcherTimer{Interval=TimeSpan.FromMilliseconds(12)};
-            resizeSampler.Tick+=(s,e)=>widths.Add(c.Window.ActualWidth);resizeSampler.Start();
-            c.UI<RadioButton>("NavCross").IsChecked=true;Pump(400);resizeSampler.Stop();
-            if(SystemParameters.ClientAreaAnimation&&c.Window.ActualWidth-normalWidth>100){
-                Check(widths.Count>=4&&widths[0]<normalWidth+140,"resize starts gradually without jumping to its final width");
-                Check(widths.Zip(widths.Skip(1),(a,b)=>b>=a-1).All(ok=>ok),"resize progresses without reversing direction");
-            }
-            Check(c.Window.ActualWidth>=normalWidth&&c.Window.ActualHeight>=normalHeight,"crosshair page expands without shrinking the window");
-            var area=System.Windows.Forms.Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(c.Window).Handle).WorkingArea;
-            var scale=PresentationSource.FromVisual(c.Window).CompositionTarget.TransformFromDevice;
-            var min=scale.Transform(new Point(area.Left,area.Top));var max=scale.Transform(new Point(area.Right,area.Bottom));
-            Check(c.Window.Left>=min.X&&c.Window.Top>=min.Y&&c.Window.Left+c.Window.ActualWidth<=max.X+1&&c.Window.Top+c.Window.ActualHeight<=max.Y+1,"expanded window stays inside the current monitor work area");
-            Check(c.UI<System.Windows.Controls.Primitives.UniformGrid>("Tiles").Columns==(c.Window.ActualWidth>=1160?8:6),"crosshair columns adapt to available width");
-            c.UI<RadioButton>("NavHud").IsChecked=true;Pump(400);
-            Check(Math.Abs(c.Window.ActualWidth-normalWidth)<1&&Math.Abs(c.Window.ActualHeight-normalHeight)<1,"returning to HUD restores the normal window size");
-            c.UI<RadioButton>("NavCross").IsChecked=true;Pump(80);c.UI<RadioButton>("NavHud").IsChecked=true;Pump(450);
-            Check(Math.Abs(c.Window.ActualWidth-normalWidth)<1&&Math.Abs(c.Window.ActualHeight-normalHeight)<1,"rapid page switching finishes at the current page size");
-            foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackground","NavBackup","NavAbout"}){c.UI<RadioButton>(nav).IsChecked=true;Pump(50);var scroll=(ScrollViewer)c.Window.FindName((string)c.UI<RadioButton>(nav).Tag);Check(scroll.ScrollableHeight<0.5,nav+" fits without unnecessary scrolling at the normal window size");}
+            double normalWidth=c.Window.ActualWidth,normalHeight=c.Window.ActualHeight,normalLeft=c.Window.Left,normalTop=c.Window.Top;
+            foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackground","NavBackup","NavAbout"}){c.UI<RadioButton>(nav).IsChecked=true;Pump(50);var scroll=(ScrollViewer)c.Window.FindName((string)c.UI<RadioButton>(nav).Tag);Check(scroll.ScrollableHeight<0.5,nav+" fits without unnecessary scrolling at the normal window size");Check(Math.Abs(c.Window.ActualWidth-normalWidth)<1&&Math.Abs(c.Window.ActualHeight-normalHeight)<1&&Math.Abs(c.Window.Left-normalLeft)<1&&Math.Abs(c.Window.Top-normalTop)<1,nav+" keeps the window size and position fixed");}
             c.UI<RadioButton>("NavHud").IsChecked=true;Pump(50);
 
-            c.UI<RadioButton>("NavCross").IsChecked=true;Pump(400);c.Window.BeginAnimation(Window.HeightProperty,null);c.Window.Height=600;Pump(100);c.UI<ScrollViewer>("CrossPage").ScrollToEnd();Pump(60);c.Window.UpdateLayout();
+            c.UI<RadioButton>("NavCross").IsChecked=true;Pump(400);c.Window.Height=600;Pump(100);c.UI<ScrollViewer>("CrossPage").ScrollToEnd();Pump(60);c.Window.UpdateLayout();
             var crossSize=c.UI<Grid>("SizeControls");var footer=c.UI<Border>("FooterRule");
             double controlsBottom=crossSize.TranslatePoint(new Point(0,crossSize.ActualHeight),c.Window).Y;
             double footerTop=footer.TranslatePoint(new Point(0,0),c.Window).Y;
