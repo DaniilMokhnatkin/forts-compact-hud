@@ -147,6 +147,7 @@ namespace FortsSetup {
             if(selection!=null){SetBackground(false,selection.MenuBackground,selection.MenuBackground==null?null:L("Выбранное изображение"));SetBackground(true,selection.ScreensBackground,selection.ScreensBackground==null?null:L("Выбранное изображение"));UI<CheckBox>("RestoreBackgroundSwitch").IsChecked=selection.RestoreBackground;}
             else{SetBackground(false,null,null);SetBackground(true,null,null);}
             foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackground","NavBackup","NavAbout"}) {var b=UI<RadioButton>(nav);b.Checked+=(s,e)=>ShowPage((string)b.Tag);}
+            foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackgroundPage","BackupPage","AboutPage"}){string name=page;var scroller=UI<ScrollViewer>(name);scroller.ScrollChanged+=(s,e)=>{if(Page==name)UpdateFooterRule();};}
             UI<Slider>("SizeSlider").ValueChanged+=(s,e)=>UpdateCross();
             UI<CheckBox>("HudSwitch").Click+=(s,e)=>UpdateSummary();UI<CheckBox>("CrossSwitch").Click+=(s,e)=>UpdateCross();UI<CheckBox>("IntroSwitch").Click+=(s,e)=>UpdateSummary();
             UI<Button>("IconsReset").Click+=(s,e)=>{foreach(var slider in iconSliders.Values)slider.Value=100;};
@@ -316,7 +317,15 @@ namespace FortsSetup {
                 bool backup=name=="BackupPage",about=name=="AboutPage";UI<Button>("InstallBtn").Content=L(name=="HudPage"||name=="CrossPage"?"Далее":"Установить");Visible("InstallBtn",!backup&&!about);Visible("RestoreBtn",backup);UI<Button>("InstallBtn").IsDefault=!backup;UI<Button>("RestoreBtn").IsDefault=backup;UI<TextBlock>("Summary").Opacity=backup||about?0:1;
                 foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackground","NavBackup","NavAbout"}){var item=UI<RadioButton>(nav);if((string)item.Tag==name){Window.UpdateLayout();Animate(UI<TranslateTransform>("NavPillY"),TranslateTransform.YProperty,item.TranslatePoint(new Point(0,0),UI<StackPanel>("Nav")).Y,220);break;}}
             }
-            UpdateSummary();
+            UpdateSummary();UpdateFooterRule();
+            // the new page has not been measured yet; check again once layout has run
+            Window.Dispatcher.BeginInvoke(DispatcherPriority.Loaded,new Action(UpdateFooterRule));
+        }
+        // Scroll-edge hairline: separates the footer only while content continues beneath it.
+        void UpdateFooterRule() {
+            var scroller=UI<FrameworkElement>(Page??"") as ScrollViewer;
+            bool more=scroller!=null&&scroller.IsVisible&&scroller.ScrollableHeight-scroller.VerticalOffset>0.5;
+            Animate(UI<Border>("FooterRule"),UIElement.OpacityProperty,more?1:0,160);
         }
         void UpdateSummary() {
             if(Layout==null||iconSliders.Count!=Engine.IconIds.Length)return;

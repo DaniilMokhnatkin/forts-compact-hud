@@ -1,7 +1,8 @@
 
           <!-- about the developer -->
-          <StackPanel x:Name="AboutPage" Visibility="Collapsed">
-            <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
+          <ScrollViewer x:Name="AboutPage" Visibility="Collapsed" Style="{StaticResource PageScroll}">
+            <ScrollViewer.RenderTransform><TranslateTransform/></ScrollViewer.RenderTransform>
+            <StackPanel Margin="32,26,32,24">
             <TextBlock Text="О разработчике" Style="{StaticResource PageTitle}"/>
             <TextBlock Style="{StaticResource PageNote}" Text="Forts Setup делаю я. Установщик бесплатный и без модов."/>
             <Border CornerRadius="12" Background="{DynamicResource Group}" Margin="0,18,0,0">
@@ -20,7 +21,7 @@
                 <Button x:Name="AuthorLink" Grid.Column="2" Style="{StaticResource Link}" Content="GitHub" VerticalAlignment="Center"/>
               </Grid>
             </Border>
-            <TextBlock Text="Ещё для Forts" Foreground="{StaticResource SecondaryText}" FontSize="12" FontWeight="Medium" Margin="4,22,0,8"/>
+            <TextBlock Text="Ещё для Forts" Style="{StaticResource Section}"/>
             <Border CornerRadius="12" Background="{DynamicResource Group}">
               <StackPanel Margin="16,14">
                 <Grid>
@@ -37,10 +38,10 @@
                   <Button x:Name="MatchroomPage" Style="{StaticResource Link}" Content="Страница на GitHub" Margin="16,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
                 <ProgressBar x:Name="MatchroomProgress" Height="4" Minimum="0" Maximum="100" Margin="0,12,0,0" Visibility="Collapsed"/>
-                <TextBlock x:Name="MatchroomStatus" Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                <TextBlock x:Name="MatchroomStatus" Style="{StaticResource StatusNote}"/>
               </StackPanel>
             </Border>
-            <TextBlock Text="А ещё у меня есть крутой скриншотер!" Foreground="{StaticResource SecondaryText}" FontSize="12" FontWeight="Medium" Margin="4,22,0,8"/>
+            <TextBlock Text="А ещё у меня есть крутой скриншотер!" Style="{StaticResource Section}"/>
             <Border CornerRadius="12" Background="{DynamicResource Group}">
               <StackPanel Margin="16,14">
                 <Grid>
@@ -57,14 +58,16 @@
                   <Button x:Name="KadrPage" Style="{StaticResource Link}" Content="Страница на GitHub" Margin="16,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
                 <ProgressBar x:Name="KadrProgress" Height="4" Minimum="0" Maximum="100" Margin="0,12,0,0" Visibility="Collapsed"/>
-                <TextBlock x:Name="KadrStatus" Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                <TextBlock x:Name="KadrStatus" Style="{StaticResource StatusNote}"/>
               </StackPanel>
             </Border>
-          </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
 
           <!-- backup -->
-          <StackPanel x:Name="BackupPage" Visibility="Collapsed">
-            <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
+          <ScrollViewer x:Name="BackupPage" Visibility="Collapsed" Style="{StaticResource PageScroll}">
+            <ScrollViewer.RenderTransform><TranslateTransform/></ScrollViewer.RenderTransform>
+            <StackPanel Margin="32,26,32,24">
             <TextBlock Text="Резервная копия" Style="{StaticResource PageTitle}"/>
             <TextBlock Style="{StaticResource PageNote}" Text="Перед первой установкой файлы игры сохраняются. Кнопка «Вернуть оригинал» кладёт их обратно."/>
             <Border CornerRadius="12" Background="{DynamicResource Group}" Margin="0,18,0,0">
@@ -87,9 +90,10 @@
                 </Grid>
               </StackPanel>
             </Border>
-            <TextBlock Style="{StaticResource PageNote}" Margin="4,12,0,0" FontSize="12"
+            <TextBlock Style="{StaticResource Footnote}"
                        Text="Полностью чистый интерфейс вернёт и Steam: Свойства → Установленные файлы → Проверить целостность."/>
-          </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
 
           <!-- working / done / error -->
           <StackPanel x:Name="WorkPage" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" Width="400" Margin="0,0,0,40">
@@ -116,7 +120,8 @@
           </StackPanel>
         </Grid>
 
-        <!-- footer -->
+        <!-- footer; the hairline shows only while the page has more content underneath -->
+        <Border x:Name="FooterRule" Grid.Row="1" Height="1" VerticalAlignment="Top" Background="{DynamicResource Separator}" Opacity="0" IsHitTestVisible="False"/>
         <Grid Grid.Row="1" Margin="32,0,24,0">
           <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" MaxWidth="360">
             <TextBlock x:Name="Summary" Foreground="{StaticResource SecondaryText}" FontSize="12" TextWrapping="Wrap"/>

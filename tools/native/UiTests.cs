@@ -30,6 +30,12 @@ static class NativeUiTests {
             Check(c.Installed.Layout=="zors","fixture really has Zors installed");
             Check(c.Layout=="compact"&&c.Theme.Current=="default","startup stays Compact/neutral even with Zors installed");
             Check(c.Window.OwnedWindows.Count==0,"startup does not open gallery");
+            c.Window.Height=600;c.UI<RadioButton>("NavCross").IsChecked=true;Pump(100);c.UI<ScrollViewer>("CrossPage").ScrollToEnd();Pump(60);c.Window.UpdateLayout();
+            var crossSize=c.UI<Grid>("SizeControls");var footer=c.UI<Border>("FooterRule");
+            double controlsBottom=crossSize.TranslatePoint(new Point(0,crossSize.ActualHeight),c.Window).Y;
+            double footerTop=footer.TranslatePoint(new Point(0,0),c.Window).Y;
+            Check(controlsBottom<=footerTop,"crosshair size controls remain above the footer in a short window");
+            c.Window.Height=780;c.UI<RadioButton>("NavHud").IsChecked=true;Pump(60);
             c.UI<RadioButton>("NavBackground").IsChecked=true;
             Check(c.UI<ScrollViewer>("BackgroundPage").Visibility==Visibility.Visible&&!c.UI<Button>("InstallBtn").IsEnabled,"background page starts without a pending operation");
             Check(c.UI<Panel>("BackgroundPresets").Children.Count==3,"three built-in background sets are available");
@@ -103,7 +109,7 @@ static class NativeUiTests {
             {var c1=new HudCustomization{Resources="corner",Cards=65,Background=100,Hue=90,Indicators=false}.For("compact");var c2=new HudCustomization{Resources="center",Background=100}.For("compact");Check(c1.Cards==80&&c1.Hue==0&&c1.Indicators&&c1.Background==0&&c2.Background==0,"Starkoff only varies resource position");}
             Render(c.Window,Path.Combine(root,@"build\native-compact.png"));
             c.UI<RadioButton>("NavAbout").IsChecked=true;Pump(300);
-            Check(c.UI<StackPanel>("AboutPage").Visibility==Visibility.Visible&&c.UI<Button>("InstallBtn").Visibility==Visibility.Collapsed&&c.UI<Button>("MatchroomDownload")!=null,"About page shows the developer and Matchroom download without the install button");
+            Check(c.UI<ScrollViewer>("AboutPage").Visibility==Visibility.Visible&&c.UI<Button>("InstallBtn").Visibility==Visibility.Collapsed&&c.UI<Button>("MatchroomDownload")!=null,"About page shows the developer and Matchroom download without the install button");
             Render(c.Window,Path.Combine(root,@"build\native-about.png"));
             {var pick=Matchroom.Pick("{\"tag_name\":\"v1.2.3\",\"assets\":[{\"name\":\"Matchroom.Next.v1.2.3.exe\",\"browser_download_url\":\"https://github.com/DaniilMokhnatkin/MatchroomNext/releases/download/v1.2.3/Matchroom.Next.v1.2.3.exe\"},{\"name\":\"x.sha256.txt\",\"browser_download_url\":\"https://github.com/DaniilMokhnatkin/MatchroomNext/releases/download/v1.2.3/x.sha256.txt\"},{\"name\":\"evil.exe\",\"browser_download_url\":\"https://evil.example/evil.exe\"}]}");
              {var kadr=Matchroom.Pick("{\"tag_name\":\"v1.0.15\",\"assets\":[{\"name\":\"Kadr-Setup.exe\",\"browser_download_url\":\"https://github.com/DaniilMokhnatkin/Kadr/releases/download/v1.0.15/Kadr-Setup.exe\"},{\"name\":\"SHA256SUMS.txt\",\"browser_download_url\":\"https://github.com/DaniilMokhnatkin/Kadr/releases/download/v1.0.15/SHA256SUMS.txt\"}]}",Matchroom.KadrRepo);Check(kadr.Name=="Kadr-Setup.exe"&&kadr.HashUrl!=null,"Kadr download picks its installer and SHA256SUMS");}

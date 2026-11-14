@@ -161,6 +161,8 @@ $script:English = @{
 
     "Оставить надпись Forts" = "Keep the Forts logo"
     "Логотип добавляется только в главное меню." = "The logo is added to the main menu only."
+    "Свои изображения" = "Your images"
+    "Не выбрано" = "Not selected"
 
 }
 

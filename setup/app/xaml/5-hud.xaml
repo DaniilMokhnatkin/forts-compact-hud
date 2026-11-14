@@ -4,12 +4,12 @@
       <Border.Effect><DropShadowEffect BlurRadius="18" ShadowDepth="2" Direction="270" Opacity="0.10"/></Border.Effect>
       <Grid>
         <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="68"/></Grid.RowDefinitions>
-        <Grid x:Name="Pages" Margin="32,26,32,0">
+        <Grid x:Name="Pages">
 
           <!-- HUD -->
-          <ScrollViewer x:Name="HudPage" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <ScrollViewer x:Name="HudPage" Style="{StaticResource PageScroll}">
             <ScrollViewer.RenderTransform><TranslateTransform/></ScrollViewer.RenderTransform>
-            <StackPanel>
+            <StackPanel Margin="32,26,32,24">
             <Grid>
               <TextBlock x:Name="HudTitle" Text="HUD" Style="{StaticResource PageTitle}"/>
               <Button x:Name="CustomizationBtn" Content="Настроить HUD" Style="{StaticResource Secondary}" HorizontalAlignment="Right" VerticalAlignment="Center" AutomationProperties.Name="Настроить HUD"/>

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.14.1 — 2026-11-14
+
+- Refined the background page with grouped image choices and a clearer logo switch.
+- Improved scrolling and spacing across setup pages, including the crosshair picker.
+
 ## 1.14.0 — 2026-11-14
 
 - Added Keep the Forts logo, enabled by default for selected backgrounds.
