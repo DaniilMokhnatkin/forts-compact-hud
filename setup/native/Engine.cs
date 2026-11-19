@@ -5,7 +5,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Web.Script.Serialization;
 using Microsoft.Win32;
@@ -26,6 +30,7 @@ namespace FortsSetup {
         public bool RestoreBackground;
         public bool BackgroundLogo;
         public Dictionary<string,int> Icons=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string,int> IconSizes=new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
     }
     public sealed class PackStatus {
         public bool HudCompatible=true, HudInstalled, HasBackup, SkipIntro;
@@ -35,6 +40,7 @@ namespace FortsSetup {
         public int Size=100;
         public HudCustomization Customization;
         public Dictionary<string,int> Icons=Engine.IconIds.ToDictionary(k=>k,k=>100);
+        public Dictionary<string,int> IconSizes=Engine.IconSizeIds.ToDictionary(k=>k,k=>100);
     }
     // Lowercase property names keep backups compatible with the previous installer.
     public sealed class StateEntry {
@@ -49,6 +55,7 @@ namespace FortsSetup {
         public const string BackupName="Forts-Setup-Backup", TextureDir=@"data\ui\textures\HUD\custom";
         public static readonly string[] LayoutIds={"compact","zors","minimalist","tactical","grib"}, SkinIds={"dlc3","base","dlc1","dlc2","pro","elite"};
         public static readonly string[] IconIds={"extinguisher","under_construction","repair","scrap"};
+        public static readonly string[] IconSizeIds={"extinguisher","under_construction","scrap"};
         public static readonly string[] MenuSkins={"base","classic","tog","dlc1","dlc2","dlc3"};
         public static void ValidateBackground(byte[] data) {
             if(data==null)return;
@@ -162,7 +169,16 @@ namespace FortsSetup {
             string config=SafePath(game,@"data\db\constants_user.lua");
             if(File.Exists(config)) {string text=File.ReadAllText(config);s.SkipIntro=Regex.IsMatch(text,@"Game\.SkipIntro\s*=\s*true");var m=Regex.Match(Regex.Match(text,CursorBlock).Value,@"-- Forts Setup size: (\d+)");if(s.Crosshair!=null&&m.Success)s.Size=Int32.Parse(m.Groups[1].Value);}
             string icons=Path.Combine(game,BackupName,"icons.json");
-            if(File.Exists(icons)) {var data=json.Deserialize<Dictionary<string,int>>(File.ReadAllText(icons));foreach(string id in IconIds){StateEntry e;string rel=@"data\ui\textures\"+id+".dds";if(data.ContainsKey(id)&&state.TryGetValue(rel,out e)&&e.owner=="icons"&&Hash(SafePath(game,rel))==e.installed)s.Icons[id]=data[id];}}
+            if(File.Exists(icons)){
+                var data=json.Deserialize<Dictionary<string,int>>(File.ReadAllText(icons));
+                foreach(string id in IconIds){
+                    StateEntry e;string rel=@"data\ui\textures\"+id+".dds";
+                    if(data==null||!state.TryGetValue(rel,out e)||e.owner!="icons"||Hash(SafePath(game,rel))!=e.installed)continue;
+                    int value;
+                    if(data.TryGetValue(id,out value)&&value>=10&&value<=100)s.Icons[id]=value;
+                    if(s.IconSizes.ContainsKey(id)&&data.TryGetValue(id+".size",out value)&&value>=10&&value<=100)s.IconSizes[id]=value;
+                }
+            }
             return s;
         }
         string LayoutHud(string layout) {return layout=="compact"?Payload(@"hud\data\ui\screens\hud.lua"):Payload(@"layouts\"+layout+@"\hud.lua");}
@@ -176,6 +192,39 @@ namespace FortsSetup {
             byte[] b=(byte[])dds.Clone();int r=Convert.ToInt32(hex.Substring(0,2),16),g=Convert.ToInt32(hex.Substring(2,2),16),blue=Convert.ToInt32(hex.Substring(4,2),16);
             for(int i=start;i+3<b.Length;i+=4){b[i]=(byte)(b[i]*blue/255);b[i+1]=(byte)(b[i+1]*g/255);b[i+2]=(byte)(b[i+2]*r/255);b[i+3]=(byte)(b[i+3]*opacity/100);}return b;
         }
+        static byte[] ScaleIcon(byte[] dds,int percent) {
+            int start=HudCustomization.BgraPixelOffset(dds);
+            int width=BitConverter.ToInt32(dds,16),height=BitConverter.ToInt32(dds,12);
+            if(dds.Length-start!=width*height*4)throw new IOException("Некорректная текстура DDS.");
+            // Keep the DDS dimensions and progress pivot. Shrink the artwork within the canvas.
+            int x=Math.Min((width-1)/2,(int)Math.Round(width*(100-percent)/200.0));
+            int y=Math.Min((height-1)/2,(int)Math.Round(height*(100-percent)/200.0));
+            int scaledWidth=width-2*x,scaledHeight=height-2*y;
+            var result=new byte[dds.Length];
+            Buffer.BlockCopy(dds,0,result,0,start);
+            using(var source=new Bitmap(width,height,PixelFormat.Format32bppArgb))
+            using(var scaled=new Bitmap(scaledWidth,scaledHeight,PixelFormat.Format32bppArgb)){
+                var sourceRect=new Rectangle(0,0,width,height);
+                var pixels=source.LockBits(sourceRect,ImageLockMode.WriteOnly,PixelFormat.Format32bppArgb);
+                try{Marshal.Copy(dds,start,pixels.Scan0,width*height*4);}
+                finally{source.UnlockBits(pixels);}
+                var scaledRect=new Rectangle(0,0,scaledWidth,scaledHeight);
+                using(var graphic=Graphics.FromImage(scaled))
+                using(var sampling=new ImageAttributes()){
+                    graphic.CompositingMode=CompositingMode.SourceCopy;
+                    graphic.InterpolationMode=InterpolationMode.HighQualityBicubic;
+                    graphic.PixelOffsetMode=PixelOffsetMode.Half;
+                    sampling.SetWrapMode(WrapMode.TileFlipXY);
+                    graphic.DrawImage(source,scaledRect,0,0,width,height,GraphicsUnit.Pixel,sampling);
+                }
+                pixels=scaled.LockBits(scaledRect,ImageLockMode.ReadOnly,PixelFormat.Format32bppArgb);
+                try{
+                    for(int row=0;row<scaledHeight;row++)
+                        Marshal.Copy(IntPtr.Add(pixels.Scan0,row*pixels.Stride),result,start+((y+row)*width+x)*4,scaledWidth*4);
+                }finally{scaled.UnlockBits(pixels);}
+            }
+            return result;
+        }
         public static string ConfigText(string before,int? percent,bool? intro) {
             string text=before;
             if(intro.HasValue){text=Regex.Replace(Regex.Replace(text,IntroBlock,""),@"(?s)\r?\n-- BEGIN SKIP INTRO\b.*?-- END SKIP INTRO\r?\n","");if(intro.Value)text+="\n-- BEGIN FORTS SETUP SKIP INTRO\n-- the engine reads Game.SkipIntro at startup (like -novid)\nGame = Game or {}\nGame.SkipIntro = true\n-- END FORTS SETUP SKIP INTRO\n";}
@@ -184,7 +233,7 @@ namespace FortsSetup {
         }
         public void Install(string game,Options o,Action<int,int,string> progress) {
             CheckGame(game);
-            if(!o.Hud&&o.Crosshair==null&&o.Icons.Count==0&&!o.SkipIntro.HasValue&&o.MenuBackground==null&&o.ScreensBackground==null&&!o.RestoreBackground)throw new ArgumentException("Ничего не выбрано");
+            if(!o.Hud&&o.Crosshair==null&&o.Icons.Count==0&&o.IconSizes.Count==0&&!o.SkipIntro.HasValue&&o.MenuBackground==null&&o.ScreensBackground==null&&!o.RestoreBackground)throw new ArgumentException("Ничего не выбрано");
             ValidateBackground(o.MenuBackground);ValidateBackground(o.ScreensBackground);
             if(o.RestoreBackground&&(o.MenuBackground!=null||o.ScreensBackground!=null))throw new ArgumentException("Выбери установку или возврат фона.");
             if(o.Hud&&!LayoutIds.Contains(o.Layout))throw new ArgumentException("Неизвестный HUD.");
@@ -192,6 +241,7 @@ namespace FortsSetup {
             if(customization!=null)customization.Validate();
             if(!SkinIds.Contains(o.Skin)||!Colors.ContainsKey(o.Color)||o.Size<50||o.Size>200||o.Size%5!=0)throw new ArgumentException("Недопустимые настройки прицела или скина.");
             if(o.Icons.Any(p=>!IconIds.Contains(p.Key)||p.Value<10||p.Value>100))throw new ArgumentException("Прозрачность иконок: от 10 до 100%.");
+            if(o.IconSizes.Any(p=>!IconSizeIds.Contains(p.Key)||p.Value<10||p.Value>100))throw new ArgumentException("Размер иконок должен быть от 10 до 100%.");
             if(o.Crosshair!=null&&!Crosshairs.Contains(o.Crosshair))throw new ArgumentException("Неизвестный прицел.");
             byte[] menuTexture=BackgroundTexture.Prepare(o.MenuBackground),screensTexture=BackgroundTexture.Prepare(o.ScreensBackground);
             string crossColor=PreservesCrosshairColours(o.Crosshair)?"white":o.Color;
@@ -235,10 +285,26 @@ namespace FortsSetup {
                 }
             }
             string iconLayout=o.Hud?o.Layout:status.Layout??"compact";
-            foreach(var icon in o.Icons)foreach(string file in new[]{icon.Key,icon.Key+"_grey"}){
-                string rel=@"data\ui\textures\"+file+".dds";
-                if(icon.Value>=100){string own=Payload(@"layouts\"+iconLayout+@"\textures\"+file+".dds");if(File.Exists(own))add(rel,own,"hud");}
-                else {string source=Payload(@"icons\"+iconLayout+"\\"+file+".dds");if(File.Exists(source))plan[rel]=new PlannedFile{Rel=rel,Bytes=Tint(File.ReadAllBytes(source),"FFFFFF",icon.Value),Owner="icons"};}
+            var iconTargets=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach(string id in IconIds.Where(id=>o.Hud||o.Icons.ContainsKey(id)||o.IconSizes.ContainsKey(id))){
+                int opacity,size;
+                if(!o.Icons.TryGetValue(id,out opacity))opacity=status.Icons[id];
+                if(!o.IconSizes.TryGetValue(id,out size)&&!status.IconSizes.TryGetValue(id,out size))size=100;
+                status.Icons[id]=opacity;
+                if(status.IconSizes.ContainsKey(id))status.IconSizes[id]=size;
+                foreach(string file in id=="extinguisher"?new[]{id}:new[]{id,id+"_grey"}){
+                    string rel=@"data\ui\textures\"+file+".dds";
+                    iconTargets.Add(rel);
+                    if(opacity==100&&size==100){
+                        string own=Payload(@"layouts\"+iconLayout+@"\textures\"+file+".dds");
+                        if(File.Exists(own))add(rel,own,"hud");
+                        continue;
+                    }
+                    byte[] texture=File.ReadAllBytes(Payload(@"icons\"+iconLayout+"\\"+file+".dds"));
+                    if(size<100)texture=ScaleIcon(texture,size);
+                    if(opacity<100)texture=Tint(texture,"FFFFFF",opacity);
+                    plan[rel]=new PlannedFile{Rel=rel,Bytes=texture,Owner="icons"};
+                }
             }
             if(o.Crosshair!=null){string dir=CrossDir(o.Crosshair,o.Size);foreach(string rel in CrossFiles){string src=Path.Combine(dir,Path.GetFileName(rel));if(crossColor=="white")add(rel,src,"crosshair");else{string tint=Path.Combine(dir,"tint.dds");plan[rel]=new PlannedFile{Rel=rel,Bytes=Tint(File.ReadAllBytes(File.Exists(tint)?tint:Path.Combine(dir,"mouse_target.dds")),Colors[crossColor],100),Owner="crosshair"};}}cursor=o.Size;}
             const string configRel=@"data\db\constants_user.lua";string config=SafePath(game,configRel),before=File.Exists(config)?File.ReadAllText(config):"",after=ConfigText(before,cursor,o.SkipIntro);
@@ -250,7 +316,7 @@ namespace FortsSetup {
             foreach(string skin in MenuSkins)foreach(var item in new[]{new {Name="FE-MainMenu-BG.dds",Data=menuTexture},new {Name="FE-AllScreens-BG.dds",Data=screensTexture}}){
                 if(item.Data!=null){string rel=@"data\ui\textures\menu_backgrounds\"+skin+"\\"+item.Name;plan[rel]=new PlannedFile{Rel=rel,Bytes=item.Data,Owner="background"};}
             }
-            var reverting=state.Values.Where(e=>((o.Hud&&e.owner=="hud")||(o.Icons.Count>0&&e.owner=="icons")||(o.RestoreBackground&&e.owner=="background"))&&!plan.ContainsKey(e.path)).ToArray();
+            var reverting=state.Values.Where(e=>((o.Hud&&e.owner=="hud")||(e.owner=="icons"&&iconTargets.Contains(e.path))||(o.RestoreBackground&&e.owner=="background"))&&!plan.ContainsKey(e.path)).ToArray();
             foreach(var e in reverting.Where(e=>e.owner=="background"))if(Hash(SafePath(game,e.path))!=e.installed)throw new IOException("Файл изменился после установки: "+e.path+". Проверь файлы через Steam.");
             string backup=SafePath(game,BackupName);Directory.CreateDirectory(backup);
             var written=new List<KeyValuePair<string,byte[]>>();int step=0,total=plan.Count+reverting.Length+1;
@@ -272,7 +338,11 @@ namespace FortsSetup {
                 write(Path.Combine(backup,"state.json"),Encoding.UTF8.GetBytes(json.Serialize(state.Values.OrderBy(e=>e.path).ToArray())));
                 if(o.Hud)write(Path.Combine(backup,"hud-profile.json"),Encoding.UTF8.GetBytes(json.Serialize(new HudProfile{layout=o.Layout,hash=Hash(SafePath(game,@"data\ui\screens\hud.lua")),customization=customization,clickThrough=o.ClickThrough})));
                 if(o.Crosshair!=null)write(Path.Combine(backup,"crosshair.json"),Encoding.UTF8.GetBytes(json.Serialize(new{id=o.Crosshair,size=o.Size,color=crossColor,hash=Hash(SafePath(game,CrossFiles[0]))})));
-                if(o.Icons.Count>0)write(Path.Combine(backup,"icons.json"),Encoding.UTF8.GetBytes(json.Serialize(o.Icons)));
+                if(iconTargets.Count>0){
+                    // Keep opacity keys readable by previous installers.
+                    foreach(var p in status.IconSizes.Where(p=>p.Value<100))status.Icons[p.Key+".size"]=p.Value;
+                    write(Path.Combine(backup,"icons.json"),Encoding.UTF8.GetBytes(json.Serialize(status.Icons)));
+                }
             } catch(Exception failure) {
                 var errors=new List<Exception>{failure};
                 foreach(var w in written.AsEnumerable().Reverse())try{WriteBytes(w.Key,w.Value);}catch(Exception e){errors.Add(e);}

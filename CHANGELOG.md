@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.19.0 — 2026-11-20
+
+- Added separate size sliders from 10% to 100% for the extinguishing,
+  construction and demolition icons. Size and opacity can be adjusted
+  independently, with a live preview.
+- Icon sizes are saved across installer launches and updates.
+
 ## 1.18.0 — 2026-11-14
 
 - Remember HUD, skin, customization, crosshair, icon opacity, intro, backgrounds,

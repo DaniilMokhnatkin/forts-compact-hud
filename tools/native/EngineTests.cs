@@ -19,6 +19,8 @@ static class EngineTests {
             File.Copy(Path.Combine(root,"original","uisprites.lua"),Path.Combine(game,"data","ui","uisprites.lua"));
             Directory.CreateDirectory(Path.Combine(game,"data","ui","textures"));
             foreach (string file in new[]{"mouse_target.dds","mouse_target_painted.dds"}) File.Copy(Path.Combine(root,"textures","vanilla",file),Path.Combine(game,"data","ui","textures",file));
+            string[] scalableTextures={"extinguisher","under_construction","under_construction_grey","scrap","scrap_grey"};
+            foreach(string name in scalableTextures)File.Copy(Path.Combine(root,@"setup\payload\icons\compact",name+".dds"),Path.Combine(game,@"data\ui\textures",name+".dds"));
             var engine=new Engine(Path.Combine(root,"setup"));
             var initial=Snapshot(game);
             Check(engine.Status(game).HudCompatible,"vanilla compatibility");
@@ -26,6 +28,46 @@ static class EngineTests {
             Reject(() => Engine.SafePath(game,game),"reject absolute path");
             Reject(() => engine.Install(game,new Options{Hud=true,Layout="unknown"},null),"reject unknown layout before writes");
             Check(Same(initial,Snapshot(game)),"invalid choice leaves game untouched");
+            var resized=new Options();
+            resized.IconSizes["repair"]=50;
+            Reject(()=>engine.Install(game,resized,null),"size settings are limited to the supported icons");
+            resized.IconSizes.Clear();
+            resized.IconSizes["scrap"]=5;
+            Reject(()=>engine.Install(game,resized,null),"reject icon scales below 10 percent");
+            Check(Same(initial,Snapshot(game)),"invalid icon sizes leave original files intact");
+            var faded=new Options();faded.Icons["scrap"]=35;
+            engine.Install(game,faded,null);
+            File.WriteAllText(Path.Combine(game,Engine.BackupName,"icons.json"),"{\"scrap\":35}");
+            Check(engine.Status(game).IconSizes["scrap"]==100,"legacy installations load at original icon size");
+            resized.IconSizes["extinguisher"]=10;resized.IconSizes["under_construction"]=65;resized.IconSizes["scrap"]=50;
+            engine.Install(game,resized,null);
+            var scaledStatus=engine.Status(game);
+            Check(resized.IconSizes.All(p=>scaledStatus.IconSizes[p.Key]==p.Value)&&scaledStatus.Icons["scrap"]==35,"size-only install persists each scale and keeps existing opacity");
+            foreach(string name in scalableTextures){
+                string id=name.Replace("_grey","");
+                byte[] data=File.ReadAllBytes(Path.Combine(game,@"data\ui\textures",name+".dds"));
+                byte[] originalTexture=File.ReadAllBytes(engine.Payload(@"icons\compact\"+name+".dds"));
+                int stride=BitConverter.ToInt32(data,16)*4, height=BitConverter.ToInt32(data,12);
+                int inset=(int)Math.Round(height*(100-resized.IconSizes[id])/200.0);
+                var alpha=data.Skip(128).Where((b,i)=>i%4==3).ToArray();
+                Check(data.Take(128).SequenceEqual(originalTexture.Take(128))&&alpha.Any(a=>a>0)
+                    &&alpha.Take(inset*stride/4).Concat(alpha.Skip((height-inset)*stride/4)).All(a=>a==0)
+                    &&(id!="scrap"||alpha.Max()<=90),"scaled "+name+" keeps a transparent border, DDS dimensions and opacity");
+            }
+            string gameExtinguisher=Path.Combine(game,@"data\ui\textures\extinguisher.dds");
+            string gameScrap=Path.Combine(game,@"data\ui\textures\scrap.dds");
+            string scaledExtinguisher=Engine.Hash(gameExtinguisher);
+            string scaledScrap=Engine.Hash(gameScrap);
+            engine.Install(game,resized,null);
+            Check(Engine.Hash(gameScrap)==scaledScrap,"reapplying size uses original art and never rescales an installed variant");
+            faded.Icons["scrap"]=100;engine.Install(game,faded,null);
+            Check(Engine.Hash(gameExtinguisher)==scaledExtinguisher&&engine.Status(game).IconSizes["scrap"]==50&&engine.Status(game).Icons["scrap"]==100&&Engine.Hash(gameScrap)!=scaledScrap,"opacity-only changes keep all selected sizes");
+            foreach(string id in resized.IconSizes.Keys.ToArray())resized.IconSizes[id]=10;
+            engine.Install(game,resized,null);
+            Check(scalableTextures.All(name=>File.ReadAllBytes(Path.Combine(game,@"data\ui\textures",name+".dds")).Skip(131).Where((b,i)=>i%4==0).Any(a=>a>0)),"all five icon textures retain visible pixels at 10 percent");
+            foreach(string id in resized.IconSizes.Keys.ToArray())resized.IconSizes[id]=100;
+            engine.Install(game,resized,null);
+            Check(Same(initial,Snapshot(game)),"resetting to 100 percent restores original icon bytes");
             Check(Engine.CanCustomize("zors"),"Zors supports resource placement customization");
             Check(Engine.IconIds.Contains("scrap"),"demolition has its own opacity setting");
             string mouseGame=Path.Combine(root,"build","native-mouse-"+Guid.NewGuid().ToString("N"));
@@ -131,6 +173,10 @@ static class EngineTests {
             Check(Engine.Hash(Path.Combine(game,@"data\ui\textures\mouse_target.dds"))==cursorBefore,"Grib HUD alone keeps the independently selected cursor");
             demolition.Icons["scrap"]=100;engine.Install(game,demolition,null);
             Check(engine.Status(game).Icons["scrap"]==100&&Engine.Hash(Path.Combine(game,@"data\ui\textures\scrap.dds"))==Engine.Hash(engine.Payload(@"layouts\grib\textures\scrap.dds")),"demolition opacity can restore the original mushroom artwork");
+            engine.Install(game,new Options{IconSizes=new Dictionary<string,int>{{"scrap",10}}},null);
+            string smallGrib=Engine.Hash(gameScrap);
+            engine.Install(game,new Options{Hud=true,Layout="compact"},null);
+            Check(engine.Status(game).IconSizes["scrap"]==10&&Engine.Hash(gameScrap)!=smallGrib,"changing the HUD reuses the size with the new theme's artwork");
             byte[] dx10=File.ReadAllBytes(engine.Payload(@"layouts\minimalist\textures\HUD\skin_base\PanelSpy.dds"));
             byte[] rotated=HudCustomization.ShiftHue(dx10,30);
             Check(dx10.Take(148).SequenceEqual(rotated.Take(148))&&Enumerable.Range(0,(dx10.Length-148)/4).All(i=>dx10[151+i*4]==rotated[151+i*4]),"DX10 hue preserves its full header and alpha");

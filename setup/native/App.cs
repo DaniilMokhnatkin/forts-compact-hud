@@ -11,8 +11,8 @@ using System.Linq;
 [assembly:AssemblyTitle("Forts Setup")]
 [assembly:AssemblyProduct("Forts Setup")]
 [assembly:AssemblyDescription("Native HUD and crosshair installer for Forts")]
-[assembly:AssemblyVersion("1.18.0.0")]
-[assembly:AssemblyFileVersion("1.18.0.0")]
+[assembly:AssemblyVersion("1.19.0.0")]
+[assembly:AssemblyFileVersion("1.19.0.0")]
 namespace FortsSetup {
     public static class EmbeddedPack {
         public static string Extract() {
@@ -53,7 +53,7 @@ namespace FortsSetup {
                     if(installed.HudInstalled||installed.Crosshair!=null)selection=new Options{
                         Hud=installed.HudInstalled,Layout=installed.Layout??"compact",Skin=installed.Skin??"dlc3",
                         ClickThrough=installed.ClickThrough,Crosshair=installed.Crosshair,Color=installed.Color,
-                        Size=installed.Size,Customization=installed.Customization,Icons=installed.Icons,SkipIntro=installed.SkipIntro};
+                        Size=installed.Size,Customization=installed.Customization,Icons=installed.Icons,IconSizes=installed.IconSizes,SkipIntro=installed.SkipIntro};
                 }catch(Exception e){System.Diagnostics.Trace.WriteLine("Read installed preferences: "+e.Message);}
                 var controller=new WindowController(pack,game,language,args.Any(a=>a.TrimStart('-').Equals("NoMotion",StringComparison.OrdinalIgnoreCase)),selection,preferences);
                 controller.PreferredPage=saved==null?null:saved.Page;

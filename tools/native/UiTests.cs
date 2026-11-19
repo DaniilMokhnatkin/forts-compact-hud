@@ -207,8 +207,26 @@ static class NativeUiTests {
             c.UI<RadioButton>("NavCross").IsChecked=true;Pump(30);Render(c.Window,Path.Combine(root,@"build\native-grib-cursor.png"));
             c.UI<CheckBox>("CrossSwitch").IsChecked=false;Check(c.Selection().Crosshair==null,"Grib cursor can be disabled independently");c.UI<CheckBox>("CrossSwitch").IsChecked=true;
             c.UI<RadioButton>("NavIcons").IsChecked=true;
-            var scrapSlider=c.UI<StackPanel>("IconRows").Children.OfType<Grid>().SelectMany(row=>row.Children.OfType<Slider>()).Single(sl=>System.Windows.Automation.AutomationProperties.GetAutomationId(sl)=="Opacity-scrap");
-            scrapSlider.Value=25;Check(c.Selection().Icons["scrap"]==25,"demolition has a working independent opacity slider");Pump(30);Render(c.Window,Path.Combine(root,@"build\native-grib-icons.png"));scrapSlider.Value=100;
+            var iconSliders=c.UI<StackPanel>("IconRows").Children.OfType<Grid>().SelectMany(row=>row.Children.OfType<Slider>()).ToDictionary(System.Windows.Automation.AutomationProperties.GetAutomationId);
+            var sizes=iconSliders.Where(p=>p.Key.StartsWith("IconSize-",StringComparison.Ordinal)).ToArray();
+            Check(sizes.Select(p=>p.Key).SequenceEqual(new[]{"IconSize-extinguisher","IconSize-under_construction","IconSize-scrap"})
+                &&sizes.All(p=>p.Value.Minimum==10&&p.Value.Maximum==100&&p.Value.Value==100),"requested icons each have a 10–100 percent size slider");
+            var scrapSlider=iconSliders["Opacity-scrap"];var scrapSize=iconSliders["IconSize-scrap"];
+            scrapSlider.Value=25;scrapSize.Value=55;
+            iconSliders["IconSize-extinguisher"].Value=10;
+            iconSliders["IconSize-under_construction"].Value=75;
+            var preview=c.UI<StackPanel>("IconPreview").Children.OfType<Image>().Last();
+            var selection=c.Selection();
+            Check(selection.Icons["scrap"]==25&&selection.IconSizes["scrap"]==55&&selection.IconSizes["extinguisher"]==10&&selection.IconSizes["under_construction"]==75
+                &&preview.Opacity==0.25&&((ScaleTransform)preview.RenderTransform).ScaleX==0.55&&preview.RenderTransformOrigin==new Point(0.5,0.5),
+                "icon preview combines independent opacity and centered size");
+            Pump(30);Render(c.Window,Path.Combine(root,@"build\native-grib-icons.png"));
+            c.UI<Button>("IconsReset").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+            Check(c.Selection().Icons.Values.All(v=>v==100)&&c.Selection().IconSizes.Values.All(v=>v==100),"icon reset restores both controls to 100 percent");
+            c.UI<CheckBox>("HudSwitch").IsChecked=false;c.UI<CheckBox>("CrossSwitch").IsChecked=false;
+            scrapSize.Value=50;
+            Check(c.UI<Button>("InstallBtn").IsEnabled,"size changes can be applied without installing a HUD or crosshair");
+            scrapSize.Value=100;c.UI<CheckBox>("HudSwitch").IsChecked=true;
             c.SelectLayout("zors");
             Check(c.UI<Button>("FeedbackBtn")!=null&&c.UI<Button>("CheckUpdateBtn")!=null,"feedback and manual update actions are present");
             Wait(()=>c.UI<Button>("CheckUpdateBtn").IsEnabled);

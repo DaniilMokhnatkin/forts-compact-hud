@@ -44,7 +44,7 @@ namespace FortsSetup {
                     MenuImage=SaveImage(o.MenuBackgroundSource??o.MenuBackground),ScreensImage=SaveImage(o.ScreensBackgroundSource??o.ScreensBackground),
                     Selection=new Options{Hud=o.Hud,ClickThrough=o.ClickThrough,Layout=o.Layout,Skin=o.Skin,Crosshair=o.Crosshair,
                         CrosshairChoice=o.CrosshairChoice,ColorChoice=o.ColorChoice,Color=o.Color,Size=o.Size,SkipIntro=o.SkipIntro,
-                        Customization=o.Customization,Icons=o.Icons,BackgroundLogo=o.BackgroundLogo,MenuCrop=o.MenuCrop,ScreensCrop=o.ScreensCrop}};
+                        Customization=o.Customization,Icons=o.Icons,IconSizes=o.IconSizes,BackgroundLogo=o.BackgroundLogo,MenuCrop=o.MenuCrop,ScreensCrop=o.ScreensCrop}};
                 AtomicWrite(Path.Combine(root,"settings.json"),Encoding.UTF8.GetBytes(json.Serialize(metadata)));return true;
             }catch(Exception e){System.Diagnostics.Trace.WriteLine("Save preferences: "+e.Message);return false;}
         }
@@ -59,6 +59,7 @@ namespace FortsSetup {
                 if(!Engine.Colors.ContainsKey(o.ColorChoice??""))o.ColorChoice=o.Color;
                 o.Size=Math.Max(50,Math.Min(200,o.Size/5*5));o.RestoreBackground=false;
                 o.Icons=(o.Icons??new Dictionary<string,int>()).Where(v=>Engine.IconIds.Contains(v.Key)&&v.Value>=10&&v.Value<=100).ToDictionary(v=>v.Key,v=>v.Value);
+                o.IconSizes=(o.IconSizes??new Dictionary<string,int>()).Where(v=>Engine.IconSizeIds.Contains(v.Key)&&v.Value>=10&&v.Value<=100).ToDictionary(v=>v.Key,v=>v.Value);
                 if(o.Customization!=null)try{o.Customization.Validate();}catch{o.Customization=null;}
                 o.MenuBackgroundSource=LoadImage(state.MenuImage);o.ScreensBackgroundSource=LoadImage(state.ScreensImage);
                 o.MenuBackground=Crop(o.MenuBackgroundSource,ref o.MenuCrop);o.ScreensBackground=Crop(o.ScreensBackgroundSource,ref o.ScreensCrop);

@@ -98,7 +98,9 @@ $script:English = @{
     "Оригиналы сохраняются, вернуть можно одной кнопкой" = "The originals are kept; restore with one button"
     "Иконки" = "Icons"; "Вернуть всем 100%" = "Set all back to 100%"; "Непрозрачность: " = "Opacity: "; "{0} изм." = "{0} changed"
     "иконки: " = "icons: "; "полупрозрачные иконки" = "see-through icons"
-    "Значки тушения, строительства, ремонта и демонтажа над фортом. Сделай их полупрозрачными, чтобы не закрывали постройки." = "Extinguish, construction, repair and demolition icons over your fort. Make them translucent so they do not hide your build."
+    "Настрой вид значков над фортом." = "Adjust the icons shown over your fort."
+    "Непрозрачность" = "Opacity"; "сброс иконок" = "reset icons"
+    "Размер иконок должен быть от 10 до 100%." = "Icon size must be between 10% and 100%."
     "Фон главного меню" = "Main menu background"; "Скины в игре" = "Skins in the game"
     "Наш компактный HUD в космическом фиолетовом: кнопки, вкладки, командир, реактор, иконки и прицел; фон меню и заставка от Zors.o." = "Our compact HUD in cosmic purple: buttons, tabs, commander, reactor, icons and crosshair; menu background and splash by Zors.o."
     "• Сейчас в игре скин меню «{0}», с ним фон Zors.o не виден: DLC-скины берут фон из своих файлов. Выбери в игре: Настройки → Игра → Скин меню → «По умолчанию», «Классика» или «Склад оружия»." = '• The game now uses the "{0}" menu skin, which does not show the Zors.o background: DLC skins use their own files. In the game choose Options → Game → Menu Skin → "Default", "Classic" or "Armoury".'

@@ -74,9 +74,9 @@ namespace FortsSetup {
         int refreshVersion,galleryVersion;
         readonly Dictionary<string,string> english;
         readonly Dictionary<string,RadioButton> layouts=new Dictionary<string,RadioButton>(),skins=new Dictionary<string,RadioButton>(),tiles=new Dictionary<string,RadioButton>(),swatches=new Dictionary<string,RadioButton>();
-        readonly Dictionary<string,Slider> iconSliders=new Dictionary<string,Slider>();
+        readonly Dictionary<string,Slider> iconSliders=new Dictionary<string,Slider>(),iconSizeSliders=new Dictionary<string,Slider>();
         readonly Dictionary<string,Image> iconImages=new Dictionary<string,Image>(),iconPreviews=new Dictionary<string,Image>();
-        readonly Dictionary<string,TextBlock> iconValues=new Dictionary<string,TextBlock>();
+        string iconArtLayout;
         static readonly ConcurrentDictionary<string,BitmapSource> Bitmaps=new ConcurrentDictionary<string,BitmapSource>(StringComparer.OrdinalIgnoreCase);
         readonly Dictionary<string,string> layoutNames=new Dictionary<string,string>{{"compact","Starkoff"},{"zors","Zors.o"},{"minimalist","Minimalist"},{"tactical","Тактический"},{"grib","♂ True Grib Version ♂"}};
         readonly Dictionary<string,string> crossNames=new Dictionary<string,string>{
@@ -156,7 +156,7 @@ namespace FortsSetup {
             foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackgroundPage","BackupPage","AboutPage"}){string name=page;var scroller=UI<ScrollViewer>(name);scroller.ScrollChanged+=(s,e)=>{if(Page==name)UpdateFooterRule();};}
             UI<Slider>("SizeSlider").ValueChanged+=(s,e)=>UpdateCross();
             UI<CheckBox>("HudSwitch").Click+=(s,e)=>UpdateSummary();UI<CheckBox>("CrossSwitch").Click+=(s,e)=>UpdateCross();UI<CheckBox>("IntroSwitch").Click+=(s,e)=>UpdateSummary();
-            UI<Button>("IconsReset").Click+=(s,e)=>{foreach(var slider in iconSliders.Values)slider.Value=100;};
+            UI<Button>("IconsReset").Click+=(s,e)=>{foreach(var slider in iconSliders.Values.Concat(iconSizeSliders.Values))slider.Value=100;};
             UI<Button>("InstallBtn").Click+=async(s,e)=>{if(Page=="HudPage")UI<RadioButton>("NavCross").IsChecked=true;else if(Page=="CrossPage")UI<RadioButton>("NavIcons").IsChecked=true;else await RunInstall(false);};
             UI<Button>("RestoreBtn").Click+=async(s,e)=>await RunInstall(true);
             UI<Button>("DoneBtn").Click+=(s,e)=>Window.Close();UI<Button>("CloseLight").Click+=(s,e)=>Window.Close();UI<Button>("MinLight").Click+=(s,e)=>Window.WindowState=WindowState.Minimized;
@@ -204,7 +204,7 @@ namespace FortsSetup {
             layouts[selection==null?"compact":selection.Layout].IsChecked=true;
             UI<RadioButton>("NavHud").IsChecked=true;
             initializing=false;
-            Window.Loaded+=async(s,e)=>{Animate(UI<UIElement>("Shell"),UIElement.OpacityProperty,1,220);Ready=Refresh();await Ready;if(selection!=null){UI<CheckBox>("HudSwitch").IsChecked=selection.Hud&&UI<CheckBox>("HudSwitch").IsEnabled;skins[selection.Skin].IsChecked=true;UI<CheckBox>("ClickThroughSwitch").IsChecked=selection.ClickThrough;UI<CheckBox>("CrossSwitch").IsChecked=selection.Crosshair!=null;UI<CheckBox>("IntroSwitch").IsChecked=selection.SkipIntro;foreach(var p in selection.Icons)iconSliders[p.Key].Value=p.Value;UpdateCross();}if(PreferredPage!=null)foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackground","NavAbout"})if((string)UI<RadioButton>(nav).Tag==PreferredPage)UI<RadioButton>(nav).IsChecked=true;CheckUpdates();};
+            Window.Loaded+=async(s,e)=>{Animate(UI<UIElement>("Shell"),UIElement.OpacityProperty,1,220);Ready=Refresh();await Ready;if(selection!=null){UI<CheckBox>("HudSwitch").IsChecked=selection.Hud&&UI<CheckBox>("HudSwitch").IsEnabled;skins[selection.Skin].IsChecked=true;UI<CheckBox>("ClickThroughSwitch").IsChecked=selection.ClickThrough;UI<CheckBox>("CrossSwitch").IsChecked=selection.Crosshair!=null;UI<CheckBox>("IntroSwitch").IsChecked=selection.SkipIntro;SetIconValues(selection.Icons,selection.IconSizes);UpdateCross();}if(PreferredPage!=null)foreach(string nav in new[]{"NavHud","NavCross","NavIcons","NavBackground","NavAbout"})if((string)UI<RadioButton>(nav).Tag==PreferredPage)UI<RadioButton>(nav).IsChecked=true;CheckUpdates();};
         }
         byte[] menuBackground, screensBackground,menuSource,screensSource;
         Int32Rect? menuCrop,screensCrop;
@@ -256,15 +256,55 @@ namespace FortsSetup {
             try{byte[] source=BackgroundImage.Encode(dialog.FileName);var crop=new BackgroundCropDialog(Window,source,lang=="en");if(crop.ShowDialog()!=true)return;SetBackground(screens,source,Path.GetFileName(dialog.FileName));if(!crop.UseOriginal)ApplyBackgroundCrop(screens,crop.Frame);Text("BackgroundStatus","");}
             catch(Exception e){Text("BackgroundStatus",L("Не удалось открыть изображение. ")+L(e.Message));}
         }
+        static Grid IconRow(Thickness margin) {
+            var row=new Grid{Margin=margin};
+            foreach(double width in new[]{40,120,0,44,22,0,44})row.ColumnDefinitions.Add(new ColumnDefinition{Width=width==0?new GridLength(1,GridUnitType.Star):new GridLength(width)});
+            return row;
+        }
+        Slider AddIconSlider(Grid row,int column,string id,string name,Action<double> preview) {
+            var slider=new Slider{Minimum=10,Maximum=100,Value=100,TickFrequency=5,IsSnapToTickEnabled=true,Height=36,Style=(Style)Window.FindResource("SizeRange")};
+            AutomationProperties.SetName(slider,name);AutomationProperties.SetAutomationId(slider,id);
+            Grid.SetColumn(slider,column);row.Children.Add(slider);
+            var value=new TextBlock{Text="100%",TextAlignment=TextAlignment.Right,VerticalAlignment=VerticalAlignment.Center};
+            Grid.SetColumn(value,column+1);row.Children.Add(value);
+            slider.ValueChanged+=(s,e)=>{value.Text=((int)slider.Value)+"%";preview(slider.Value/100);UpdateSummary();};
+            return slider;
+        }
         void MakeIcons() {
-            foreach(var pair in iconNames){string id=pair.Key;var row=new Grid{Margin=new Thickness(16,6,16,6)};foreach(double width in new[]{40,120,0,46})row.ColumnDefinitions.Add(new ColumnDefinition{Width=width==0?new GridLength(1,GridUnitType.Star):new GridLength(width)});
+            var rows=UI<StackPanel>("IconRows");
+            var headers=IconRow(new Thickness(16,10,16,1));
+            var opacity=new TextBlock{Text=L("Непрозрачность"),Style=(Style)Window.FindResource("RowNote")};
+            var size=new TextBlock{Text=L("Размер"),Style=(Style)Window.FindResource("RowNote")};
+            Grid.SetColumn(opacity,2);headers.Children.Add(opacity);
+            Grid.SetColumn(size,5);headers.Children.Add(size);
+            rows.Children.Add(headers);
+            foreach(string id in Engine.IconIds){
+                var row=IconRow(new Thickness(16,2,16,2));
                 var image=new Image{Width=30,Height=30};row.Children.Add(image);iconImages[id]=image;
-                var label=new TextBlock{Text=L(pair.Value),FontWeight=FontWeights.Medium,VerticalAlignment=VerticalAlignment.Center};Grid.SetColumn(label,1);row.Children.Add(label);
-                var slider=new Slider{Minimum=10,Maximum=100,Value=100,TickFrequency=5,IsSnapToTickEnabled=true,Height=36,Style=(Style)Window.FindResource("SizeRange")};Grid.SetColumn(slider,2);row.Children.Add(slider);AutomationProperties.SetName(slider,L(pair.Value));AutomationProperties.SetAutomationId(slider,"Opacity-"+id);iconSliders[id]=slider;
-                var value=new TextBlock{Text="100%",TextAlignment=TextAlignment.Right,VerticalAlignment=VerticalAlignment.Center};Grid.SetColumn(value,3);row.Children.Add(value);iconValues[id]=value;
-                UI<StackPanel>("IconRows").Children.Add(row);var preview=new Image{Width=54,Height=54,Margin=new Thickness(14,0,14,0)};UI<StackPanel>("IconPreview").Children.Add(preview);iconPreviews[id]=preview;
-                slider.ValueChanged+=(s,e)=>{value.Text=((int)slider.Value)+"%";preview.Opacity=slider.Value/100;image.Opacity=Math.Max(slider.Value/100,0.35);UpdateSummary();};
+                string name=L(iconNames[id]);
+                var label=new TextBlock{Text=name,FontWeight=FontWeights.Medium,VerticalAlignment=VerticalAlignment.Center};
+                Grid.SetColumn(label,1);row.Children.Add(label);
+                var scale=new ScaleTransform(1,1);
+                var preview=new Image{Width=54,Height=54,Margin=new Thickness(14,0,14,0),RenderTransform=scale,RenderTransformOrigin=new Point(0.5,0.5)};
+                UI<StackPanel>("IconPreview").Children.Add(preview);iconPreviews[id]=preview;
+                iconSliders[id]=AddIconSlider(row,2,"Opacity-"+id,L("Непрозрачность")+" · "+name,
+                    factor=>{preview.Opacity=factor;image.Opacity=Math.Max(factor,0.35);});
+                if(Engine.IconSizeIds.Contains(id))iconSizeSliders[id]=AddIconSlider(row,5,"IconSize-"+id,L("Размер")+" · "+name,
+                    factor=>scale.ScaleX=scale.ScaleY=factor);
+                rows.Children.Add(row);
             }
+        }
+        void SetIconValues(Dictionary<string,int> opacity,Dictionary<string,int> sizes) {
+            foreach(var p in opacity)iconSliders[p.Key].Value=p.Value;
+            foreach(var p in sizes)iconSizeSliders[p.Key].Value=p.Value;
+        }
+        void UpdateIconArt(string layout) {
+            if(iconArtLayout==layout)return;
+            foreach(string id in Engine.IconIds){
+                var bmp=Image("icon_"+layout+"_"+id+".png");
+                iconImages[id].Source=bmp;iconPreviews[id].Source=bmp;
+            }
+            iconArtLayout=layout;
         }
         public void SelectLayout(string key) {
             if(layouts[key].IsChecked!=true){layouts[key].IsChecked=true;return;}
@@ -285,7 +325,6 @@ namespace FortsSetup {
                 Text("LayoutTitle","♂ True Grib Version ♂");
                 Text("LayoutText",L("Мухоморные вкладки, лесные панели и грибной прицел. 100% гриб. Скилл в комплект не входит."));
             }
-            foreach(string id in Engine.IconIds){var bmp=Image("icon_"+key+"_"+id+".png");iconImages[id].Source=bmp;iconPreviews[id].Source=bmp;}
             if(!initializing&&key!="compact") {bool themed=key=="zors"||key=="grib";UI<CheckBox>("CrossSwitch").IsChecked=themed;if(themed)tiles[key].IsChecked=true;}
             Text("HudNote",L(Installed!=null&&Installed.Layout==key?"Уже стоит. Переустановка ничего не сломает":"Оригиналы сохраняются, вернуть можно одной кнопкой"));
             LoadGallery(key);UpdateCross();
@@ -333,7 +372,7 @@ namespace FortsSetup {
             image.Source=enabled?Tinted(Image("crosshair_"+cross+"_"+size+".png"),Engine.Colors[Engine.PreservesCrosshairColours(cross)?"white":color]):Image("crosshair_vanilla.png");
             Text("AfterLabel",enabled?L(crossNames[cross])+" · "+size+"%":L("Не меняется"));UpdateSummary();
         }
-        public Options Selection() {return new Options{CrosshairChoice=cross,ColorChoice=color,BackgroundLogo=On("BackgroundLogoSwitch"),MenuBackground=menuBackground,ScreensBackground=screensBackground,MenuBackgroundSource=menuSource,ScreensBackgroundSource=screensSource,MenuCrop=SaveCrop(menuCrop),ScreensCrop=SaveCrop(screensCrop),RestoreBackground=On("RestoreBackgroundSwitch"),Hud=On("HudSwitch"),ClickThrough=On("ClickThroughSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=Engine.PreservesCrosshairColours(cross)?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
+        public Options Selection() {return new Options{CrosshairChoice=cross,ColorChoice=color,BackgroundLogo=On("BackgroundLogoSwitch"),MenuBackground=menuBackground,ScreensBackground=screensBackground,MenuBackgroundSource=menuSource,ScreensBackgroundSource=screensSource,MenuCrop=SaveCrop(menuCrop),ScreensCrop=SaveCrop(screensCrop),RestoreBackground=On("RestoreBackgroundSwitch"),Hud=On("HudSwitch"),ClickThrough=On("ClickThroughSwitch"),Layout=Layout,Skin=skin,Crosshair=On("CrossSwitch")?cross:null,Color=Engine.PreservesCrosshairColours(cross)?"white":color,Size=(int)UI<Slider>("SizeSlider").Value,Icons=iconSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),IconSizes=iconSizeSliders.ToDictionary(p=>p.Key,p=>(int)p.Value.Value),SkipIntro=On("IntroSwitch"),Customization=Engine.CanCustomize(Layout)?customization.For(Layout):null};}
         public void ShowPage(string name) {
             Page=name;foreach(string page in new[]{"HudPage","CrossPage","IconsPage","BackgroundPage","BackupPage","AboutPage","WorkPage"})Visible(page,page==name);
             if(name!="WorkPage"){
@@ -353,14 +392,19 @@ namespace FortsSetup {
         void UpdateSummary() {
             if(Layout==null||iconSliders.Count!=Engine.IconIds.Length)return;
             var o=Selection();var parts=new List<string>();if(o.Hud)parts.Add("HUD «"+L(layoutNames[Layout])+"»");if(o.Crosshair!=null)parts.Add(L("Прицел")+" «"+L(crossNames[cross])+"» "+o.Size+"%");
-            foreach(var p in o.Icons)if(p.Value<100)parts.Add(L(iconNames[p.Key])+" "+p.Value+"%");if(Installed!=null&&o.SkipIntro!=Installed.SkipIntro)parts.Add(L(o.SkipIntro==true?"без заставки":"с заставкой"));
+            UpdateIconArt(o.Hud?o.Layout:Installed!=null?Installed.Layout??"compact":"compact");
+            bool iconsChanged=Installed!=null&&(o.Icons.Any(p=>p.Value!=Installed.Icons[p.Key])||o.IconSizes.Any(p=>p.Value!=Installed.IconSizes[p.Key]));
+            int customizedIcons=o.Icons.Where(p=>p.Value<100).Select(p=>p.Key).Union(o.IconSizes.Where(p=>p.Value<100).Select(p=>p.Key)).Count();
+            string iconCount=customizedIcons==0?"":String.Format(L("{0} изм."),customizedIcons);
+            if(customizedIcons>0)parts.Add(L("иконки: ")+iconCount);else if(iconsChanged)parts.Add(L("сброс иконок"));
+            if(Installed!=null&&o.SkipIntro!=Installed.SkipIntro)parts.Add(L(o.SkipIntro==true?"без заставки":"с заставкой"));
             if(o.MenuBackground!=null||o.ScreensBackground!=null)parts.Add(L("свой фон"));if(o.RestoreBackground)parts.Add(L("возврат фонов"));
             if(Page=="BackgroundPage"){parts.Clear();if(o.MenuBackground!=null)parts.Add(L("Главное меню"));if(o.ScreensBackground!=null)parts.Add(L("Лобби и другие экраны"));if(o.RestoreBackground)parts.Add(L("возврат фонов"));}
             Text("NavBackgroundValue",o.MenuBackground!=null||o.ScreensBackground!=null?L("Выбран"):Installed!=null&&(Installed.MenuBackground||Installed.ScreensBackground)?L("Есть"):"");
-            Text("Summary",parts.Count>0?L("Будет установлено: ")+String.Join("; ",parts):L("Ничего не выбрано"));Text("NavHudValue",o.Hud?L(layoutNames[Layout]):L("Выкл."));Text("NavCrossValue",o.Crosshair==null?L("Выкл."):L(crossNames[cross]));Text("NavIconsValue",o.Icons.Count(p=>p.Value<100)>0?o.Icons.Count(p=>p.Value<100)+" изм.":"");
+            Text("Summary",parts.Count>0?L("Будет установлено: ")+String.Join("; ",parts):L("Ничего не выбрано"));Text("NavHudValue",o.Hud?L(layoutNames[Layout]):L("Выкл."));Text("NavCrossValue",o.Crosshair==null?L("Выкл."):L(crossNames[cross]));Text("NavIconsValue",iconCount);
             UI<Button>("CustomizationBtn").ToolTip=(customization.Resources=="corner"?L("Ресурсы справа внизу"):L("Ресурсы по центру"))+(Layout=="tactical"?" · "+customization.Cards+"% · "+CustomizationDialog.ColourLabel(Layout,customization,lang=="en"):"");
             UI<Panel>("Tiles").IsEnabled=o.Crosshair!=null;UI<Grid>("SizeControls").IsEnabled=o.Crosshair!=null;UI<Grid>("ColourControls").IsEnabled=o.Crosshair!=null&&!Engine.PreservesCrosshairColours(cross);UI<StackPanel>("Skins").IsEnabled=o.Hud;
-            bool changes=Installed!=null&&(o.Icons.Any(p=>p.Value!=Installed.Icons[p.Key])||o.SkipIntro!=Installed.SkipIntro);
+            bool changes=iconsChanged||(Installed!=null&&o.SkipIntro!=Installed.SkipIntro);
             UI<CheckBox>("RestoreBackgroundSwitch").IsEnabled=Installed!=null&&(Installed.MenuBackground||Installed.ScreensBackground);
             UI<Button>("InstallBtn").IsEnabled=!busy&&statusReady&&Engine.IsGame(game)&&(Page=="BackgroundPage"?(o.MenuBackground!=null||o.ScreensBackground!=null||o.RestoreBackground):(o.Hud||o.Crosshair!=null||changes||Page!="IconsPage"));
         }
@@ -375,7 +419,7 @@ namespace FortsSetup {
                 string detected=Engine.GameSkin(game,false)??status.Skin??"dlc3";if(skins.ContainsKey(detected))skins[detected].IsChecked=true;
                 // Installed state is informational; never change the user's selected layout/theme here.
                 if(!customizationChosen&&status.Customization!=null){customization=status.Customization.Clone();customizationChosen=true;}
-                foreach(var p in status.Icons)iconSliders[p.Key].Value=p.Value;UI<CheckBox>("IntroSwitch").IsChecked=status.SkipIntro;
+                SetIconValues(status.Icons,status.IconSizes);UI<CheckBox>("IntroSwitch").IsChecked=status.SkipIntro;
                 if(initializing)return;
                 Text("HudNote",L(status.Layout==Layout?"Уже стоит. Переустановка ничего не сломает":"Оригиналы сохраняются, вернуть можно одной кнопкой"));
                 Text("BackupState",L(status.HasBackup?"есть, файлы игры сохранены":"нет — пак сюда ещё не ставился"));Text("BackupPath",Path.Combine(game,Engine.BackupName));Text("NavBackupValue",status.HasBackup?L("Есть"):"");UI<Button>("RestoreBtn").IsEnabled=status.HasBackup&&!busy;
