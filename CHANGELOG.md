@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.19.1 — 2026-11-20
+
+- Added a 10% to 100% size slider for the repair icon. Size and opacity can be
+  adjusted independently, previewed together, and saved between launches.
+
 ## 1.19.0 — 2026-11-20
 
 - Added separate size sliders from 10% to 100% for the extinguishing,

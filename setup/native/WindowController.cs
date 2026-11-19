@@ -289,7 +289,7 @@ namespace FortsSetup {
                 UI<StackPanel>("IconPreview").Children.Add(preview);iconPreviews[id]=preview;
                 iconSliders[id]=AddIconSlider(row,2,"Opacity-"+id,L("Непрозрачность")+" · "+name,
                     factor=>{preview.Opacity=factor;image.Opacity=Math.Max(factor,0.35);});
-                if(Engine.IconSizeIds.Contains(id))iconSizeSliders[id]=AddIconSlider(row,5,"IconSize-"+id,L("Размер")+" · "+name,
+                iconSizeSliders[id]=AddIconSlider(row,5,"IconSize-"+id,L("Размер")+" · "+name,
                     factor=>scale.ScaleX=scale.ScaleY=factor);
                 rows.Children.Add(row);
             }

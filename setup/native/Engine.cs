@@ -40,7 +40,7 @@ namespace FortsSetup {
         public int Size=100;
         public HudCustomization Customization;
         public Dictionary<string,int> Icons=Engine.IconIds.ToDictionary(k=>k,k=>100);
-        public Dictionary<string,int> IconSizes=Engine.IconSizeIds.ToDictionary(k=>k,k=>100);
+        public Dictionary<string,int> IconSizes=Engine.IconIds.ToDictionary(k=>k,k=>100);
     }
     // Lowercase property names keep backups compatible with the previous installer.
     public sealed class StateEntry {
@@ -55,7 +55,6 @@ namespace FortsSetup {
         public const string BackupName="Forts-Setup-Backup", TextureDir=@"data\ui\textures\HUD\custom";
         public static readonly string[] LayoutIds={"compact","zors","minimalist","tactical","grib"}, SkinIds={"dlc3","base","dlc1","dlc2","pro","elite"};
         public static readonly string[] IconIds={"extinguisher","under_construction","repair","scrap"};
-        public static readonly string[] IconSizeIds={"extinguisher","under_construction","scrap"};
         public static readonly string[] MenuSkins={"base","classic","tog","dlc1","dlc2","dlc3"};
         public static void ValidateBackground(byte[] data) {
             if(data==null)return;
@@ -176,7 +175,7 @@ namespace FortsSetup {
                     if(data==null||!state.TryGetValue(rel,out e)||e.owner!="icons"||Hash(SafePath(game,rel))!=e.installed)continue;
                     int value;
                     if(data.TryGetValue(id,out value)&&value>=10&&value<=100)s.Icons[id]=value;
-                    if(s.IconSizes.ContainsKey(id)&&data.TryGetValue(id+".size",out value)&&value>=10&&value<=100)s.IconSizes[id]=value;
+                    if(data.TryGetValue(id+".size",out value)&&value>=10&&value<=100)s.IconSizes[id]=value;
                 }
             }
             return s;
@@ -241,7 +240,7 @@ namespace FortsSetup {
             if(customization!=null)customization.Validate();
             if(!SkinIds.Contains(o.Skin)||!Colors.ContainsKey(o.Color)||o.Size<50||o.Size>200||o.Size%5!=0)throw new ArgumentException("Недопустимые настройки прицела или скина.");
             if(o.Icons.Any(p=>!IconIds.Contains(p.Key)||p.Value<10||p.Value>100))throw new ArgumentException("Прозрачность иконок: от 10 до 100%.");
-            if(o.IconSizes.Any(p=>!IconSizeIds.Contains(p.Key)||p.Value<10||p.Value>100))throw new ArgumentException("Размер иконок должен быть от 10 до 100%.");
+            if(o.IconSizes.Any(p=>!IconIds.Contains(p.Key)||p.Value<10||p.Value>100))throw new ArgumentException("Размер иконок должен быть от 10 до 100%.");
             if(o.Crosshair!=null&&!Crosshairs.Contains(o.Crosshair))throw new ArgumentException("Неизвестный прицел.");
             byte[] menuTexture=BackgroundTexture.Prepare(o.MenuBackground),screensTexture=BackgroundTexture.Prepare(o.ScreensBackground);
             string crossColor=PreservesCrosshairColours(o.Crosshair)?"white":o.Color;
@@ -289,9 +288,9 @@ namespace FortsSetup {
             foreach(string id in IconIds.Where(id=>o.Hud||o.Icons.ContainsKey(id)||o.IconSizes.ContainsKey(id))){
                 int opacity,size;
                 if(!o.Icons.TryGetValue(id,out opacity))opacity=status.Icons[id];
-                if(!o.IconSizes.TryGetValue(id,out size)&&!status.IconSizes.TryGetValue(id,out size))size=100;
+                if(!o.IconSizes.TryGetValue(id,out size))size=status.IconSizes[id];
                 status.Icons[id]=opacity;
-                if(status.IconSizes.ContainsKey(id))status.IconSizes[id]=size;
+                status.IconSizes[id]=size;
                 foreach(string file in id=="extinguisher"?new[]{id}:new[]{id,id+"_grey"}){
                     string rel=@"data\ui\textures\"+file+".dds";
                     iconTargets.Add(rel);

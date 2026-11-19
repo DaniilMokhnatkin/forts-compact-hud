@@ -19,7 +19,7 @@ static class EngineTests {
             File.Copy(Path.Combine(root,"original","uisprites.lua"),Path.Combine(game,"data","ui","uisprites.lua"));
             Directory.CreateDirectory(Path.Combine(game,"data","ui","textures"));
             foreach (string file in new[]{"mouse_target.dds","mouse_target_painted.dds"}) File.Copy(Path.Combine(root,"textures","vanilla",file),Path.Combine(game,"data","ui","textures",file));
-            string[] scalableTextures={"extinguisher","under_construction","under_construction_grey","scrap","scrap_grey"};
+            string[] scalableTextures={"extinguisher","under_construction","under_construction_grey","repair","repair_grey","scrap","scrap_grey"};
             foreach(string name in scalableTextures)File.Copy(Path.Combine(root,@"setup\payload\icons\compact",name+".dds"),Path.Combine(game,@"data\ui\textures",name+".dds"));
             var engine=new Engine(Path.Combine(root,"setup"));
             var initial=Snapshot(game);
@@ -29,20 +29,20 @@ static class EngineTests {
             Reject(() => engine.Install(game,new Options{Hud=true,Layout="unknown"},null),"reject unknown layout before writes");
             Check(Same(initial,Snapshot(game)),"invalid choice leaves game untouched");
             var resized=new Options();
-            resized.IconSizes["repair"]=50;
+            resized.IconSizes["upgrade"]=50;
             Reject(()=>engine.Install(game,resized,null),"size settings are limited to the supported icons");
             resized.IconSizes.Clear();
             resized.IconSizes["scrap"]=5;
             Reject(()=>engine.Install(game,resized,null),"reject icon scales below 10 percent");
             Check(Same(initial,Snapshot(game)),"invalid icon sizes leave original files intact");
-            var faded=new Options();faded.Icons["scrap"]=35;
+            var faded=new Options();faded.Icons["scrap"]=35;faded.Icons["repair"]=60;
             engine.Install(game,faded,null);
-            File.WriteAllText(Path.Combine(game,Engine.BackupName,"icons.json"),"{\"scrap\":35}");
-            Check(engine.Status(game).IconSizes["scrap"]==100,"legacy installations load at original icon size");
-            resized.IconSizes["extinguisher"]=10;resized.IconSizes["under_construction"]=65;resized.IconSizes["scrap"]=50;
+            File.WriteAllText(Path.Combine(game,Engine.BackupName,"icons.json"),"{\"scrap\":35,\"repair\":60}");
+            Check(engine.Status(game).IconSizes.Values.All(size=>size==100),"legacy installations load at original icon size");
+            resized.IconSizes["extinguisher"]=10;resized.IconSizes["under_construction"]=65;resized.IconSizes["repair"]=40;resized.IconSizes["scrap"]=50;
             engine.Install(game,resized,null);
             var scaledStatus=engine.Status(game);
-            Check(resized.IconSizes.All(p=>scaledStatus.IconSizes[p.Key]==p.Value)&&scaledStatus.Icons["scrap"]==35,"size-only install persists each scale and keeps existing opacity");
+            Check(resized.IconSizes.All(p=>scaledStatus.IconSizes[p.Key]==p.Value)&&faded.Icons.All(p=>scaledStatus.Icons[p.Key]==p.Value),"size-only install persists each scale and keeps existing opacity");
             foreach(string name in scalableTextures){
                 string id=name.Replace("_grey","");
                 byte[] data=File.ReadAllBytes(Path.Combine(game,@"data\ui\textures",name+".dds"));
@@ -52,7 +52,7 @@ static class EngineTests {
                 var alpha=data.Skip(128).Where((b,i)=>i%4==3).ToArray();
                 Check(data.Take(128).SequenceEqual(originalTexture.Take(128))&&alpha.Any(a=>a>0)
                     &&alpha.Take(inset*stride/4).Concat(alpha.Skip((height-inset)*stride/4)).All(a=>a==0)
-                    &&(id!="scrap"||alpha.Max()<=90),"scaled "+name+" keeps a transparent border, DDS dimensions and opacity");
+                    &&alpha.Max()<=255*scaledStatus.Icons[id]/100,"scaled "+name+" keeps a transparent border, DDS dimensions and opacity");
             }
             string gameExtinguisher=Path.Combine(game,@"data\ui\textures\extinguisher.dds");
             string gameScrap=Path.Combine(game,@"data\ui\textures\scrap.dds");
@@ -60,11 +60,11 @@ static class EngineTests {
             string scaledScrap=Engine.Hash(gameScrap);
             engine.Install(game,resized,null);
             Check(Engine.Hash(gameScrap)==scaledScrap,"reapplying size uses original art and never rescales an installed variant");
-            faded.Icons["scrap"]=100;engine.Install(game,faded,null);
+            faded.Icons["scrap"]=100;faded.Icons["repair"]=100;engine.Install(game,faded,null);
             Check(Engine.Hash(gameExtinguisher)==scaledExtinguisher&&engine.Status(game).IconSizes["scrap"]==50&&engine.Status(game).Icons["scrap"]==100&&Engine.Hash(gameScrap)!=scaledScrap,"opacity-only changes keep all selected sizes");
             foreach(string id in resized.IconSizes.Keys.ToArray())resized.IconSizes[id]=10;
             engine.Install(game,resized,null);
-            Check(scalableTextures.All(name=>File.ReadAllBytes(Path.Combine(game,@"data\ui\textures",name+".dds")).Skip(131).Where((b,i)=>i%4==0).Any(a=>a>0)),"all five icon textures retain visible pixels at 10 percent");
+            Check(scalableTextures.All(name=>File.ReadAllBytes(Path.Combine(game,@"data\ui\textures",name+".dds")).Skip(131).Where((b,i)=>i%4==0).Any(a=>a>0)),"all seven icon textures retain visible pixels at 10 percent");
             foreach(string id in resized.IconSizes.Keys.ToArray())resized.IconSizes[id]=100;
             engine.Install(game,resized,null);
             Check(Same(initial,Snapshot(game)),"resetting to 100 percent restores original icon bytes");

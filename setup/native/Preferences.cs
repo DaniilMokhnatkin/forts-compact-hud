@@ -59,7 +59,7 @@ namespace FortsSetup {
                 if(!Engine.Colors.ContainsKey(o.ColorChoice??""))o.ColorChoice=o.Color;
                 o.Size=Math.Max(50,Math.Min(200,o.Size/5*5));o.RestoreBackground=false;
                 o.Icons=(o.Icons??new Dictionary<string,int>()).Where(v=>Engine.IconIds.Contains(v.Key)&&v.Value>=10&&v.Value<=100).ToDictionary(v=>v.Key,v=>v.Value);
-                o.IconSizes=(o.IconSizes??new Dictionary<string,int>()).Where(v=>Engine.IconSizeIds.Contains(v.Key)&&v.Value>=10&&v.Value<=100).ToDictionary(v=>v.Key,v=>v.Value);
+                o.IconSizes=(o.IconSizes??new Dictionary<string,int>()).Where(v=>Engine.IconIds.Contains(v.Key)&&v.Value>=10&&v.Value<=100).ToDictionary(v=>v.Key,v=>v.Value);
                 if(o.Customization!=null)try{o.Customization.Validate();}catch{o.Customization=null;}
                 o.MenuBackgroundSource=LoadImage(state.MenuImage);o.ScreensBackgroundSource=LoadImage(state.ScreensImage);
                 o.MenuBackground=Crop(o.MenuBackgroundSource,ref o.MenuCrop);o.ScreensBackground=Crop(o.ScreensBackgroundSource,ref o.ScreensCrop);

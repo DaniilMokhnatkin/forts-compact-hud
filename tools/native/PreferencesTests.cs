@@ -34,12 +34,13 @@ static class PreferencesTests {
    Check(reopened.Page=="BackgroundPage"&&reopened.Selection().MenuBackground.SequenceEqual(before.MenuBackground),"new window restores page and background");
    reopened.CompleteSelfUpdate("fixture.exe",file=>{Check(store.Load().Selection.Size==145,"choices are saved before updater starts");});
    saved=store.Load();saved.Language="en";saved.Selection.Skin="dlc2";saved.Selection.Color="cyan";saved.Selection.ColorChoice="cyan";saved.Selection.CrosshairChoice="neo_star";
-   saved.Selection.Icons["scrap"]=35;saved.Selection.IconSizes["scrap"]=10;saved.Selection.Customization=new HudCustomization{Resources="center",Cards=65,Background=50,Hue=45,White=true,Indicators=false};saved.Selection.RestoreBackground=true;
+   saved.Selection.Icons["scrap"]=35;saved.Selection.IconSizes["scrap"]=10;saved.Selection.IconSizes["repair"]=40;
+   saved.Selection.Customization=new HudCustomization{Resources="center",Cards=65,Background=50,Hue=45,White=true,Indicators=false};saved.Selection.RestoreBackground=true;
    Check(store.Save(saved),"updated version can save the same stable profile");
    var same=new Preferences(dir).Load();Check(same.Language=="en"&&same.Selection.Skin=="dlc2"&&same.Selection.Icons["scrap"]==35&&same.Selection.Customization.White,"language skin icons and customization survive a new store instance");
    var third=new WindowController(pack,game,same.Language,true,same.Selection,store);third.Window.Show();Ready(third);
    Check(third.Selection().Skin=="dlc2"&&third.Selection().ColorChoice=="cyan"&&third.Selection().CrosshairChoice=="neo_star"&&third.Selection().Icons["scrap"]==35,"saved skin colour disabled cursor and icon values win over installed state");
-   Check(third.Selection().IconSizes["scrap"]==10&&third.Selection().IconSizes["extinguisher"]==100,"saved sizes survive reopening the installer independently");
+   Check(third.Selection().IconSizes["scrap"]==10&&third.Selection().IconSizes["repair"]==40&&third.Selection().IconSizes["extinguisher"]==100,"saved sizes survive reopening the installer independently");
    Check(third.Selection().Customization.White&&third.Selection().Customization.Cards==65&&third.Selection().Customization.Resources=="center","custom HUD settings restore in the real controller");third.Window.Close();
    var languageWindow=new WindowController(pack,game,"ru",true,same.Selection,store);languageWindow.Window.Show();Ready(languageWindow);
    languageWindow.UI<RadioButton>("LangEn").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
